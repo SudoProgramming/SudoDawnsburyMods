@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34511.84
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats", "Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats\Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats.csproj", "{45665247-442F-451E-9333-0AB085BB3EBB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2BCE50A5-29F0-4675-8B3A-DC90DF410584}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BCE50A5-29F0-4675-8B3A-DC90DF410584}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BCE50A5-29F0-4675-8B3A-DC90DF410584}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BCE50A5-29F0-4675-8B3A-DC90DF410584}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45665247-442F-451E-9333-0AB085BB3EBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45665247-442F-451E-9333-0AB085BB3EBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45665247-442F-451E-9333-0AB085BB3EBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45665247-442F-451E-9333-0AB085BB3EBB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6C763FC8-5179-45EF-BB7E-53372F166D73}
+	EndGlobalSection
+EndGlobal

@@ -12,6 +12,7 @@ using Dawnsbury.Core.Possibilities;
 using Dawnsbury.Core.Roller;
 using Dawnsbury.Modding;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -255,6 +256,32 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
             yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Horned dragon"), DamageKind.Poison);
             yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Mirage dragon"), DamageKind.Mental);
             yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Omen dragon"), DamageKind.Mental);
+
+            yield return new TrueFeat(ModManager.RegisterFeatName("Scars of Steel"), 4, "When you are struck with the mightiest of blows, you can flex your muscles to turn aside some of the damage.", "Once per day, when an opponent critically hits you with an attack that deals physical damage, you can spend a reaction to gain resistance to the triggering attack equal to your Constitution modifier plus half your level.", new Trait[] { Trait.Barbarian, Trait.Rage })
+            .WithActionCost(-2).WithPermanentQEffect("You gain resistance to the triggering attack equal to your Constitution modifier plus half your level as a reaction.", delegate (QEffect qf)
+            {
+                qf.YouAreDealtDamage = async (QEffect qEffect, Creature attacker, DamageStuff damage, Creature defender) =>
+                {
+                    int possibleResistance = qEffect.Owner.Abilities.Constitution + (int)Math.Floor(qEffect.Owner.Level / 2.0);
+                    if (damage.Kind.IsPhysical() && damage.Power != null && damage.Power.CheckResult == CheckResult.CriticalSuccess && damage.Power.HasTrait(Trait.Attack) && await qf.Owner.Battle.AskToUseReaction(qf.Owner, "You were critically hit for a total damage of " + damage.Amount + ".\nUse Scars of Steel to gain " + possibleResistance + " damage resistence?"))
+                    {
+                        return new ReduceDamageModification(possibleResistance, "You reduced " + possibleResistance + " damage from the incoming damage.");
+                    }
+
+                    return null;
+                };
+                //qf.YouAreTargeted = async delegate (QEffect qf, CombatAction attack)
+                //{
+                //    if (attack.HasTrait(Trait.Attack) && qf.Owner.CanSee(attack.Owner) && !attack.HasTrait(Trait.AttackDoesNotTargetAC) && await qf.Owner.Battle.AskToUseReaction(qf.Owner, "You're targeted by " + attack.Owner.Name + "'s " + attack.Name + ".\nUse Nimble Dodge to gain a +2 circumstance bonus to AC?"))
+                //    {
+                //        qf.Owner.AddQEffect(new QEffect
+                //        {
+                //            ExpiresAt = ExpirationCondition.EphemeralAtEndOfImmediateAction,
+                //            BonusToDefenses = (QEffect effect, CombatAction? action, Defense defense) => (defense != 0) ? null : new Bonus(2, BonusType.Circumstance, "Nimble Dodge")
+                //        });
+                //    }
+                //};
+            });
         }
     }
 }

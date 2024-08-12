@@ -150,37 +150,7 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
                                 });
                             }
                         };
-                        //qEffect.YouAcquireQEffect = (QEffect self, QEffect effectToCheck) =>
-                        //{
-                        //    if (effectToCheck.Id == QEffectId.DenyAdvantage)
-                        //    {
-                        //        return new QEffect("Furious Footfalls", "You gain a +5-foot status bonus to your Speed. This bonus increases to +10 feet while you're raging.")
-                        //        {
-                        //            BonusToAllSpeeds = (QEffect qEffect) =>
-                        //            {
-                        //                int speedBonus = (qEffect.Owner.HasEffect(QEffectId.Rage)) ? 10 : 5;
-                        //                return new Bonus(speedBonus, BonusType.Status, "Furious Footfalls", true);
-                        //            }
-                        //        };
-                        //    }
-
-                        //    return effectToCheck;
-                        //};
                     });
-                    //classSelectionFeat.WithOnCreature(creature =>
-                    //{
-                    //    creature.AddQEffect(new QEffect("Updated Rage", "Update")
-                    //    {
-                    //        YouAcquireQEffect = (QEffect updateRageEffect, QEffect effectToCheck) =>
-                    //        {
-                    //            if(effectToCheck.Name == "Rage")
-                    //            {
-                    //                effectToCheck.BonusToDefenses = null;
-                    //            }
-                    //            return effectToCheck;
-                    //        }
-                    //    });
-                    //});
                     classSelectionFeat.WithPermanentQEffect(null, (QEffect qEffect) =>
                     {
                         qEffect.YouAcquireQEffect = (QEffect self, QEffect effectToCheck) =>
@@ -197,42 +167,6 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
                             return effectToCheck;
                         };
                     });
-
-                    //classSelectionFeat.WithPermanentQEffect(null, (QEffect qEffect) =>
-                    //{
-                    //    qEffect.StartOfCombat = async (QEffect qEffect) =>
-                    //    {
-                    //        qEffect.Owner.Possibilities.Sections.ForEach(section =>
-                    //        {
-                    //            if (section.Name == "Main actions")
-                    //            {
-                    //                section.Possibilities.Where(possibility => possibility.Caption == "Rage" && possibility is ActionPossibility).ForEach(action =>
-                    //                {
-                    //                    ActionPossibility origionalPossibility = (ActionPossibility)action;
-                    //                    string updatedDescription = origionalPossibility.CombatAction.Description.Replace("• You take a -1 penalty to AC.\n", string.Empty);
-                    //                    string updatedShortDescription = origionalPossibility.CombatAction.ShortDescription.Replace(" and a penalty to AC until the end of the encounter", string.Empty);
-                    //                    CombatAction updatedAction = origionalPossibility.CombatAction;
-                    //                    updatedAction.Description = updatedDescription;
-                    //                    updatedAction.ShortDescription = updatedShortDescription;
-                    //                    ActionPossibility updatedPossibility = new ActionPossibility(updatedAction);
-
-                    //                    action = updatedPossibility;
-
-                    //                });
-                    //            }
-
-                    //            qEffect.Owner.QEffects.ForEach(qE =>
-                    //            {
-                    //                if (qE.ProvideMainAction != null)
-                    //                {
-                    //                    var ma = qE.ProvideMainAction;
-                    //                    int z = 0;
-                    //                }
-                    //            });
-                    //            qEffect.Owner.RegeneratePossibilities();
-                    //        });
-                    //    };
-                    //});
                 }
             });
         }
@@ -270,17 +204,6 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
 
                     return null;
                 };
-                //qf.YouAreTargeted = async delegate (QEffect qf, CombatAction attack)
-                //{
-                //    if (attack.HasTrait(Trait.Attack) && qf.Owner.CanSee(attack.Owner) && !attack.HasTrait(Trait.AttackDoesNotTargetAC) && await qf.Owner.Battle.AskToUseReaction(qf.Owner, "You're targeted by " + attack.Owner.Name + "'s " + attack.Name + ".\nUse Nimble Dodge to gain a +2 circumstance bonus to AC?"))
-                //    {
-                //        qf.Owner.AddQEffect(new QEffect
-                //        {
-                //            ExpiresAt = ExpirationCondition.EphemeralAtEndOfImmediateAction,
-                //            BonusToDefenses = (QEffect effect, CombatAction? action, Defense defense) => (defense != 0) ? null : new Bonus(2, BonusType.Circumstance, "Nimble Dodge")
-                //        });
-                //    }
-                //};
             });
         }
     }

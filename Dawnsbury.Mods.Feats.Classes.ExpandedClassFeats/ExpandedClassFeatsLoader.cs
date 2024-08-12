@@ -79,7 +79,6 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
                     .Replace("Deny advantage {i}(you aren't flat-footed to hidden or flanking creatures of your level or lower){/i}", "Furious Footfalls {i}You gain a +5-foot status bonus to your Speed. This bonus increases to +10 feet while you're raging.{/i}");
 
                     // Adds the QEffect at the start of combat to prompt for a free action rage if the user is not wearing heavy armor
-                    // HACK: Currently Rage is NOT exposed via the modding dlls so reflection is being used to call the 'EnterRage' method. THIS SHOULD BE CHANGED IF 'EnterRage' IS EVER MADE PUBLIC
                     classSelectionFeat.WithOnCreature(creature =>
                     {
                         creature.AddQEffect(new QEffect("Quick-Tempered", "At the beginning of each encounter, you can enter rage as a free action if you are not wearing heavy armor.")
@@ -89,7 +88,7 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
                                 Creature owner = qEffect.Owner;
                                 if (!owner.Armor.Item.Traits.Contains(Trait.HeavyArmor) && await owner.Battle.AskForConfirmation(owner, IllustrationName.Rage, "Enter rage as a free action?", "Rage!"))
                                 {
-                                    typeof(BarbarianFeatsDb).GetMethod("EnterRage", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { owner });
+                                    BarbarianFeatsDb.EnterRage(owner);
                                 }
                             }
                         });

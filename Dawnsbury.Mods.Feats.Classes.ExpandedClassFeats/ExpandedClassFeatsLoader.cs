@@ -52,6 +52,10 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
             });
             AllFeats.All.ForEach((feat) =>
             {
+                if (feat.FeatName == FeatName.IntimidatingStrike)
+                {
+                    feat.Traits.Add(Trait.Barbarian);
+                }
                 // Updates the 'Barbarian' class feature to include the 'Quick-Tempered' feature.
                 if (feat.FeatName == FeatName.Barbarian && feat is ClassSelectionFeat classSelectionFeat)
                 {

@@ -41,7 +41,7 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
         /// </summary>
         private static void PatchFeats()
         {
-            AllFeats.All.RemoveAll((feat) => feat is DragonInstinctFeat && originalDragonInstincts.Contains(feat.FeatName));
+            AllFeats.All.RemoveAll((feat) => feat.FeatName == FeatName.SecondWind || (feat is DragonInstinctFeat && originalDragonInstincts.Contains(feat.FeatName)));
             ModManager.RegisterActionOnEachActionPossibility(action =>
             {
                 if (action.Name == "Rage")

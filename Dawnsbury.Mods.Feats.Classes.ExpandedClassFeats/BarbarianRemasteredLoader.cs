@@ -1,5 +1,4 @@
-﻿using Dawnsbury.Auxiliary;
-using Dawnsbury.Core;
+﻿using Dawnsbury.Core;
 using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb;
@@ -8,22 +7,24 @@ using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Core;
 using Dawnsbury.Core.Mechanics.Enumerations;
-using Dawnsbury.Core.Possibilities;
 using Dawnsbury.Core.Roller;
 using Dawnsbury.Modding;
-using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using static Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb.BarbarianFeatsDb;
 
 namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
 {
-    public class ExpandedClassFeatsLoader
+    /// <summary>
+    /// Updates and loads the Remastered changes into the game for the Barbarian
+    /// </summary>
+    public class BarbarianRemasteredLoader
     {
+        /// <summary>
+        /// A list of the original Dragon Instincts in Dawnsbury
+        /// </summary>
         private static readonly List<FeatName> originalDragonInstincts = new List<FeatName>() { FeatName.DragonInstinctFire, FeatName.DragonInstinctCold, FeatName.DragonInstinctElectricity, FeatName.DragonInstinctSonic, FeatName.DragonInstinctAcid };
 
         /// <summary>
@@ -32,9 +33,8 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
         [DawnsburyDaysModMainMethod]
         public static void LoadMod()
         {
-            Debugger.Launch();
             PatchFeats();
-            AddFeats(CreateRemasteredBarbarianFeats());
+            AddFeats(BarbarianRemastered.CreateRemasteredBarbarianFeats());
         }
 
         /// <summary>
@@ -170,40 +170,16 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
             });
         }
 
+        /// <summary>
+        /// Adds the provided feats via the ModManager
+        /// </summary>
+        /// <param name="feats">The feats to add</param>
         private static void AddFeats(IEnumerable<Feat> feats)
         {
             foreach (Feat feat in feats)
             {
                 ModManager.AddFeat(feat);
             }
-        }
-
-        private static IEnumerable<Feat> CreateRemasteredBarbarianFeats()
-        {
-            yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Adamantine dragon"), DamageKind.Bludgeoning);
-            yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Conspirator dragon"), DamageKind.Poison);
-            yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Diabolic dragon"), DamageKind.Fire);
-            // TODO: When spirit damage is added ad Empureal
-            //yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Empureal dragon"), DamageKind.Spirit);
-            yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Fortune dragon"), DamageKind.Force);
-            yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Horned dragon"), DamageKind.Poison);
-            yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Mirage dragon"), DamageKind.Mental);
-            yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Omen dragon"), DamageKind.Mental);
-
-            yield return new TrueFeat(ModManager.RegisterFeatName("Scars of Steel"), 4, "When you are struck with the mightiest of blows, you can flex your muscles to turn aside some of the damage.", "Once per day, when an opponent critically hits you with an attack that deals physical damage, you can spend a reaction to gain resistance to the triggering attack equal to your Constitution modifier plus half your level.", new Trait[] { Trait.Barbarian, Trait.Rage })
-            .WithActionCost(-2).WithPermanentQEffect("You gain resistance to the triggering attack equal to your Constitution modifier plus half your level as a reaction.", delegate (QEffect qf)
-            {
-                qf.YouAreDealtDamage = async (QEffect qEffect, Creature attacker, DamageStuff damage, Creature defender) =>
-                {
-                    int possibleResistance = qEffect.Owner.Abilities.Constitution + (int)Math.Floor(qEffect.Owner.Level / 2.0);
-                    if (damage.Kind.IsPhysical() && damage.Power != null && damage.Power.CheckResult == CheckResult.CriticalSuccess && damage.Power.HasTrait(Trait.Attack) && await qf.Owner.Battle.AskToUseReaction(qf.Owner, "You were critically hit for a total damage of " + damage.Amount + ".\nUse Scars of Steel to gain " + possibleResistance + " damage resistence?"))
-                    {
-                        return new ReduceDamageModification(possibleResistance, "You reduced " + possibleResistance + " damage from the incoming damage.");
-                    }
-
-                    return null;
-                };
-            });
         }
     }
 }

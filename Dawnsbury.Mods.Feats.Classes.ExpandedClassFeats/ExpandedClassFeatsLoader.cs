@@ -55,6 +55,19 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
                 if (feat.FeatName == FeatName.IntimidatingStrike)
                 {
                     feat.Traits.Add(Trait.Barbarian);
+                    for (int i = 0; i < feat.Prerequisites.Count; i++)
+                    {
+                        Prerequisite prereq = feat.Prerequisites[i];
+                        if (prereq is ClassPrerequisite classPrerequisite)
+                        {
+                            if (!classPrerequisite.AllowedClasses.Contains(Trait.Barbarian))
+                            {
+                                List<Trait> updatedAllowedClasses = classPrerequisite.AllowedClasses;
+                                updatedAllowedClasses.Add(Trait.Barbarian);
+                                feat.Prerequisites[i] = new ClassPrerequisite(updatedAllowedClasses);
+                            }
+                        }
+                    }
                 }
                 // Updates the 'Barbarian' class feature to include the 'Quick-Tempered' feature.
                 if (feat.FeatName == FeatName.Barbarian && feat is ClassSelectionFeat classSelectionFeat)

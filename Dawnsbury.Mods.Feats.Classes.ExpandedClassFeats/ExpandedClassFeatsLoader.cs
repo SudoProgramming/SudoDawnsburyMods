@@ -169,13 +169,17 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
                         {
                             if (effectToCheck.Name == "Rage")
                             {
-                                Creature x = self.Owner;
                                 effectToCheck.BonusToDefenses = null;
                                 effectToCheck.Description = effectToCheck.Description.Replace("You take a -1 penalty to AC.\n\n", string.Empty);
+                            }
+                            else if (effectToCheck.Id == QEffectId.HasRagedThisEncounter)
+                            {
+                                effectToCheck = null;
                             }
                             return effectToCheck;
                         };
                     });
+
                     //classSelectionFeat.WithPermanentQEffect(null, (QEffect qEffect) =>
                     //{
                     //    qEffect.StartOfCombat = async (QEffect qEffect) =>

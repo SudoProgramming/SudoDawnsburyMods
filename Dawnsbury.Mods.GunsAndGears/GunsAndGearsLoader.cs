@@ -16,7 +16,7 @@ namespace Dawnsbury.Mods.GunsAndGears
         [DawnsburyDaysModMainMethod]
         public static void LoadMod()
         {
-            EquipmentGunsAndGears.AddItems();
+            EquipmentGunsAndGears.RegisterItems();
         }
     }
 }

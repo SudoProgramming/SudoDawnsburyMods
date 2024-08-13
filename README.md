@@ -14,7 +14,7 @@ This module updates the base pre-remastered Barbarian class in Dawnsbury days wi
 - Removed Second Wind feat (Currently not helpful with changes to Rage)
 - Removed Second Wind Feat (It has been replaced with the base feature 'Furious Footfalls'
 -  Added Intimidating Strike feat
--  Added Scars of Steel feat **NOTE: Is once per combat instead of once per day**
+-  Added Scars of Steel feat
 
 # Licensing
 All files and details are covered under the ORC license covered in deatil in the Licensing/ORC copyright notice.html

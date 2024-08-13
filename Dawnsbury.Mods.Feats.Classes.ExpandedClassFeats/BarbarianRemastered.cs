@@ -65,13 +65,9 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
                 qf.YouAreDealtDamage = async (QEffect qEffect, Creature attacker, DamageStuff damage, Creature defender) =>
                 {
                     int possibleResistance = qEffect.Owner.Abilities.Constitution + (int)Math.Floor(qEffect.Owner.Level / 2.0);
-                    bool usedScarsOfSteel = qf.Owner.QEffects.Where(qe => qe.Name == "UsedScarsOfSteel").ToArray().Length > 0;
-                    if (damage.Kind.IsPhysical() && !usedScarsOfSteel && damage.Power != null && damage.Power.CheckResult == CheckResult.CriticalSuccess && damage.Power.HasTrait(Trait.Attack) && await qf.Owner.Battle.AskToUseReaction(qf.Owner, "You were critically hit for a total damage of " + damage.Amount + ".\nUse Scars of Steel to gain " + possibleResistance + " damage resistence?"))
+                    if (damage.Kind.IsPhysical() && !qf.Owner.PersistentUsedUpResources.UsedUpActions.Contains("Scars of Steel") && damage.Power != null && damage.Power.CheckResult == CheckResult.CriticalSuccess && damage.Power.HasTrait(Trait.Attack) && await qf.Owner.Battle.AskToUseReaction(qf.Owner, "You were critically hit for a total damage of " + damage.Amount + ".\nUse Scars of Steel to gain " + possibleResistance + " damage resistence?"))
                     {
-                        qf.Owner.AddQEffect(new QEffect("UsedScarsOfSteel", "Added when Scars of Steel is used")
-                        {
-                            ExpiresAt = ExpirationCondition.Never
-                        });
+                        qf.Owner.PersistentUsedUpResources.UsedUpActions.Add("Scars of Steel");
                         return new ReduceDamageModification(possibleResistance, "You reduced " + possibleResistance + " damage from the incoming damage.");
                     }
 

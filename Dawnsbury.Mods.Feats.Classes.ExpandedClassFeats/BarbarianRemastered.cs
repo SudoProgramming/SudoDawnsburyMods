@@ -190,8 +190,7 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
                     AddExtraStrikeDamage = delegate (CombatAction attack, Creature defender)
                     {
                         Creature owner = attack.Owner;
-                        bool doesRageApplyToAcction = (bool)typeof(BarbarianFeatsDb).GetMethod("DoesRageApplyToAction", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { attack });
-                        if (owner.HasEffect(QEffectId.Rage) && doesRageApplyToAcction && attack.Item != null)
+                        if (owner.HasEffect(QEffectId.Rage) && BarbarianFeatsDb.DoesRageApplyToAction(attack) && attack.Item != null)
                         {
                             List<DamageKind> list = attack.Item.DetermineDamageKinds();
                             DamageKind damageTypeToUse = defender.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(list);

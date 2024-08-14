@@ -1,6 +1,7 @@
 ﻿using Dawnsbury.Core;
 using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Core.Creatures;
+using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Modding;
@@ -21,6 +22,9 @@ namespace Dawnsbury.Mods.GunsAndGears
 
         public static readonly Trait ConcussiveTrait = ModManager.RegisterTrait("Concussive", new TraitProperties("Concussive", true, "When determining a creature's resistance or immunity to damage from this weapon, use the weaker of the target's resistance or immunity to piercing or to bludgeoning. For instance, if the creature were immune to piercing and had no resistance or immunity to bludgeoning damage, it would take full damage from a concussive weapon. Resistance or immunity to all physical damage, or all damage, applies as normal.", relevantForShortBlock: true));
 
+        public static readonly Trait Magazine6Trait = ModManager.RegisterTrait("Magazine6", new TraitProperties("Magazine", true, "This repeating weapon has a magazine capacity of 6 instead of 5.", relevantForShortBlock: true));
+
+        public static readonly Trait Magazine8Trait = ModManager.RegisterTrait("Magazine8", new TraitProperties("Magazine", true, "This repeating weapon has a magazine capacity of 8 instead of 5.", relevantForShortBlock: true));
 
         /// <summary>
         /// Register all the Guns and Gears items
@@ -31,7 +35,7 @@ namespace Dawnsbury.Mods.GunsAndGears
             //  - Air Repeater
             // TODO: Add Magazine
             ModManager.RegisterNewItemIntoTheShop("Air Repeater", itemName =>
-                new Item(itemName, IllustrationName.Unknown, "airrepeater", 0, 3, Trait.Agile, Trait.Repeating, FirearmTrait, Trait.Simple)
+                new Item(itemName, IllustrationName.Unknown, "airrepeater", 0, 3, Trait.Agile, Trait.Repeating, Magazine6Trait, FirearmTrait, Trait.Simple)
                     .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Piercing)
                         .WithRangeIncrement(6)));
 
@@ -160,6 +164,31 @@ namespace Dawnsbury.Mods.GunsAndGears
                 new Item(itemName, IllustrationName.Unknown, "slidepistol", 0, 8, Trait.FatalD10, FirearmTrait, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Piercing)
                         .WithRangeIncrement(6)));
+        }
+
+        public static void SetupTraitLogic()
+        {
+            ModManager.RegisterActionOnEachCreature(creature =>
+            {
+                creature.AddQEffect(new QEffect
+                {
+                    StateCheck = (QEffect concussiveEffect) =>
+                    {
+                        foreach (Item item in concussiveEffect.Owner.HeldItems)
+                        {
+                            if (item.HasTrait(ConcussiveTrait))
+                            {
+                                // Add VersatileB basically but I can't find VersatileB
+                            }
+                            if (item.HasTrait(Magazine6Trait) && item.HasTrait(Trait.Repeating))
+                            {
+                                item.EphemeralItemProperties.AmmunitionLeftInMagazine = 6;
+                                item.EphemeralItemProperties
+                            }
+                        }
+                    }
+                });
+            });
         }
     }
 }

@@ -2,6 +2,7 @@
 using Dawnsbury.Core.CharacterBuilder.FeatsDb;
 using Dawnsbury.Modding;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Dawnsbury.Mods.GunsAndGears
 {
@@ -16,7 +17,9 @@ namespace Dawnsbury.Mods.GunsAndGears
         [DawnsburyDaysModMainMethod]
         public static void LoadMod()
         {
+            Debugger.Launch();
             EquipmentGunsAndGears.RegisterItems();
+            EquipmentGunsAndGears.SetupTraitLogic();
         }
     }
 }

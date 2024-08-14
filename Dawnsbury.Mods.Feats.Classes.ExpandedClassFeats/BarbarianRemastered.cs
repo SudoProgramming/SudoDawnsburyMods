@@ -58,7 +58,7 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
             yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Omen dragon"), DamageKind.Mental);
 
             // Class Level 4 Feat - Scars of Steel - NOTE: Is Once per combat instead of once per day
-            yield return new TrueFeat(ModManager.RegisterFeatName("Scars of Steel"), 4, "When you are struck with the mightiest of blows, you can flex your muscles to turn aside some of the damage.", "Once per combat, when an opponent critically hits you with an attack that deals physical damage, you can spend a reaction to gain resistance to the triggering attack equal to your Constitution modifier plus half your level.", new Trait[] { Trait.Barbarian, Trait.Rage })
+            yield return new TrueFeat(ModManager.RegisterFeatName("Scars of Steel"), 4, "When you are struck with the mightiest of blows, you can flex your muscles to turn aside some of the damage.", "Once per day, when an opponent critically hits you with an attack that deals physical damage, you can spend a reaction to gain resistance to the triggering attack equal to your Constitution modifier plus half your level.", new Trait[] { Trait.Barbarian, Trait.Rage })
             .WithActionCost(-2).WithPermanentQEffect("You gain resistance to the triggering attack equal to your Constitution modifier plus half your level as a reaction.", delegate (QEffect qf)
             {
                 // Checks the incoming damage and prompts for reaction if it's a crit and physical. Then applies the damage reduction
@@ -128,7 +128,7 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
                     StartOfCombat = async (QEffect qEffect) =>
                     {
                         Creature owner = qEffect.Owner;
-                        if (!owner.Armor.Item.Traits.Contains(Trait.HeavyArmor) && await owner.Battle.AskForConfirmation(owner, IllustrationName.Rage, "Enter rage as a free action?", "Rage!"))
+                        if ((owner.Armor.Item == null || !owner.Armor.Item.Traits.Contains(Trait.HeavyArmor)) && await owner.Battle.AskForConfirmation(owner, IllustrationName.Rage, "Enter rage as a free action?", "Rage!"))
                         {
                             BarbarianFeatsDb.EnterRage(owner);
                         }

@@ -128,7 +128,7 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
                     StartOfCombat = async (QEffect qEffect) =>
                     {
                         Creature owner = qEffect.Owner;
-                        if (owner.Armor == null || (!owner.Armor.Item.Traits.Contains(Trait.HeavyArmor) && await owner.Battle.AskForConfirmation(owner, IllustrationName.Rage, "Enter rage as a free action?", "Rage!")))
+                        if ((owner.Armor.Item == null || !owner.Armor.Item.Traits.Contains(Trait.HeavyArmor)) && await owner.Battle.AskForConfirmation(owner, IllustrationName.Rage, "Enter rage as a free action?", "Rage!"))
                         {
                             BarbarianFeatsDb.EnterRage(owner);
                         }

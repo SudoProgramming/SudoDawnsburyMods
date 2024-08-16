@@ -396,3 +396,5 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/Dawnsbury.Mods.GunsAndGears/Assets
+/Dawnsbury.Mods.GunsAndGears/GunsAndGearsAssets

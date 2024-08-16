@@ -3,6 +3,7 @@ This is a repository for mods designed for for the [Dawnsbury Days](https://stor
 
 # Barbarian Remastered
 This module updates the base pre-remastered Barbarian class in Dawnsbury days with the following changes:
+- Added Giant Instinct
 - Added Quick-Tempered
 - Added Furious Footfalls
 - Removed Deny Advantage

@@ -18,8 +18,8 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
         {
             // First all feats that should be removed are removed, then update Rage, and finally creates and adds all the new Barbarian feats
             AllFeats.All.RemoveAll(BarbarianRemastered.ShouldFeatBeRemoved);
-            AllFeats.All.ForEach(BarbarianRemastered.PatchFeats);
             AddFeats(BarbarianRemastered.CreateRemasteredBarbarianFeats());
+            AllFeats.All.ForEach(BarbarianRemastered.PatchFeats);
         }
 
         /// <summary>

@@ -1,5 +1,4 @@
-﻿using Dawnsbury.Campaign.Path;
-using Dawnsbury.Core;
+﻿using Dawnsbury.Core;
 using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb;
@@ -8,13 +7,12 @@ using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Core;
 using Dawnsbury.Core.Mechanics.Enumerations;
+using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Core.Roller;
 using Dawnsbury.Modding;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using static Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb.BarbarianFeatsDb;
 
 namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
@@ -24,6 +22,16 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
     /// </summary>
     public static class BarbarianRemastered
     {
+        /// <summary>
+        /// The Registered Giant Instict Feat Name
+        /// </summary>
+        public static readonly FeatName GiantInstictFeatName = ModManager.RegisterFeatName("Giant Instict");
+
+        /// <summary>
+        /// The Registered Giant Weapon Trait
+        /// </summary>
+        public static readonly Trait GiantWeaponTrait = ModManager.RegisterTrait("Giant Weapon");
+
         /// <summary>
         /// A list of the original Dragon Instincts in Dawnsbury
         /// </summary>
@@ -56,6 +64,58 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
             yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Horned dragon"), DamageKind.Poison);
             yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Mirage dragon"), DamageKind.Mental);
             yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Omen dragon"), DamageKind.Mental);
+
+            // The Giant Instict Feat
+            yield return new Feat(GiantInstictFeatName, "Your rage gives you the raw power and size of a giant", "You can use weapons built for larger creature. While weilding any weapon you increase the additional damage from Rage from 2 to 6. All weapons you weild are considered large which leaves you clumsy 1 as you weild a weapon.", new List<Trait>(), null).WithOnCreature(delegate (Creature cr)
+            {
+                cr.AddQEffect(new QEffect
+                {
+                    // Removed the original Rage Damage
+                    StateCheck = delegate (QEffect sc)
+                    {
+                        QEffect qEffect = sc.Owner.QEffects.FirstOrDefault((QEffect qfId) => qfId.Id == QEffectId.Rage);
+                        if (qEffect != null)
+                        {
+                            qEffect.YouDealDamageWithStrike = null;
+                        }
+                    },
+
+                    // Checks if the weapon is a giant weapon and upgrades the damage if it is
+                    AddExtraStrikeDamage = delegate (CombatAction attack, Creature defender)
+                    {
+                        Creature owner = attack.Owner;
+                        if (owner.HasEffect(QEffectId.Rage) && BarbarianFeatsDb.DoesRageApplyToAction(attack) && attack.Item != null)
+                        {
+                            List<DamageKind> list = attack.Item.DetermineDamageKinds();
+                            DamageKind damageTypeToUse = defender.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(list);
+                            DiceFormula item3 = null;
+                            if (attack.HasTrait(GiantWeaponTrait))
+                            {
+                                item3 = DiceFormula.FromText((attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "3" : "6", (attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "Barbarian rage (giant & agile)" : "Barbarian rage (giant)");
+                            }
+                            else
+                            {
+                                item3 = DiceFormula.FromText((attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "1" : "2", (attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "Barbarian rage (agile)" : "Barbarian rage");
+                            }
+                            
+                            return (item3, damageTypeToUse);
+                        }
+
+                        return null;
+                    },
+
+                    // Goes through every item Giant Instict's are holding and converts non-consumable weapons to Giant versions
+                    StartOfCombat = async (QEffect qEffect) =>
+                    {
+                        Creature owner = qEffect.Owner;
+                        foreach (Item item in owner.HeldItems.Concat(owner.CarriedItems).Where(item => DoesGiantInstictApply(item)))
+                        {
+                            item.Traits.Add(GiantWeaponTrait);
+                            item.Name = "Giant " + item.Name;
+                        }
+                    }
+                });
+            });
 
             // Class Level 4 Feat - Scars of Steel - NOTE: Is Once per combat instead of once per day
             yield return new TrueFeat(ModManager.RegisterFeatName("Scars of Steel"), 4, "When you are struck with the mightiest of blows, you can flex your muscles to turn aside some of the damage.", "Once per day, when an opponent critically hits you with an attack that deals physical damage, you can spend a reaction to gain resistance to the triggering attack equal to your Constitution modifier plus half your level.", new Trait[] { Trait.Barbarian, Trait.Rage })
@@ -106,8 +166,14 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
                     }
                 });
 
+                // Adds the Giant Instict Sub Class
+                AddGiantInstict(classSelectionFeat);
+
                 // Updates Rage to match the Remaster
                 UpdateRage(classSelectionFeat);
+
+                // Sets up the Giant Weapon trait
+                SetupGiantWeaponTrait();
 
                 // Updates all text descriptions for the Barbarian
                 UpdateAllTextDescriptions(classSelectionFeat);
@@ -162,6 +228,16 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
                     }
                 };
             });
+        }
+
+        /// <summary>
+        /// Adds the Giant Instict subclass to the Barbarian class
+        /// </summary>
+        /// <param name="classSelectionFeat">The barbarian class feat</param>
+        private static void AddGiantInstict(ClassSelectionFeat classSelectionFeat)
+        {
+            Feat giantInstictFeat = AllFeats.All.FirstOrDefault(feat => feat.FeatName == GiantInstictFeatName);
+            classSelectionFeat.Subfeats.Add(giantInstictFeat);
         }
 
         /// <summary>
@@ -272,7 +348,49 @@ namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
                         intimidatingStrikeFeat.Prerequisites[i] = new ClassPrerequisite(updatedAllowedClasses);
                     }
                 }
+          
+            
             }
+        }
+
+        /// <summary>
+        /// Setups the logic for a creature holding a giant weapon
+        /// </summary>
+        private static void SetupGiantWeaponTrait()
+        {
+            string clumsyFromGiantWeaponTag = "Clumsy 1 from Giant Weapon";
+            ModManager.RegisterActionOnEachCreature(creature =>
+            {
+                creature.AddQEffect(new QEffect
+                {
+                    StateCheck = (QEffect self) =>
+                    {
+                        List<Item> giantItems = self.Owner.HeldItems.Where(item => item.HasTrait(GiantWeaponTrait)).ToList();
+                        if (giantItems.Count > 0 && self.Owner.QEffects.Count(effect => effect.Tag != null && effect.Tag.GetType() == typeof(string) && effect.Tag.Equals(clumsyFromGiantWeaponTag)) == 0)
+                        {
+                            self.Owner.AddQEffect(new QEffect
+                            {
+                                Tag = clumsyFromGiantWeaponTag
+                            });
+                            self.Owner.AddQEffect(QEffect.Clumsy(1));
+                        }
+                        else if (giantItems.Count == 0 && self.Owner.QEffects.Count(effect => effect.Tag != null && effect.Tag.GetType() == typeof(string) && effect.Tag.Equals(clumsyFromGiantWeaponTag)) > 0)
+                        {
+                            self.Owner.RemoveAllQEffects(effect => effect.NameWithValue == "Clumsy 1" || (effect.Tag != null && effect.Tag.GetType() == typeof(string) && effect.Tag.Equals(clumsyFromGiantWeaponTag)));
+                        }
+                    }
+                });
+            });
+        }
+
+        /// <summary>
+        /// Determines if the provided item should have Giant Instict apply
+        /// </summary>
+        /// <param name="item">The item being checked</param>
+        /// <returns>True if the item can benefit from Giant Instict and false otherwise</returns>
+        private static bool DoesGiantInstictApply(Item item)
+        {
+            return item.HasTrait(Trait.Weapon) && !item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.Consumable);
         }
     }
 }

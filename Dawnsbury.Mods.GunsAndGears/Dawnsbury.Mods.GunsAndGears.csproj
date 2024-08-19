@@ -100,9 +100,6 @@
 	  <Content Include="GunsAndGearsAssets\SlidePistol.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\UnknownGun.png">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
 	</ItemGroup>
 	<ItemGroup>
 		<Reference Include="G:\SteamLibrary\steamapps\common\Dawnsbury Days\Data\Dawnsbury Days.dll" />

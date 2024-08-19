@@ -17,7 +17,6 @@ namespace Dawnsbury.Mods.GunsAndGears
         [DawnsburyDaysModMainMethod]
         public static void LoadMod()
         {
-            Debugger.Launch();
             EquipmentGunsAndGears.RegisterItems();
             EquipmentGunsAndGears.SetupTraitLogic();
         }

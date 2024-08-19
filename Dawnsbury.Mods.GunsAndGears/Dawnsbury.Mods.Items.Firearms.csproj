@@ -13,91 +13,91 @@
 		<!-- Makes the "You're using obsolete stuff." warning into an error so that you're aware when Dawnsbury Days code is going to be changed. -->
 	</PropertyGroup>
 	<ItemGroup>
-	  <None Remove="GunsAndGearsAssets\AirRepeater.png" />
-	  <None Remove="GunsAndGearsAssets\Arquebus.png" />
-	  <None Remove="GunsAndGearsAssets\Blunderbuss.png" />
-	  <None Remove="GunsAndGearsAssets\ClanPistol.png" />
-	  <None Remove="GunsAndGearsAssets\CoatPistol.png" />
-	  <None Remove="GunsAndGearsAssets\Double-barreledMusket.png" />
-	  <None Remove="GunsAndGearsAssets\Double-barreledPistol.png" />
-	  <None Remove="GunsAndGearsAssets\DragonMouthPistol.png" />
-	  <None Remove="GunsAndGearsAssets\DuelingPistol.png" />
-	  <None Remove="GunsAndGearsAssets\DwarvenScattergun.png" />
-	  <None Remove="GunsAndGearsAssets\FireLance.png" />
-	  <None Remove="GunsAndGearsAssets\Flingflenser.png" />
-	  <None Remove="GunsAndGearsAssets\FlintlockMusket.png" />
-	  <None Remove="GunsAndGearsAssets\FlintlockPistol.png" />
-	  <None Remove="GunsAndGearsAssets\HandCannon.png" />
-	  <None Remove="GunsAndGearsAssets\HarmonaGun.png" />
-	  <None Remove="GunsAndGearsAssets\Jezail.png" />
-	  <None Remove="GunsAndGearsAssets\LongAirRepeater.png" />
-	  <None Remove="GunsAndGearsAssets\MithralTree.png" />
-	  <None Remove="GunsAndGearsAssets\Pepperbox.png" />
-	  <None Remove="GunsAndGearsAssets\SlidePistol.png" />
-	  <None Remove="GunsAndGearsAssets\UnknownGun.png" />
+	  <None Remove="FirearmsAssets\AirRepeater.png" />
+	  <None Remove="FirearmsAssets\Arquebus.png" />
+	  <None Remove="FirearmsAssets\Blunderbuss.png" />
+	  <None Remove="FirearmsAssets\ClanPistol.png" />
+	  <None Remove="FirearmsAssets\CoatPistol.png" />
+	  <None Remove="FirearmsAssets\Double-barreledMusket.png" />
+	  <None Remove="FirearmsAssets\Double-barreledPistol.png" />
+	  <None Remove="FirearmsAssets\DragonMouthPistol.png" />
+	  <None Remove="FirearmsAssets\DuelingPistol.png" />
+	  <None Remove="FirearmsAssets\DwarvenScattergun.png" />
+	  <None Remove="FirearmsAssets\FireLance.png" />
+	  <None Remove="FirearmsAssets\Flingflenser.png" />
+	  <None Remove="FirearmsAssets\FlintlockMusket.png" />
+	  <None Remove="FirearmsAssets\FlintlockPistol.png" />
+	  <None Remove="FirearmsAssets\HandCannon.png" />
+	  <None Remove="FirearmsAssets\HarmonaGun.png" />
+	  <None Remove="FirearmsAssets\Jezail.png" />
+	  <None Remove="FirearmsAssets\LongAirRepeater.png" />
+	  <None Remove="FirearmsAssets\MithralTree.png" />
+	  <None Remove="FirearmsAssets\Pepperbox.png" />
+	  <None Remove="FirearmsAssets\SlidePistol.png" />
+	  <None Remove="FirearmsAssets\UnknownGun.png" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Content Include="GunsAndGearsAssets\AirRepeater.png">
+	  <Content Include="FirearmsAssets\AirRepeater.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\Arquebus.png">
+	  <Content Include="FirearmsAssets\Arquebus.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\Blunderbuss.png">
+	  <Content Include="FirearmsAssets\Blunderbuss.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\ClanPistol.png">
+	  <Content Include="FirearmsAssets\ClanPistol.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\CoatPistol.png">
+	  <Content Include="FirearmsAssets\CoatPistol.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\Double-barreledMusket.png">
+	  <Content Include="FirearmsAssets\Double-barreledMusket.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\Double-barreledPistol.png">
+	  <Content Include="FirearmsAssets\Double-barreledPistol.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\DragonMouthPistol.png">
+	  <Content Include="FirearmsAssets\DragonMouthPistol.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\DuelingPistol.png">
+	  <Content Include="FirearmsAssets\DuelingPistol.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\DwarvenScattergun.png">
+	  <Content Include="FirearmsAssets\DwarvenScattergun.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\FireLance.png">
+	  <Content Include="FirearmsAssets\FireLance.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\Flingflenser.png">
+	  <Content Include="FirearmsAssets\Flingflenser.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\FlintlockMusket.png">
+	  <Content Include="FirearmsAssets\FlintlockMusket.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\FlintlockPistol.png">
+	  <Content Include="FirearmsAssets\FlintlockPistol.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\HandCannon.png">
+	  <Content Include="FirearmsAssets\HandCannon.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\HarmonaGun.png">
+	  <Content Include="FirearmsAssets\HarmonaGun.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\Jezail.png">
+	  <Content Include="FirearmsAssets\Jezail.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\LongAirRepeater.png">
+	  <Content Include="FirearmsAssets\LongAirRepeater.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\MithralTree.png">
+	  <Content Include="FirearmsAssets\MithralTree.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\Pepperbox.png">
+	  <Content Include="FirearmsAssets\Pepperbox.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="GunsAndGearsAssets\SlidePistol.png">
+	  <Content Include="FirearmsAssets\SlidePistol.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	</ItemGroup>

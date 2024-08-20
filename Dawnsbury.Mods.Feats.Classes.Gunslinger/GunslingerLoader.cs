@@ -1,11 +1,11 @@
 ﻿using Dawnsbury.Modding;
 
-namespace Dawnsbury.Mods.Items.Firearms
+namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
     /// <summary>
     /// Loads the Guns and Gears content
     /// </summary>
-    public class FirearmsLoader
+    public class GunslingerLoader
     {
         /// <summary>
         /// Runs on launch and loads all the mod content
@@ -13,9 +13,7 @@ namespace Dawnsbury.Mods.Items.Firearms
         [DawnsburyDaysModMainMethod]
         public static void LoadMod()
         {
-            Firearms.RegisterItems();
-            Firearms.SetupTraitLogic();
-            Firearms.PatchItems();
+            
         }
     }
 }

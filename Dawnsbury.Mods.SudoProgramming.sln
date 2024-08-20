@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dawnsbury.Mods.Feats.Classe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dawnsbury.Mods.Items.Firearms", "Dawnsbury.Mods.Items.Firearms\Dawnsbury.Mods.Items.Firearms.csproj", "{B6D899BF-AE96-4AA2-B5FB-BE06A7B3AC0E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dawnsbury.Mods.Feats.Classes.Gunslinger", "Dawnsbury.Mods.Feats.Classes.Gunslinger\Dawnsbury.Mods.Feats.Classes.Gunslinger.csproj", "{5F6E9587-D39E-4BD5-8AE9-0B36B3EEB97E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{B6D899BF-AE96-4AA2-B5FB-BE06A7B3AC0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B6D899BF-AE96-4AA2-B5FB-BE06A7B3AC0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B6D899BF-AE96-4AA2-B5FB-BE06A7B3AC0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F6E9587-D39E-4BD5-8AE9-0B36B3EEB97E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F6E9587-D39E-4BD5-8AE9-0B36B3EEB97E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F6E9587-D39E-4BD5-8AE9-0B36B3EEB97E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F6E9587-D39E-4BD5-8AE9-0B36B3EEB97E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

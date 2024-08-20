@@ -68,6 +68,7 @@ This module adds firearm weapons from Guns and Gears along with the traits for t
 ### Firearms Future Plans
 - Add [Combination Traits](https://2e.aonprd.com/Traits.aspx?ID=417) and the weapons from Guns and Gears
 - Add [Parry](https://2e.aonprd.com/Traits.aspx?ID=667&Redirected=1) and add to Mithral Tree
+- Add Treasure Vault firearms
 
 # SudoProgramming's Modding Plans
 - [X] Update Barbarian to match the Remastered rules

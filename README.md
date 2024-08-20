@@ -57,7 +57,7 @@ This module adds firearm weapons from Guns and Gears along with the traits for t
 ### Traits
 - [Firearm](https://2e.aonprd.com/WeaponGroups.aspx?ID=16)
 - [Concussive](https://2e.aonprd.com/Traits.aspx?ID=401)
-    - All weapons with concussive have the base damage type of B with the Versatile P trait
+    - RAW Difference: All weapons with concussive have the base damage type of B with the Versatile P trait
 - [Double Barrel](https://2e.aonprd.com/Traits.aspx?ID=403)
 - [Fatal Aim](https://2e.aonprd.com/Traits.aspx?ID=404)
 - [Kickback](https://2e.aonprd.com/Traits.aspx?ID=409)

@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb.BarbarianFeatsDb;
 
-namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
+namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
 {
     /// <summary>
     /// The Remastered Barbarian Class

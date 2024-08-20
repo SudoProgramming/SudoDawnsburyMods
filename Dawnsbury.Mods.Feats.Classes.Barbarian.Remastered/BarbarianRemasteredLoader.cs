@@ -3,7 +3,7 @@ using Dawnsbury.Core.CharacterBuilder.FeatsDb;
 using Dawnsbury.Modding;
 using System.Collections.Generic;
 
-namespace Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats
+namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
 {
     /// <summary>
     /// Updates and loads the Remastered changes into the game for the Barbarian

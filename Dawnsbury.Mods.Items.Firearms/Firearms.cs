@@ -580,7 +580,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                 // Adds the penality to attack rolls depending on if you have a tripod setup, just a firearm stabalizer, enough strength, or nothing
                 BonusToAttackRolls = (QEffect self, CombatAction action, Creature? defender) =>
                 {
-                    if (self.Owner.Abilities.Strength < 14 && self.Owner.QEffects.Count(qe => qe.Name == TripodSetupQEffect.Name) == 0)
+                    if (self.Owner.Abilities.Strength < 2 && self.Owner.QEffects.Count(qe => qe.Name == TripodSetupQEffect.Name) == 0)
                     {
                         int penality = (self.Owner.HeldItems.Concat(self.Owner.CarriedItems).Count(item => item.Name == "Firearm Stabalizer") > 0) ? -1 : -2;
                         return new Bonus(penality, BonusType.Circumstance, "Kickback" + ((penality == -1) ? " (Stablized)" : ""));

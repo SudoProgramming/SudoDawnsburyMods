@@ -70,10 +70,10 @@ This module adds firearm weapons from Guns and Gears along with the traits for t
 - Add [Parry](https://2e.aonprd.com/Traits.aspx?ID=667&Redirected=1) and add to Mithral Tree
 
 # SudoProgramming's Modding Plans
-[X] Update Barbarian to match the Remastered rules
-[X] Add the Firearm items and traits
-[ ] Add the Gunslinger class
-[ ] Add the Thaumaturge class
+- [X] Update Barbarian to match the Remastered rules
+- [X] Add the Firearm items and traits
+- [ ] Add the Gunslinger class
+- [ ] Add the Thaumaturge class
 
 # Licensing
 All files and details are covered under the ORC or OGL license covered in deatil in the Licensing/ORC copyright notice.html or Licensing/OGL copyright notice.html

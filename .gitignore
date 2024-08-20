@@ -396,4 +396,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-/Dawnsbury.Mods.GunsAndGears/FirearmsAssets
+/Dawnsbury.Mods.Items.Firearms/FirearmsAssets

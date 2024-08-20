@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34511.84
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered", "Dawnsbury.Mods.Feats.Classes.ExpandedClassFeats\Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered.csproj", "{45665247-442F-451E-9333-0AB085BB3EBB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered", "Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered\Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered.csproj", "{F72A4FE0-6678-4F17-92CF-2C457DA6AB10}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dawnsbury.Mods.Items.Firearms", "Dawnsbury.Mods.GunsAndGears\Dawnsbury.Mods.Items.Firearms.csproj", "{F68B596E-C23A-4899-A6FB-A94040C92B00}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dawnsbury.Mods.Items.Firearms", "Dawnsbury.Mods.Items.Firearms\Dawnsbury.Mods.Items.Firearms.csproj", "{B6D899BF-AE96-4AA2-B5FB-BE06A7B3AC0E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{45665247-442F-451E-9333-0AB085BB3EBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{45665247-442F-451E-9333-0AB085BB3EBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{45665247-442F-451E-9333-0AB085BB3EBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{45665247-442F-451E-9333-0AB085BB3EBB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F68B596E-C23A-4899-A6FB-A94040C92B00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F68B596E-C23A-4899-A6FB-A94040C92B00}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F68B596E-C23A-4899-A6FB-A94040C92B00}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F68B596E-C23A-4899-A6FB-A94040C92B00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F72A4FE0-6678-4F17-92CF-2C457DA6AB10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F72A4FE0-6678-4F17-92CF-2C457DA6AB10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F72A4FE0-6678-4F17-92CF-2C457DA6AB10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F72A4FE0-6678-4F17-92CF-2C457DA6AB10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6D899BF-AE96-4AA2-B5FB-BE06A7B3AC0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6D899BF-AE96-4AA2-B5FB-BE06A7B3AC0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6D899BF-AE96-4AA2-B5FB-BE06A7B3AC0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6D899BF-AE96-4AA2-B5FB-BE06A7B3AC0E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

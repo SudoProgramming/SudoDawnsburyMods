@@ -17,6 +17,65 @@ This module updates the base pre-remastered Barbarian class in Dawnsbury days wi
 -  Added Intimidating Strike feat
 -  Added Scars of Steel feat
 
+# Firearms
+This module adds firearm weapons from Guns and Gears along with the traits for those weapons. Here is a list of those changes in detail:
+#### Simple Ranged Firearms
+- [Air Repeater](https://2e.aonprd.com/Weapons.aspx?ID=188)
+    - RAW Difference: Magazine size is 5 instead of 6
+- [Coat Pistol](https://2e.aonprd.com/Weapons.aspx?ID=189)
+- [Fire Lance](https://2e.aonprd.com/Weapons.aspx?ID=190)
+- [Flintlock Musket](https://2e.aonprd.com/Weapons.aspx?ID=191)
+- [Flintlock Pistol](https://2e.aonprd.com/Weapons.aspx?ID=192)
+- [Hand Cannon](https://2e.aonprd.com/Weapons.aspx?ID=193)
+    - RAW Difference: Deals the best damage out of B, P, or S without needing an action to change between the damage types
+- [Long Air Repeater](https://2e.aonprd.com/Weapons.aspx?ID=194)
+    - RAW Difference: Magazine size is 5 instead of 8
+
+#### Martial Ranged Firearms
+- [Arquebus](https://2e.aonprd.com/Weapons.aspx?ID=195)
+- [Blunderbuss](https://2e.aonprd.com/Weapons.aspx?ID=196)
+- [Clan Pistol](https://2e.aonprd.com/Weapons.aspx?ID=197)
+- [Double-barreled Musket](https://2e.aonprd.com/Weapons.aspx?ID=198)
+- [Double-barreled Pistol](https://2e.aonprd.com/Weapons.aspx?ID=199)
+- [Dragon Mouth Pistol](https://2e.aonprd.com/Weapons.aspx?ID=200)
+- [Dueling Pistol](https://2e.aonprd.com/Weapons.aspx?ID=201)
+- [Harmona Gun](https://2e.aonprd.com/Weapons.aspx?ID=202)
+- [Jezail](https://2e.aonprd.com/Weapons.aspx?ID=203)
+- [Mithral Tree](https://2e.aonprd.com/Weapons.aspx?ID=204)
+    - RAW Difference: Does NOT have the Parry trait. Adding this is in Firearms Future Plans
+- [Pepperbox](https://2e.aonprd.com/Weapons.aspx?ID=205)
+- [Slide Pistol](https://2e.aonprd.com/Weapons.aspx?ID=206)
+
+#### Advanced Ranged Firearms
+- [Dwarven Scattergun](https://2e.aonprd.com/Weapons.aspx?ID=207)
+- [Flingflenser](https://2e.aonprd.com/Weapons.aspx?ID=208)
+
+### Other Items
+- Firearm Stabalizer - Reduces Kickback penality to -1 if its in your backpack
+- Tripod - Can be setup as an interact action to ignore Kickback penality till you move
+
+### Traits
+- [Firearm](https://2e.aonprd.com/WeaponGroups.aspx?ID=16)
+- [Concussive](https://2e.aonprd.com/Traits.aspx?ID=401)
+    - All weapons with concussive have the base damage type of B with the Versatile P trait
+- [Double Barrel](https://2e.aonprd.com/Traits.aspx?ID=403)
+- [Fatal Aim](https://2e.aonprd.com/Traits.aspx?ID=404)
+- [Kickback](https://2e.aonprd.com/Traits.aspx?ID=409)
+- [Modular](https://2e.aonprd.com/Traits.aspx?ID=271)
+    - RAW Difference: Deals the best damage out of B, P, or S without needing an action to change between the damage types
+- [Scatter](https://2e.aonprd.com/Traits.aspx?ID=413)
+
+### Firearms Future Plans
+- Add [Combination Traits](https://2e.aonprd.com/Traits.aspx?ID=417) and the weapons from Guns and Gears
+- Add [Parry](https://2e.aonprd.com/Traits.aspx?ID=667&Redirected=1) and add to Mithral Tree
+
+# SudoProgramming's Modding Plans
+[X] Update Barbarian to match the Remastered rules
+[X] Add the Firearm items and traits
+[ ] Add the Gunslinger class
+[ ] Add the Thaumaturge class
+
 # Licensing
-All files and details are covered under the ORC license covered in deatil in the Licensing/ORC copyright notice.html
+All files and details are covered under the ORC or OGL license covered in deatil in the Licensing/ORC copyright notice.html or Licensing/OGL copyright notice.html
+
 

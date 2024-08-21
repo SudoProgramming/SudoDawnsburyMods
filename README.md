@@ -70,6 +70,45 @@ This module adds firearm weapons from Guns and Gears along with the traits for t
 - Add [Parry](https://2e.aonprd.com/Traits.aspx?ID=667&Redirected=1) and add to Mithral Tree
 - Add Treasure Vault firearms
 
+# Gunslinger
+This module adds the Gunslinger class. This is a Work in Progress:
+### Setup
+- [X] Class Selection Feat
+    - The Crossbows need a technical trait attached 
+- [X] Ways Stubbed out
+- [X] Class Feats Stubbed out
+
+### Class Feats
+- [X] Cover Fire
+- [ ] Crossbow Crack Shot
+- [ ] Hit the Dirt
+- [ ] Sword and Pistol
+- [ ] Defensive Armaments
+    - Needs the parry trait added
+- [ ] Fake Out
+- [ ] Pistol Twirl
+- [ ] Risky Reload
+- [X] Quick Draw
+- [ ] Warning Shot
+- [ ] Alchemical Shot
+- [ ] Instant Backup
+- [ ] Paired Shots
+- [ ] Running Reload
+
+### Sub Class Feats
+- [ ] Way of the Drifter
+- [ ] Way of the Pistolero
+- [ ] Way of the Sniper
+- [ ] Way of the Triggerbrand
+    - Needs combination weapons
+- [ ] Way of the Vanguard
+
+### Dependencies
+This module depends on the Firearms mod
+
+### Spell Shot
+Spell shot would need the https://github.com/AurixVirlym/DawnniExpanded to represent this correctly so might be a seperate mod
+
 # SudoProgramming's Modding Plans
 - [X] Update Barbarian to match the Remastered rules
 - [X] Add the Firearm items and traits

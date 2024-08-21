@@ -46,27 +46,32 @@ namespace Dawnsbury.Mods.Items.Firearms
         /// <summary>
         /// Adds the technical trait for simple firearms used for proficiency
         /// </summary>
-        public static readonly Trait SimpleFirearmTrait = ModManager.RegisterTrait("Simple Firearm", new TraitProperties("Simple Firearm", false));
+        public static readonly Trait SimpleFirearmTrait = ModManager.RegisterTrait("Simple Firearm", new TraitProperties("Simple Firearm", false) { ProficiencyName = "Simple Firearm"});
 
         /// <summary>
         /// Adds the technical trait for martial firearms used for proficiency
         /// </summary>
-        public static readonly Trait MartialFirearmTrait = ModManager.RegisterTrait("Martial Firearm", new TraitProperties("Martial Firearm", false));
+        public static readonly Trait MartialFirearmTrait = ModManager.RegisterTrait("Martial Firearm", new TraitProperties("Martial Firearm", false) { ProficiencyName = "Martial Firearm" });
 
         /// <summary>
         /// Adds the technical trait for advanced firearms used for proficiency
         /// </summary>
-        public static readonly Trait AdvancedFirearmTrait = ModManager.RegisterTrait("Advanced Firearm", new TraitProperties("Advanced Firearm", false));
+        public static readonly Trait AdvancedFirearmTrait = ModManager.RegisterTrait("Advanced Firearm", new TraitProperties("Advanced Firearm", false) { ProficiencyName = "Advanced Firearm" });
+
+        /// <summary>
+        /// Adds the technical trait for simple crossbows used for proficiency
+        /// </summary>
+        public static readonly Trait SimpleCrossbowTrait = ModManager.RegisterTrait("Simple Crossbow Prof", new TraitProperties("Simple Crossbow Prof", false) { ProficiencyName = "Simple Crossbow" });
 
         /// <summary>
         /// Adds the technical trait for martial crossbows used for proficiency
         /// </summary>
-        public static readonly Trait MartialCrossbowTrait = ModManager.RegisterTrait("Martial Crossbow", new TraitProperties("Martial Crossbow", false));
+        public static readonly Trait MartialCrossbowTrait = ModManager.RegisterTrait("Martial Crossbow", new TraitProperties("Martial Crossbow", false) { ProficiencyName = "Martial Crossbow" });
 
         /// <summary>
         /// Adds the technical trait for advanced crossbows used for proficiency
         /// </summary>
-        public static readonly Trait AdvancedCrossbowTrait = ModManager.RegisterTrait("Advanced Crossbow", new TraitProperties("Advanced Crossbow", false));
+        public static readonly Trait AdvancedCrossbowTrait = ModManager.RegisterTrait("Advanced Crossbow", new TraitProperties("Advanced Crossbow", false) { ProficiencyName = "Advanced Crossbow" });
 
         /// <summary>
         /// Adds the concussive trait for firearms
@@ -120,165 +125,142 @@ namespace Dawnsbury.Mods.Items.Firearms
             ModManager.RegisterNewItemIntoTheShop("Air Repeater", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/AirRepeater.png"), "Air Repeater", 0, 3, Trait.Agile, Trait.Repeating, FirearmTrait, SimpleFirearmTrait, Trait.Simple)
                     .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Piercing)
-                        .WithRangeIncrement(6))
-                            .WithMainTrait(ModManager.RegisterTrait("Air Repeater", new TraitProperties("Air Repeater", false))));
+                        .WithRangeIncrement(6)));
 
             //  - Coat Pistol
             ModManager.RegisterNewItemIntoTheShop("Coat Pistol", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/CoatPistol.png"), "Coat Pistol", 0, 3, Trait.FatalD8, ConcussiveTrait, FirearmTrait, SimpleFirearmTrait, Trait.Simple, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(6))
-                            .WithMainTrait(ModManager.RegisterTrait("Coat Pistol", new TraitProperties("Coat Pistol", false))));
+                        .WithRangeIncrement(6)));
 
             //  - Fire Lance
             ModManager.RegisterNewItemIntoTheShop("Fire Lance", itemName =>
                new Item(itemName, new ModdedIllustration("FirearmsAssets/FireLance.png"), "Fire Lance", 0, 3, Trait.FatalD10, FirearmTrait, SimpleFirearmTrait, Trait.Simple, Trait.Reload2, Trait.TwoHanded)
                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Piercing)
-                       .WithRangeIncrement(2))
-                            .WithMainTrait(ModManager.RegisterTrait("Fire Lance", new TraitProperties("Fire Lance", false))));
+                       .WithRangeIncrement(2)));
 
             //  - Flintlock Musket
             ModManager.RegisterNewItemIntoTheShop("Flintlock Musket", itemName =>
                new Item(itemName, new ModdedIllustration("FirearmsAssets/FlintlockMusket.png"), "Flintlock Musket", 0, 4, Trait.FatalD10, ConcussiveTrait, FirearmTrait, SimpleFirearmTrait, Trait.Simple, Trait.Reload1, Trait.TwoHanded)
                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
-                       .WithRangeIncrement(14))
-                            .WithMainTrait(ModManager.RegisterTrait("Flintlock Musket", new TraitProperties("Flintlock Musket", false))));
+                       .WithRangeIncrement(14)));
 
             //  - Flintlock Pistol
             ModManager.RegisterNewItemIntoTheShop("Flintlock Pistol", itemName =>
                new Item(itemName, new ModdedIllustration("FirearmsAssets/FlintlockPistol.png"), "Flintlock Pistol", 0, 3, Trait.FatalD8, ConcussiveTrait, FirearmTrait, SimpleFirearmTrait, Trait.Simple, Trait.Reload1)
                    .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning)
-                       .WithRangeIncrement(8))
-                            .WithMainTrait(ModManager.RegisterTrait("Flintlock Pistol", new TraitProperties("Flintlock Pistol", false))));
+                       .WithRangeIncrement(8)));
 
             //  - Hand Cannon
             ModManager.RegisterNewItemIntoTheShop("Hand Cannon", itemName =>
                new Item(itemName, new ModdedIllustration("FirearmsAssets/HandCannon.png"), "Hand Cannon", 0, 3, Trait.FatalD8, ModularTrait, FirearmTrait, SimpleFirearmTrait, Trait.Simple, Trait.Reload1)
                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
-                       .WithRangeIncrement(6))
-                            .WithMainTrait(ModManager.RegisterTrait("Hand Cannon", new TraitProperties("Hand Cannon", false))));
+                       .WithRangeIncrement(6)));
 
             //  - Long Air Repeater
             ModManager.RegisterNewItemIntoTheShop("Long Air Repeater", itemName =>
                new Item(itemName, new ModdedIllustration("FirearmsAssets/LongAirRepeater.png"), "Long Air Repeater", 0, 5, Trait.Repeating, FirearmTrait, SimpleFirearmTrait, Trait.Simple)
                    .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Piercing)
-                       .WithRangeIncrement(12))
-                            .WithMainTrait(ModManager.RegisterTrait("Long Air Repeater", new TraitProperties("Long Air Repeater", false))));
+                       .WithRangeIncrement(12)));
 
             // Martial Ranged Firearm Weapons
             //  - Arquebus
             ModManager.RegisterNewItemIntoTheShop("Arquebus", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Arquebus.png"), "Arquebus", 0, 5, Trait.FatalD12, KickbackTrait, ConcussiveTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(30))
-                            .WithMainTrait(ModManager.RegisterTrait("Arquebus", new TraitProperties("Arquebus", false))));
+                        .WithRangeIncrement(30)));
 
             //  - Blunderbuss
             ModManager.RegisterNewItemIntoTheShop("Blunderbuss", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Blunderbuss.png"), "Blunderbuss", 0, 4, ConcussiveTrait, Scatter10Trait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(8))
-                            .WithMainTrait(ModManager.RegisterTrait("Blunderbuss", new TraitProperties("Blunderbuss", false))));
+                        .WithRangeIncrement(8)));
 
             //  - Clan Pistol
             ModManager.RegisterNewItemIntoTheShop("Clan Pistol", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/ClanPistol.png"), "Clan Pistol", 0, 0, Trait.Dwarf, Trait.FatalD10, ConcussiveTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(16))
-                            .WithMainTrait(ModManager.RegisterTrait("Clan Pistol", new TraitProperties("Clan Pistol", false))));
+                        .WithRangeIncrement(16)));
 
             //  - Double-barreled Musket
             ModManager.RegisterNewItemIntoTheShop("Double-barreled Musket", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Double-barreledMusket.png"), "Double-barreled Musket", 0, 5, Trait.FatalD10, ConcussiveTrait, DoubleBarrelTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(12))
-                            .WithMainTrait(ModManager.RegisterTrait("Double-barreled Musket", new TraitProperties("Double-barreled Musket", false))));
+                        .WithRangeIncrement(12)));
 
             //  - Double-barreled Pistol
             ModManager.RegisterNewItemIntoTheShop("Double-barreled Pistol", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Double-barreledPistol.png"), "Double-barreled Pistol", 0, 4, Trait.FatalD8, ConcussiveTrait, DoubleBarrelTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(6))
-                            .WithMainTrait(ModManager.RegisterTrait("Double-barreled Pistol", new TraitProperties("Double-barreled Pistol", false))));
+                        .WithRangeIncrement(6)));
 
             //  - Dragon Mouth Pistol
             ModManager.RegisterNewItemIntoTheShop("Dragon Mouth Pistol", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/DragonMouthPistol.png"), "Dragon Mouth Pistol", 0, 5, Trait.FatalD8, ConcussiveTrait, Scatter5Trait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(4))
-                            .WithMainTrait(ModManager.RegisterTrait("Dragon Mouth Pistol", new TraitProperties("Dragon Mouth Pistol", false))));
+                        .WithRangeIncrement(4)));
 
             //  - Dueling Pistol
             ModManager.RegisterNewItemIntoTheShop("Dueling Pistol", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/DuelingPistol.png"), "Dueling Pistol", 0, 6, Trait.FatalD10, ConcussiveTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(12))
-                            .WithMainTrait(ModManager.RegisterTrait("Dueling Pistol", new TraitProperties("Dueling Pistol", false))));
+                        .WithRangeIncrement(12)));
 
             //  - Harmona Gun
             ModManager.RegisterNewItemIntoTheShop("Harmona Gun", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/HarmonaGun.png"), "Harmona Gun", 0, 5, KickbackTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d10", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(30))
-                            .WithMainTrait(ModManager.RegisterTrait("Harmona Gun", new TraitProperties("Harmona Gun", false))));
+                        .WithRangeIncrement(30)));
 
             //  - Jezail
             ModManager.RegisterNewItemIntoTheShop("Jezail", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Jezail.png"), "Jezail", 0, 5, ConcussiveTrait, FatalAimD12Trait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(18))
-                            .WithMainTrait(ModManager.RegisterTrait("Jezail", new TraitProperties("Jezail", false))));
+                        .WithRangeIncrement(18)));
 
             //  - Mithral Tree
             // TODO: Add Parry
             ModManager.RegisterNewItemIntoTheShop("Mithral Tree", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/MithralTree.png"), "Mithral Tree", 0, 5, Trait.Elf, Trait.FatalD10, ConcussiveTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(30))
-                            .WithMainTrait(ModManager.RegisterTrait("Mithral Tree", new TraitProperties("Mithral Tree", false))));
+                        .WithRangeIncrement(30)));
 
             //  - Pepperbox
             ModManager.RegisterNewItemIntoTheShop("Pepperbox", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Pepperbox.png"), "Pepperbox", 0, 6, Trait.FatalD8, ConcussiveTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(12))
-                            .WithMainTrait(ModManager.RegisterTrait("Pepperbox", new TraitProperties("Pepperbox", false))));
+                        .WithRangeIncrement(12)));
 
             //  - Slide Pistol
             ModManager.RegisterNewItemIntoTheShop("Slide Pistol", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/SlidePistol.png"), "Slide Pistol", 0, 8, Trait.FatalD10, ConcussiveTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(6))
-                            .WithMainTrait(ModManager.RegisterTrait("Slide Pistol", new TraitProperties("Slide Pistol", false))));
+                        .WithRangeIncrement(6)));
 
             // Advanced Ranged Firearm Weapons
             //  - Dwarven Scattergun
             ModManager.RegisterNewItemIntoTheShop("Dwarven Scattergun", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/DwarvenScattergun.png"), "Dwarven Scattergun", 0, 5, Trait.Dwarf, ConcussiveTrait, KickbackTrait, Scatter10Trait, FirearmTrait, AdvancedFirearmTrait, Trait.Advanced, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning)
-                        .WithRangeIncrement(10))
-                            .WithMainTrait(ModManager.RegisterTrait("Dwarven Scattergun", new TraitProperties("Dwarven Scattergun", false))));
+                        .WithRangeIncrement(10)));
 
             //  - Flingflenser
             ModManager.RegisterNewItemIntoTheShop("Flingflenser", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Flingflenser.png"), "Flingflenser", 0, 3, Trait.Goblin, Trait.Backstabber, Trait.FatalD10, Scatter5Trait, FirearmTrait, AdvancedFirearmTrait, Trait.Advanced, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Slashing)
-                        .WithRangeIncrement(6))
-                            .WithMainTrait(ModManager.RegisterTrait("Flingflenser", new TraitProperties("Flingflenser", false))));
+                        .WithRangeIncrement(6)));
 
             // Other Items
             //  - Firearm Stabalizer
             ModManager.RegisterNewItemIntoTheShop("Firearm Stabalizer", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Stabalizer.png"), "Firearm Stabalizer", 0, 1)
-                    .WithDescription("Reduces the circumstance penality from the Kickback trait to -1.")
-                            .WithMainTrait(ModManager.RegisterTrait("Firearm Stabalizer", new TraitProperties("Firearm Stabalizer", false))));
+                    .WithDescription("Reduces the circumstance penality from the Kickback trait to -1."));
 
             // Other Items
             //  - Tripod
             ModManager.RegisterNewItemIntoTheShop("Tripod", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Tripod.png"), "Tripod", 0, 2)
-                    .WithDescription("Requires an action to setup then reduces the circumstance penality from the Kickback trait to -2. This will require another action to resetup if a movement action is taken.")
-                            .WithMainTrait(ModManager.RegisterTrait("Tripod", new TraitProperties("Tripod", false))));
+                    .WithDescription("Requires an action to setup then reduces the circumstance penality from the Kickback trait to -2. This will require another action to resetup if a movement action is taken."));
         }
 
         /// <summary>
@@ -398,8 +380,11 @@ namespace Dawnsbury.Mods.Items.Firearms
                     combatAction.WithActionCost(1);
                     combatAction.Name = "Double Barrel Fire";
                     combatAction.Illustration = new SideBySideIllustration(combatAction.Illustration, IllustrationName.StarHit);
-                    combatAction.Traits.Add(Trait.Basic);
-                    combatAction.Description = StrikeRules.CreateBasicStrikeDescription(combatAction.StrikeModifiers, "You can fire both barrels of a double barrel weapon in a single Strike to increase the weapon damage die by one step. If the weapon has the fatal trait, this increases the fatal die by one step.", null, null, null);
+                    if (!combatAction.HasTrait(Trait.Basic))
+                    {
+                        combatAction.Traits.Add(Trait.Basic);
+                    }
+                    combatAction.Description = StrikeRules.CreateBasicStrikeDescription(combatAction.StrikeModifiers, "You can fire both barrels of a double barrel weapon in a single Strike to increase the weapon damage die by one step. If the weapon has the fatal trait, this increases the fatal die by one step.", null, null, null, weaponDieIncreased: true);
 
                     // Updates our stike modifers by adding a QEffect to handle the fatal die upgrade logic
                     StrikeModifiers strikeModifiers = combatAction.StrikeModifiers;

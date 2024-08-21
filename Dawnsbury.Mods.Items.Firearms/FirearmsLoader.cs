@@ -15,6 +15,7 @@ namespace Dawnsbury.Mods.Items.Firearms
         {
             Firearms.RegisterItems();
             Firearms.SetupTraitLogic();
+            Firearms.PatchItems();
         }
     }
 }

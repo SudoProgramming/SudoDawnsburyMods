@@ -20,6 +20,8 @@ using Dawnsbury.Core.Tiles;
 using System.ComponentModel.Design;
 using Dawnsbury.Core.Mechanics.Core;
 using System.Linq;
+using System;
+using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -122,6 +124,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
         /// <summary>
         /// The Paired Shots class feat name
+        /// HACK: Currently the percision damage is added from both attacks. Dawnsbury doesn't break out precision damage to check which is higher
         /// </summary>
         public static readonly FeatName PairedShotsFeatName = ModManager.RegisterFeatName("Paired Shots", "Paired Shots");
 
@@ -230,7 +233,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             yield return new TrueFeat(InstantBackupFeatName, 4, "Even as your firearm misfires, you quickly draw a backup weapon.", "Release the misfired weapon if you so choose, and Interact to draw a one-handed weapon.\n\n" + missfireDescriptionText, [GunslingerTrait]).WithActionCost(-2);
 
             // TODO
-            yield return new TrueFeat(PairedShotsFeatName, 4, "Your shots hit simultaneously.", "{b}Requirements{/b} You're wielding two weapons, each of which can be either a loaded one-handed firearm or loaded one-handed crossbow.\n\nMake two Strikes, one with each of your two ranged weapons, each using your current multiple attack penalty. Both Strikes must have the same target.\n\nIf both attacks hit, combine their damage and then add any applicable effects from both weapons. You add any precision damage, only once, to the attack of your choice. Combine the damage from both Strikes and apply resistances and weaknesses only once. This counts as two attacks when calculating your multiple attack penalty.", [GunslingerTrait]).WithActionCost(2);
+            TrueFeat pairedShotsFeat = new TrueFeat(PairedShotsFeatName, 4, "Your shots hit simultaneously.", "{b}Requirements{/b} You're wielding two weapons, each of which can be either a loaded one-handed firearm or loaded one-handed crossbow.\n\nMake two Strikes, one with each of your two ranged weapons, each using your current multiple attack penalty. Both Strikes must have the same target.\n\nIf both attacks hit, combine their damage and then add any applicable effects from both weapons. You add any precision damage, only once, to the attack of your choice. Combine the damage from both Strikes and apply resistances and weaknesses only once. This counts as two attacks when calculating your multiple attack penalty.", [GunslingerTrait]).WithActionCost(2);
+            AddPairedShotsLogic(pairedShotsFeat);
+            yield return pairedShotsFeat;
 
             // TODO
             yield return new TrueFeat(RunningReloadFeatName, 4, "You can reload your weapon on the move.", "You Stride, Step, or Sneak, then Interact to reload.", [GunslingerTrait]).WithActionCost(1);
@@ -360,6 +365,37 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         }
 
         /// <summary>
+        /// Adds the logic for the Paired Shots feat
+        /// </summary>
+        /// <param name="pairedShotsFeat">The Paired Shots true feat object</param>
+        private static void AddPairedShotsLogic(TrueFeat pairedShotsFeat)
+        {
+            pairedShotsFeat.WithPermanentQEffect(pairedShotsFeat.FlavorText, delegate (QEffect self)
+            {
+                self.ProvideMainAction = (QEffect pairedShotEffect) =>
+                {
+                    if (pairedShotEffect.Owner.HeldItems.Count(item => (item.HasTrait(Trait.Crossbow) || item.HasTrait(Firearms.FirearmTrait)) && IsItemLoaded(item) && item.WeaponProperties != null) != 2)
+                    {
+                        return null;
+                    }
+                    int currentMap = self.Owner.Actions.AttackedThisManyTimesThisTurn;
+                    Item firstHeldItem = self.Owner.HeldItems[0];
+                    Item secondHeldItem = self.Owner.HeldItems[1];
+                    int maxRange = Math.Min(firstHeldItem.WeaponProperties.MaximumRange, secondHeldItem.WeaponProperties.MaximumRange);
+
+                    return new ActionPossibility(new CombatAction(pairedShotEffect.Owner, new SideBySideIllustration(firstHeldItem.Illustration, secondHeldItem.Illustration), "Paired Shots", [GunslingerTrait, Trait.Basic, Trait.IsHostile], pairedShotsFeat.RulesText, Target.Ranged(maxRange)).WithActionCost(2).WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
+                    {
+                        if (targets.ChosenCreature != null)
+                        {
+                            await pairedShotEffect.Owner.MakeStrike(targets.ChosenCreature, firstHeldItem, currentMap);
+                            await pairedShotEffect.Owner.MakeStrike(targets.ChosenCreature, secondHeldItem, currentMap);
+                        }
+                    }));
+                };
+            });
+        }
+
+        /// <summary>
         /// Patches Quick Draw to be selectable by Gunslinger
         /// </summary>
         /// <param name="quickDrawFeat">The Quick Draw feat</param>
@@ -411,7 +447,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <returns>True if the item is loaded and false otherwise</returns>
         private static bool IsItemLoaded(Item item)
         {
-            return (item.EphemeralItemProperties != null && !item.EphemeralItemProperties.NeedsReload) ? true : false;
+            return item.EphemeralItemProperties != null && !item.EphemeralItemProperties.NeedsReload;
         }
 
         /// <summary>

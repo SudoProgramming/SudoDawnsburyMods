@@ -22,6 +22,7 @@ using Dawnsbury.Core.Mechanics.Core;
 using System.Linq;
 using System;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
+using Dawnsbury.Core.Mechanics.Damage;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -228,8 +229,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             AddWarningShotLogic(warningShotFeat);
             yield return warningShotFeat;
 
-            // TODO
-            yield return new TrueFeat(AlchemicalShotFeatName, 4, "You've practiced a technique for mixing alchemical bombs with your loaded shot.", "{b}Requirements{/b} You have an alchemical bomb worn or in one hand, and are wielding a firearm or crossbow.\n\nYou Interact to retrieve the bomb (if it's not already in your hand) and pour its contents onto your ammunition, consuming the bomb, then resume your grip on the required weapon. Next, Strike with your firearm. The Strike deals damage of the same type as the bomb (for instance, fire damage for alchemist's fire), and it deals an additional 1d6 persistent damage of the same type as the bomb. If the Strike is a failure, you take 1d6 damage of the same type as the bomb you used, and the firearm misfires. " + missfireDescriptionText, [GunslingerTrait]);
+            TrueFeat alchemicalShotFeat = new TrueFeat(AlchemicalShotFeatName, 4, "You've practiced a technique for mixing alchemical bombs with your loaded shot.", "{b}Requirements{/b} You have an alchemical bomb worn or in one hand, and are wielding a firearm or crossbow.\n\nYou Interact to retrieve the bomb (if it's not already in your hand) and pour its contents onto your ammunition, consuming the bomb, then resume your grip on the required weapon. Next, Strike with your firearm. The Strike deals damage of the same type as the bomb (for instance, fire damage for alchemist's fire), and it deals an additional 1d6 persistent damage of the same type as the bomb. If the Strike is a failure, you take 1d6 damage of the same type as the bomb you used, and the firearm misfires. " + missfireDescriptionText, [GunslingerTrait]);
+            alchemicalShotFeat.WithActionCost(2);
+            AddAlchemicalShotLogic(alchemicalShotFeat);
+            yield return alchemicalShotFeat;
 
             // TODO
             yield return new TrueFeat(InstantBackupFeatName, 4, "Even as your firearm misfires, you quickly draw a backup weapon.", "Release the misfired weapon if you so choose, and Interact to draw a one-handed weapon.\n\n" + missfireDescriptionText, [GunslingerTrait]).WithActionCost(-2);
@@ -265,102 +268,107 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
-                    QEffect technicalEffectForOncePerRound = new QEffect("Technical Cover Fire", "[this condition has no description]")
+                    if (IsItemFirearmOrCrossbow(item) && IsItemLoaded(item) && item.WeaponProperties != null)
                     {
-                        ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn
-                    };
-                    CombatAction basicStrike = self.Owner.CreateStrike(item);
-
-                    CombatAction coverFireAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.TakeCover), "Cover Fire", [GunslingerTrait, Trait.Basic, Trait.IsHostile, Trait.Attack], coverFireFeat.RulesText, basicStrike.Target);
-                    coverFireAction.WithActionCost(1);
-                    coverFireAction.WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
-                    {
-                        if (attacker.QEffects.Count(qe => qe == technicalEffectForOncePerRound) == 0)
+                        QEffect technicalEffectForOncePerRound = new QEffect("Technical Cover Fire", "[this condition has no description]")
                         {
-                            attacker.AddQEffect(technicalEffectForOncePerRound);
-                        }
-
-                        Creature? target = targets.ChosenCreature;
-                        CoverKind cover = attacker.HasLineOfEffectTo(target.Occupies);
-                        QEffect attackRollBonus = new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
-                        {
-                            BonusToAttackRolls = (QEffect penalty, CombatAction action, Creature? defender) =>
-                            {
-                                return new Bonus(1, BonusType.Circumstance, "Cover Fire", true);
-                            }
+                            ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn
                         };
-                        QEffect acBonus = new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
-                        {
-                            BonusToDefenses = (QEffect bonus, CombatAction action, Defense defense) =>
-                            {
-                                return new Bonus(cover > 0 ? 4 : 2, BonusType.Circumstance, "Cover Fire", true);
-                            }
-                        };
+                        CombatAction basicStrike = self.Owner.CreateStrike(item);
 
-                        if (target != null)
+                        CombatAction coverFireAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.TakeCover), "Cover Fire", [GunslingerTrait, Trait.Basic, Trait.IsHostile, Trait.Attack], coverFireFeat.RulesText, basicStrike.Target);
+                        coverFireAction.WithActionCost(1);
+                        coverFireAction.WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
                         {
-                            bool shouldDodge = true;
-                            if (target.OwningFaction != target.Battle.You)
+                            if (attacker.QEffects.Count(qe => qe == technicalEffectForOncePerRound) == 0)
                             {
-                                if (cover <= 0 && target.WieldsItem(Trait.Ranged))
+                                attacker.AddQEffect(technicalEffectForOncePerRound);
+                            }
+
+                            Creature? target = targets.ChosenCreature;
+                            CoverKind cover = attacker.HasLineOfEffectTo(target.Occupies);
+                            QEffect attackRollBonus = new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
+                            {
+                                BonusToAttackRolls = (QEffect penalty, CombatAction action, Creature? defender) =>
                                 {
-                                    shouldDodge = false;
+                                    return new Bonus(1, BonusType.Circumstance, "Cover Fire", true);
+                                }
+                            };
+                            QEffect acBonus = new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
+                            {
+                                BonusToDefenses = (QEffect bonus, CombatAction action, Defense defense) =>
+                                {
+                                    return new Bonus(cover > 0 ? 4 : 2, BonusType.Circumstance, "Cover Fire", true);
+                                }
+                            };
+
+                            if (target != null)
+                            {
+                                bool shouldDodge = true;
+                                if (target.OwningFaction != target.Battle.You)
+                                {
+                                    if (cover <= 0 && target.WieldsItem(Trait.Ranged))
+                                    {
+                                        shouldDodge = false;
+
+                                    }
+                                    else
+                                    {
+                                        shouldDodge = true;
+                                    }
 
                                 }
                                 else
                                 {
-                                    shouldDodge = true;
+                                    shouldDodge = await target.Battle.AskForConfirmation(self.Owner, IllustrationName.QuestionMark, "Duck to gain +" + (cover > 0 ? "4" : "2") + " circumstance bonus to AC against the attack, along with a -2 circumstance penalty to ranged attack rolls until the end of your next turn?", "Duck");
                                 }
-                                
-                            }
-                            else
-                            {
-                                shouldDodge = await target.Battle.AskForConfirmation(self.Owner, IllustrationName.QuestionMark, "Duck to gain +" + (cover > 0 ? "4" : "2") + " circumstance bonus to AC against the attack, along with a -2 circumstance penalty to ranged attack rolls until the end of your next turn?", "Duck");
-                            }
 
-                            if (shouldDodge)
-                            {
-                                target.AddQEffect(acBonus);
-                                target.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfSourcesTurn)
+                                if (shouldDodge)
                                 {
-                                    BonusToAttackRolls = (QEffect penalty, CombatAction action, Creature? defender) =>
+                                    target.AddQEffect(acBonus);
+                                    target.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfSourcesTurn)
                                     {
-                                        if(basicStrike.HasTrait(Trait.Ranged))
+                                        BonusToAttackRolls = (QEffect penalty, CombatAction action, Creature? defender) =>
                                         {
-                                            return new Bonus(-2, BonusType.Circumstance, "Cover Fire", false);
+                                            if (basicStrike.HasTrait(Trait.Ranged))
+                                            {
+                                                return new Bonus(-2, BonusType.Circumstance, "Cover Fire", false);
+                                            }
+
+                                            return null;
                                         }
+                                    });
+                                }
+                                else
+                                {
+                                    attacker.AddQEffect(attackRollBonus);
+                                }
 
-                                        return null;
-                                    }
-                                });
+                                await attacker.MakeStrike(target, item);
+                                attacker.RemoveAllQEffects(qe => qe == attackRollBonus);
+                                target.RemoveAllQEffects(qe => qe == acBonus);
                             }
-                            else
+                        });
+
+                        // Checks if the item needs to be reloaded
+                        ((CreatureTarget)coverFireAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                        {
+                            if (!IsItemLoaded(item))
                             {
-                                attacker.AddQEffect(attackRollBonus);
+                                return Usability.NotUsable("Needs to be reloaded.");
+                            }
+                            else if (attacker.QEffects.Count(qe => qe.Name == technicalEffectForOncePerRound.Name) > 0)
+                            {
+                                return Usability.NotUsable("Already used this round.");
                             }
 
-                            await attacker.MakeStrike(target, item);
-                            attacker.RemoveAllQEffects(qe => qe == attackRollBonus);
-                            target.RemoveAllQEffects(qe => qe == acBonus);
-                        }
-                    });
+                            return Usability.Usable;
+                        });
 
-                    // Checks if the item needs to be reloaded
-                    ((CreatureTarget)coverFireAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
-                    {
-                        if (!IsItemLoaded(item))
-                        {
-                            return Usability.NotUsable("Needs to be reloaded.");
-                        }
-                        else if (attacker.QEffects.Count(qe => qe.Name == technicalEffectForOncePerRound.Name) > 0)
-                        {
-                            return Usability.NotUsable("Already used this round.");
-                        }
+                        return coverFireAction;
+                    };
 
-                        return Usability.Usable;
-                    });
-
-                    return coverFireAction;
+                    return null;
                 };
             });
         }
@@ -415,7 +423,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideMainAction = (QEffect pairedShotEffect) =>
                 {
-                    if (pairedShotEffect.Owner.HeldItems.Count(item => (item.HasTrait(Trait.Crossbow) || item.HasTrait(Firearms.FirearmTrait)) && IsItemLoaded(item) && item.WeaponProperties != null) != 2)
+                    if (pairedShotEffect.Owner.HeldItems.Count(item => IsItemFirearmOrCrossbow(item) && IsItemLoaded(item) && item.WeaponProperties != null) != 2)
                     {
                         return null;
                     }
@@ -432,6 +440,85 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             await pairedShotEffect.Owner.MakeStrike(targets.ChosenCreature, secondHeldItem, currentMap);
                         }
                     }));
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Alchemical Shot feat
+        /// </summary>
+        /// <param name="alchemicalShotFeat">The Alchemical Shot true feat object</param>
+        private static void AddAlchemicalShotLogic(TrueFeat alchemicalShotFeat)
+        {
+            alchemicalShotFeat.WithPermanentQEffect(alchemicalShotFeat.FlavorText, delegate (QEffect self)
+            {
+                self.StateCheck = (QEffect state) =>
+                {
+                    HashSet<Item> bombsWorn = new HashSet<Item>(self.Owner.HeldItems.Concat(self.Owner.CarriedItems).Where(item => item.HasTrait(Trait.Alchemical) && item.HasTrait(Trait.Bomb)).ToList());
+                    foreach (Item bomb in bombsWorn)
+                    {
+                        self.ProvideStrikeModifier = (Item item) =>
+                        {
+                            if (IsItemFirearmOrCrossbow(item) && IsItemLoaded(item) && item.WeaponProperties != null)
+                            {
+                                if (!self.Owner.HeldItems.Concat(self.Owner.CarriedItems).Contains(bomb))
+                                {
+                                    return null;
+                                }
+
+                                DamageKind alchemicalDamageType = (bomb != null && bomb.WeaponProperties != null) ? bomb.WeaponProperties.DamageKind : item.WeaponProperties.DamageKind;
+                                Item alchemicalBombLoadedWeapon = item;
+                                alchemicalBombLoadedWeapon.Traits.Remove(Trait.VersatileP);
+                                alchemicalBombLoadedWeapon.Traits.Remove(Trait.VersatileS);
+                                alchemicalBombLoadedWeapon.WeaponProperties = new WeaponProperties(item.WeaponProperties.Damage, alchemicalDamageType);
+
+                                CombatAction alchemicalShotAction = self.Owner.CreateStrike(alchemicalBombLoadedWeapon);
+                                alchemicalShotAction.Name = "Alchemical Shot (" + bomb.Name + ")";
+                                alchemicalShotAction.ActionCost = 2;
+                                alchemicalShotAction.Illustration = new SideBySideIllustration(item.Illustration, bomb.Illustration);
+                                alchemicalShotAction.Description = alchemicalShotFeat.RulesText;
+
+                                alchemicalShotAction.WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
+                                {
+                                    if (targets.ChosenCreature != null)
+                                    {
+                                        targets.ChosenCreature.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
+                                        for (int i = 0; i < self.Owner.HeldItems.Count; i++)
+                                        {
+                                            if (self.Owner.HeldItems.Contains(bomb))
+                                            {
+                                                self.Owner.HeldItems.Remove(bomb);
+                                                break;
+                                            }
+                                            else if (self.Owner.CarriedItems.Contains(bomb))
+                                            {
+                                                self.Owner.CarriedItems.Remove(bomb);
+                                            }
+                                        }
+                                    }
+                                });
+
+                                // Checks if the item needs to be reloaded
+                                ((CreatureTarget)alchemicalShotAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                                {
+                                    if (!IsItemLoaded(item))
+                                    {
+                                        return Usability.NotUsable("Needs to be reloaded.");
+                                    }
+                                    else if (bombsWorn.Count == 0)
+                                    {
+                                        return Usability.NotUsable("You have no more alchemical bombs.");
+                                    }
+
+                                    return Usability.Usable;
+                                });
+
+                                return alchemicalShotAction;
+                            }
+
+                            return null;
+                        };
+                    }
                 };
             });
         }

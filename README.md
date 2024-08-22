@@ -89,7 +89,7 @@ This module adds the Gunslinger class. This is a Work in Progress:
 - [ ] Pistol Twirl
 - [ ] Risky Reload
 - [X] Quick Draw
-- [ ] Warning Shot
+- [X] Warning Shot
 - [ ] Alchemical Shot
 - [ ] Instant Backup
 - [X] Paired Shots

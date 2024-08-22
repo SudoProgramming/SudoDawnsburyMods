@@ -223,8 +223,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             // TODO
             yield return new TrueFeat(RiskyReloadFeatName, 2, "You've practiced a technique for rapidly reloading your firearm, but attempting to use this technique is a dangerous gamble with your firearm's functionality.", "{b}Requirements{/b} You're wielding a firearm.\n\nInteract to reload a firearm, then make a Strike with that firearm. If the Strike fails, the firearm misfires. " + missfireDescriptionText, [GunslingerTrait, Trait.Flourish]).WithActionCost(1);
 
-            // TODO
-            yield return new TrueFeat(WarningShotFeatName, 2, "Who needs words when the roar of a gun is so much more succinct?", "{b}Requirements{/b} You're wielding a loaded firearm.\n\nYou attempt to Demoralize a foe by firing your weapon into the air, using the firearm's maximum range rather than the usual range of 30 feet.", [GunslingerTrait]).WithActionCost(1).WithPrerequisite((CalculatedCharacterSheetValues sheet) => (sheet.Proficiencies.AllProficiencies[Trait.Intimidation] >= Proficiency.Trained), "trained in Intimidation");
+            TrueFeat warningShotFeat = new TrueFeat(WarningShotFeatName, 2, "Who needs words when the roar of a gun is so much more succinct?", "{b}Requirements{/b} You're wielding a loaded firearm.\n\nYou attempt to Demoralize a foe by firing your weapon into the air, using the firearm's maximum range rather than the usual range of 30 feet. This check doesn't take the –4 circumstance penalty if the target doesn't share a language with you.", [GunslingerTrait]);
+            warningShotFeat.WithActionCost(1).WithPrerequisite((CalculatedCharacterSheetValues sheet) => (sheet.Proficiencies.AllProficiencies[Trait.Intimidation] >= Proficiency.Trained), "trained in Intimidation");
+            AddWarningShotLogic(warningShotFeat);
+            yield return warningShotFeat;
 
             // TODO
             yield return new TrueFeat(AlchemicalShotFeatName, 4, "You've practiced a technique for mixing alchemical bombs with your loaded shot.", "{b}Requirements{/b} You have an alchemical bomb worn or in one hand, and are wielding a firearm or crossbow.\n\nYou Interact to retrieve the bomb (if it's not already in your hand) and pour its contents onto your ammunition, consuming the bomb, then resume your grip on the required weapon. Next, Strike with your firearm. The Strike deals damage of the same type as the bomb (for instance, fire damage for alchemist's fire), and it deals an additional 1d6 persistent damage of the same type as the bomb. If the Strike is a failure, you take 1d6 damage of the same type as the bomb you used, and the firearm misfires. " + missfireDescriptionText, [GunslingerTrait]);
@@ -232,7 +234,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             // TODO
             yield return new TrueFeat(InstantBackupFeatName, 4, "Even as your firearm misfires, you quickly draw a backup weapon.", "Release the misfired weapon if you so choose, and Interact to draw a one-handed weapon.\n\n" + missfireDescriptionText, [GunslingerTrait]).WithActionCost(-2);
 
-            // TODO
             TrueFeat pairedShotsFeat = new TrueFeat(PairedShotsFeatName, 4, "Your shots hit simultaneously.", "{b}Requirements{/b} You're wielding two weapons, each of which can be either a loaded one-handed firearm or loaded one-handed crossbow.\n\nMake two Strikes, one with each of your two ranged weapons, each using your current multiple attack penalty. Both Strikes must have the same target.\n\nIf both attacks hit, combine their damage and then add any applicable effects from both weapons. You add any precision damage, only once, to the attack of your choice. Combine the damage from both Strikes and apply resistances and weaknesses only once. This counts as two attacks when calculating your multiple attack penalty.", [GunslingerTrait]).WithActionCost(2);
             AddPairedShotsLogic(pairedShotsFeat);
             yield return pairedShotsFeat;
@@ -270,7 +271,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     };
                     CombatAction basicStrike = self.Owner.CreateStrike(item);
 
-                    CombatAction coverFireAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.TakeCover), "Cover Fire", [GunslingerTrait, Trait.Basic, Trait.IsHostile, Trait.Attack], "{b}Frequency{/b} once per round\n\n{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nMake a firearm or crossbow Strike; the target must decide before you roll your attack whether it will duck out of the way.\n\nIf the target ducks, it gains a +2 circumstance bonus to AC against your attack, or a +4 circumstance bonus to AC if it has cover. It also takes a –2 circumstance penalty to ranged attack rolls until the end of its next turn.\n\nIf the target chooses not to duck, you gain a +1 circumstance bonus to your attack roll for that Strike.", basicStrike.Target);
+                    CombatAction coverFireAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.TakeCover), "Cover Fire", [GunslingerTrait, Trait.Basic, Trait.IsHostile, Trait.Attack], coverFireFeat.RulesText, basicStrike.Target);
                     coverFireAction.WithActionCost(1);
                     coverFireAction.WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
                     {
@@ -360,6 +361,46 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     });
 
                     return coverFireAction;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Warning Shot feat
+        /// </summary>
+        /// <param name="pairedShotsFeat">The Warning Shot true feat object</param>
+        private static void AddWarningShotLogic(TrueFeat warningShotFeat)
+        {
+            warningShotFeat.WithPermanentQEffect(warningShotFeat.FlavorText, delegate (QEffect self)
+            {
+                self.ProvideStrikeModifier = (Item item) =>
+                {
+                    if (item.HasTrait(Firearms.FirearmTrait) && IsItemLoaded(item) && item.WeaponProperties != null)
+                    {
+                        CombatAction warningShotAction = CommonCombatActions.Demoralize(self.Owner);
+                        warningShotAction.Name = "Warning Shot";
+                        warningShotAction.Item = item;
+                        warningShotAction.ActionCost = 1;
+                        warningShotAction.Illustration = new SideBySideIllustration(item.Illustration, IllustrationName.Demoralize);
+                        warningShotAction.Description = warningShotFeat.RulesText;
+                        warningShotAction.Target = Target.Ranged(item.WeaponProperties.MaximumRange);
+                        warningShotAction.StrikeModifiers.QEffectForStrike = new QEffect()
+                        {
+                            Id = QEffectId.IntimidatingGlare,
+                            ExpiresAt = ExpirationCondition.EphemeralAtEndOfImmediateAction,
+                        };
+
+                        return warningShotAction;
+                    }
+
+                    return null;
+                };
+                self.YouBeginAction = async (QEffect dischargeEffect, CombatAction action) =>
+                {
+                    if (action.Name == "Warning Shot" && action.Item != null)
+                    {
+                        DischargeItem(action.Item);
+                    }
                 };
             });
         }
@@ -463,6 +504,23 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 {
                     traits.Add(trait);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Discharges the provided item
+        /// </summary>
+        /// <param name="item">The item being discharged</param>
+        private static void DischargeItem(Item item)
+        {
+            if (item.EphemeralItemProperties != null)
+            {
+                if (item.HasTrait(Trait.Reload1) || item.HasTrait(Trait.Reload2))
+                {
+                    item.EphemeralItemProperties.NeedsReload = true;
+                }
+
+                item.EphemeralItemProperties.AmmunitionLeftInMagazine--;
             }
         }
     }

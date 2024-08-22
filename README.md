@@ -92,7 +92,8 @@ This module adds the Gunslinger class. This is a Work in Progress:
 - [ ] Warning Shot
 - [ ] Alchemical Shot
 - [ ] Instant Backup
-- [ ] Paired Shots
+- [X] Paired Shots
+    - RAW Difference: The precision damage is applied from both strikes.
 - [ ] Running Reload
 
 ### Sub Class Feats

@@ -237,7 +237,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             // TODO
             yield return new TrueFeat(InstantBackupFeatName, 4, "Even as your firearm misfires, you quickly draw a backup weapon.", "Release the misfired weapon if you so choose, and Interact to draw a one-handed weapon.\n\n" + missfireDescriptionText, [GunslingerTrait]).WithActionCost(-2);
 
-            TrueFeat pairedShotsFeat = new TrueFeat(PairedShotsFeatName, 4, "Your shots hit simultaneously.", "{b}Requirements{/b} You're wielding two weapons, each of which can be either a loaded one-handed firearm or loaded one-handed crossbow.\n\nMake two Strikes, one with each of your two ranged weapons, each using your current multiple attack penalty. Both Strikes must have the same target.\n\nIf both attacks hit, combine their damage and then add any applicable effects from both weapons. You add any precision damage, only once, to the attack of your choice. Combine the damage from both Strikes and apply resistances and weaknesses only once. This counts as two attacks when calculating your multiple attack penalty.", [GunslingerTrait]).WithActionCost(2);
+            TrueFeat pairedShotsFeat = new TrueFeat(PairedShotsFeatName, 4, "Your shots hit simultaneously.", "{b}Requirements{/b} You're wielding two weapons, each of which can be either a loaded one-handed firearm or loaded one-handed crossbow.\n\nMake two Strikes, one with each of your two ranged weapons, each using your current multiple attack penalty. Both Strikes must have the same target.\n\nIf both attacks hit, combine their damage and then add any applicable effects from both weapons. Combine the damage from both Strikes and apply resistances and weaknesses only once. This counts as two attacks when calculating your multiple attack penalty.", [GunslingerTrait]).WithActionCost(2);
             AddPairedShotsLogic(pairedShotsFeat);
             yield return pairedShotsFeat;
 
@@ -450,77 +450,173 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="alchemicalShotFeat">The Alchemical Shot true feat object</param>
         private static void AddAlchemicalShotLogic(TrueFeat alchemicalShotFeat)
         {
-            alchemicalShotFeat.WithPermanentQEffect(alchemicalShotFeat.FlavorText, delegate (QEffect self)
+            alchemicalShotFeat.WithOnCreature(creature =>
             {
-                self.StateCheck = (QEffect state) =>
+
+                creature.AddQEffect(new QEffect()
                 {
-                    HashSet<Item> bombsWorn = new HashSet<Item>(self.Owner.HeldItems.Concat(self.Owner.CarriedItems).Where(item => item.HasTrait(Trait.Alchemical) && item.HasTrait(Trait.Bomb)).ToList());
-                    foreach (Item bomb in bombsWorn)
+                    StateCheck = (QEffect permanentState) =>
                     {
-                        self.ProvideStrikeModifier = (Item item) =>
+                        List<Item> heldBombs = permanentState.Owner.HeldItems.Concat(permanentState.Owner.CarriedItems).Where(item => item.HasTrait(Trait.Alchemical) && item.HasTrait(Trait.Bomb)).ToList();
+                        HashSet<string> uniqueBombNames = new HashSet<string>(heldBombs.Select(bomb => bomb.Name).ToList());
+                        List<Item> uniqueBombsHeld = new List<Item>();
+                        foreach (string bombName in uniqueBombNames)
                         {
-                            if (IsItemFirearmOrCrossbow(item) && IsItemLoaded(item) && item.WeaponProperties != null)
+                            Item? matchingBomb = heldBombs.FirstOrDefault(bomb => bomb.Name == bombName);
+                            if (matchingBomb != null)
                             {
-                                if (!self.Owner.HeldItems.Concat(self.Owner.CarriedItems).Contains(bomb))
+                                uniqueBombsHeld.Add(matchingBomb);
+                            }
+                        }
+
+                        foreach (Item bomb in uniqueBombsHeld)
+                        {
+                            permanentState.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
+                            {
+                                ProvideStrikeModifier = (Item item) =>
                                 {
+                                    if (IsItemFirearmOrCrossbow(item) && IsItemLoaded(item) && item.WeaponProperties != null)
+                                    {
+                                        if (!permanentState.Owner.HeldItems.Concat(permanentState.Owner.CarriedItems).Contains(bomb))
+                                        {
+                                            return null;
+                                        }
+
+                                        DamageKind alchemicalDamageType = (bomb != null && bomb.WeaponProperties != null) ? bomb.WeaponProperties.DamageKind : item.WeaponProperties.DamageKind;
+                                        Item alchemicalBombLoadedWeapon = new Item(item.Illustration, item.Name, item.Traits.ToArray())
+                                        {
+                                            WeaponProperties = new WeaponProperties(item.WeaponProperties.Damage, alchemicalDamageType).WithRangeIncrement(item.WeaponProperties.RangeIncrement)
+                                        };
+
+                                        CombatAction alchemicalShotAction = permanentState.Owner.CreateStrike(alchemicalBombLoadedWeapon);
+                                        alchemicalShotAction.Name = "Alchemical Shot (" + bomb.Name + ")";
+                                        alchemicalShotAction.ActionCost = 2;
+                                        alchemicalShotAction.Illustration = new SideBySideIllustration(item.Illustration, bomb.Illustration);
+                                        alchemicalShotAction.Description = alchemicalShotFeat.RulesText;
+
+                                        alchemicalShotAction.WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
+                                        {
+                                            if (targets.ChosenCreature != null)
+                                            {
+                                                targets.ChosenCreature.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
+                                                DischargeItem(item);
+                                                for (int i = 0; i < permanentState.Owner.HeldItems.Count; i++)
+                                                {
+                                                    if (permanentState.Owner.HeldItems.Contains(bomb))
+                                                    {
+                                                        permanentState.Owner.HeldItems.Remove(bomb);
+                                                        break;
+                                                    }
+                                                    else if (permanentState.Owner.CarriedItems.Contains(bomb))
+                                                    {
+                                                        permanentState.Owner.CarriedItems.Remove(bomb);
+                                                    }
+                                                }
+                                            }
+                                        });
+
+                                        // Checks if the item needs to be reloaded
+                                        ((CreatureTarget)alchemicalShotAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                                        {
+                                            if (!IsItemLoaded(item))
+                                            {
+                                                return Usability.NotUsable("Needs to be reloaded.");
+                                            }
+                                            else if (heldBombs.Count == 0)
+                                            {
+                                                return Usability.NotUsable("You have no more alchemical bombs.");
+                                            }
+
+                                            return Usability.Usable;
+                                        });
+
+                                        return alchemicalShotAction;
+                                    }
+
                                     return null;
                                 }
-
-                                DamageKind alchemicalDamageType = (bomb != null && bomb.WeaponProperties != null) ? bomb.WeaponProperties.DamageKind : item.WeaponProperties.DamageKind;
-                                Item alchemicalBombLoadedWeapon = item;
-                                alchemicalBombLoadedWeapon.Traits.Remove(Trait.VersatileP);
-                                alchemicalBombLoadedWeapon.Traits.Remove(Trait.VersatileS);
-                                alchemicalBombLoadedWeapon.WeaponProperties = new WeaponProperties(item.WeaponProperties.Damage, alchemicalDamageType);
-
-                                CombatAction alchemicalShotAction = self.Owner.CreateStrike(alchemicalBombLoadedWeapon);
-                                alchemicalShotAction.Name = "Alchemical Shot (" + bomb.Name + ")";
-                                alchemicalShotAction.ActionCost = 2;
-                                alchemicalShotAction.Illustration = new SideBySideIllustration(item.Illustration, bomb.Illustration);
-                                alchemicalShotAction.Description = alchemicalShotFeat.RulesText;
-
-                                alchemicalShotAction.WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
-                                {
-                                    if (targets.ChosenCreature != null)
-                                    {
-                                        targets.ChosenCreature.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
-                                        for (int i = 0; i < self.Owner.HeldItems.Count; i++)
-                                        {
-                                            if (self.Owner.HeldItems.Contains(bomb))
-                                            {
-                                                self.Owner.HeldItems.Remove(bomb);
-                                                break;
-                                            }
-                                            else if (self.Owner.CarriedItems.Contains(bomb))
-                                            {
-                                                self.Owner.CarriedItems.Remove(bomb);
-                                            }
-                                        }
-                                    }
-                                });
-
-                                // Checks if the item needs to be reloaded
-                                ((CreatureTarget)alchemicalShotAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
-                                {
-                                    if (!IsItemLoaded(item))
-                                    {
-                                        return Usability.NotUsable("Needs to be reloaded.");
-                                    }
-                                    else if (bombsWorn.Count == 0)
-                                    {
-                                        return Usability.NotUsable("You have no more alchemical bombs.");
-                                    }
-
-                                    return Usability.Usable;
-                                });
-
-                                return alchemicalShotAction;
-                            }
-
-                            return null;
-                        };
+                            });
+                        }
                     }
-                };
+                });
             });
+            //});
+            
+            //alchemicalShotFeat.WithPermanentQEffect(alchemicalShotFeat.FlavorText, delegate (QEffect self)
+            //{
+            //    self.StateCheck = (QEffect permanentState) =>
+            //    {
+            //        permanentState.StateCheck = (QEffect refreshState) =>
+            //        {
+            //            HashSet<Item> bombsWorn = new HashSet<Item>(self.Owner.HeldItems.Concat(self.Owner.CarriedItems).Where(item => item.HasTrait(Trait.Alchemical) && item.HasTrait(Trait.Bomb)).ToList());
+            //            foreach (Item bomb in bombsWorn)
+            //            {
+            //                refreshState.ProvideStrikeModifier = (Item item) =>
+            //                {
+            //                    if (IsItemFirearmOrCrossbow(item) && IsItemLoaded(item) && item.WeaponProperties != null)
+            //                    {
+            //                        if (!refreshState.Owner.HeldItems.Concat(refreshState.Owner.CarriedItems).Contains(bomb))
+            //                        {
+            //                            return null;
+            //                        }
+
+            //                        DamageKind alchemicalDamageType = (bomb != null && bomb.WeaponProperties != null) ? bomb.WeaponProperties.DamageKind : item.WeaponProperties.DamageKind;
+            //                        Item alchemicalBombLoadedWeapon = item;
+            //                        alchemicalBombLoadedWeapon.Traits.Remove(Trait.VersatileP);
+            //                        alchemicalBombLoadedWeapon.Traits.Remove(Trait.VersatileS);
+            //                        alchemicalBombLoadedWeapon.WeaponProperties = new WeaponProperties(item.WeaponProperties.Damage, alchemicalDamageType);
+
+            //                        CombatAction alchemicalShotAction = refreshState.Owner.CreateStrike(alchemicalBombLoadedWeapon);
+            //                        alchemicalShotAction.Name = "Alchemical Shot (" + bomb.Name + ")";
+            //                        alchemicalShotAction.ActionCost = 2;
+            //                        alchemicalShotAction.Illustration = new SideBySideIllustration(item.Illustration, bomb.Illustration);
+            //                        alchemicalShotAction.Description = alchemicalShotFeat.RulesText;
+
+            //                        alchemicalShotAction.WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
+            //                        {
+            //                            if (targets.ChosenCreature != null)
+            //                            {
+            //                                targets.ChosenCreature.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
+            //                                for (int i = 0; i < self.Owner.HeldItems.Count; i++)
+            //                                {
+            //                                    if (refreshState.Owner.HeldItems.Contains(bomb))
+            //                                    {
+            //                                        refreshState.Owner.HeldItems.Remove(bomb);
+            //                                        break;
+            //                                    }
+            //                                    else if (refreshState.Owner.CarriedItems.Contains(bomb))
+            //                                    {
+            //                                        refreshState.Owner.CarriedItems.Remove(bomb);
+            //                                    }
+            //                                }
+            //                            }
+            //                        });
+
+            //                        // Checks if the item needs to be reloaded
+            //                        ((CreatureTarget)alchemicalShotAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+            //                        {
+            //                            if (!IsItemLoaded(item))
+            //                            {
+            //                                return Usability.NotUsable("Needs to be reloaded.");
+            //                            }
+            //                            else if (bombsWorn.Count == 0)
+            //                            {
+            //                                return Usability.NotUsable("You have no more alchemical bombs.");
+            //                            }
+
+            //                            return Usability.Usable;
+            //                        });
+
+            //                        return alchemicalShotAction;
+            //                    }
+
+            //                    return null;
+            //                };
+            //            }
+            //        };
+
+            //    };
+            //});
         }
 
         /// <summary>

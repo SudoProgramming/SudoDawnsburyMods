@@ -206,8 +206,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             // TODO
             yield return new TrueFeat(CrossbowCrackShotFeatName, 1, "You're exceptionally skilled with the crossbow.", "The first time each round that you Interact to reload a crossbow you are wielding, including Interact actions as part of your slinger's reload and similar effects, you increase the range increment for your next Strike with that weapon by 10 feet and deal 1 additional precision damage per weapon damage die with that Strike.\n\nIf your crossbow has the backstabber trait and you are attacking an off-guard target, backstabber deals 2 additional precision damage per weapon damage die instead of its normal effects.", [GunslingerTrait]);
 
-            // TODO
-            yield return new TrueFeat(HitTheDirtFeatName, 1, "You fling yourself out of harm's way.", "You Leap. Your movement gives you a +2 circumstance bonus to AC against the triggering attack. Regardless of whether or not the triggering attack hits, you land prone after completing your Leap.", [GunslingerTrait]).WithActionCost(-2);
+            TrueFeat hitTheDirtFeat = new TrueFeat(HitTheDirtFeatName, 1, "You fling yourself out of harm's way.", "You Leap. Your movement gives you a +2 circumstance bonus to AC against the triggering attack. Regardless of whether or not the triggering attack hits, you land prone after completing your Leap.", [GunslingerTrait]).WithActionCost(-2);
+            AddHitTheDirtLogic(hitTheDirtFeat);
+            yield return hitTheDirtFeat;
 
             // TODO
             yield return new TrueFeat(SwordAndPistolFeatName, 1, "You're comfortable wielding a firearm or crossbow in one hand and a melee weapon in the other, combining melee attacks with shots from the firearm.", "When you make a successful ranged Strike against an enemy within your reach with your one-handed firearm or one-handed crossbow, that enemy is flat-footed against your next melee attack with a one-handed melee weapon.\n\nWhen you make a successful melee Strike against an enemy with your one-handed melee weapon, the next ranged Strike you make against that enemy with a one-handed firearm or one-handed crossbow doesn't trigger reactions that would trigger on a ranged attack, such as Attack of Opportunity. Either of these benefits is lost if not used by the end of your next turn.", [GunslingerTrait]);
@@ -540,83 +541,42 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     }
                 });
             });
-            //});
-            
-            //alchemicalShotFeat.WithPermanentQEffect(alchemicalShotFeat.FlavorText, delegate (QEffect self)
-            //{
-            //    self.StateCheck = (QEffect permanentState) =>
-            //    {
-            //        permanentState.StateCheck = (QEffect refreshState) =>
-            //        {
-            //            HashSet<Item> bombsWorn = new HashSet<Item>(self.Owner.HeldItems.Concat(self.Owner.CarriedItems).Where(item => item.HasTrait(Trait.Alchemical) && item.HasTrait(Trait.Bomb)).ToList());
-            //            foreach (Item bomb in bombsWorn)
-            //            {
-            //                refreshState.ProvideStrikeModifier = (Item item) =>
-            //                {
-            //                    if (IsItemFirearmOrCrossbow(item) && IsItemLoaded(item) && item.WeaponProperties != null)
-            //                    {
-            //                        if (!refreshState.Owner.HeldItems.Concat(refreshState.Owner.CarriedItems).Contains(bomb))
-            //                        {
-            //                            return null;
-            //                        }
+        }
 
-            //                        DamageKind alchemicalDamageType = (bomb != null && bomb.WeaponProperties != null) ? bomb.WeaponProperties.DamageKind : item.WeaponProperties.DamageKind;
-            //                        Item alchemicalBombLoadedWeapon = item;
-            //                        alchemicalBombLoadedWeapon.Traits.Remove(Trait.VersatileP);
-            //                        alchemicalBombLoadedWeapon.Traits.Remove(Trait.VersatileS);
-            //                        alchemicalBombLoadedWeapon.WeaponProperties = new WeaponProperties(item.WeaponProperties.Damage, alchemicalDamageType);
+        /// <summary>
+        /// Adds the logic for the Hit the Dirt feat
+        /// </summary>
+        /// <param name="hitTheDirtFeat">The Hit the Dirt true feat object</param>
+        private static void AddHitTheDirtLogic(TrueFeat hitTheDirtFeat)
+        {
+            QEffect circumstanceBonus = new QEffect(ExpirationCondition.ExpiresAtEndOfAnyTurn)
+            {
+                BonusToDefenses = (QEffect q, CombatAction? action, Defense defense) =>
+                {
+                    if (action.HasTrait(Trait.Ranged))
+                    {
+                        return new Bonus(2, BonusType.Circumstance, "Hit the Dirt", true);
+                    }
 
-            //                        CombatAction alchemicalShotAction = refreshState.Owner.CreateStrike(alchemicalBombLoadedWeapon);
-            //                        alchemicalShotAction.Name = "Alchemical Shot (" + bomb.Name + ")";
-            //                        alchemicalShotAction.ActionCost = 2;
-            //                        alchemicalShotAction.Illustration = new SideBySideIllustration(item.Illustration, bomb.Illustration);
-            //                        alchemicalShotAction.Description = alchemicalShotFeat.RulesText;
-
-            //                        alchemicalShotAction.WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
-            //                        {
-            //                            if (targets.ChosenCreature != null)
-            //                            {
-            //                                targets.ChosenCreature.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
-            //                                for (int i = 0; i < self.Owner.HeldItems.Count; i++)
-            //                                {
-            //                                    if (refreshState.Owner.HeldItems.Contains(bomb))
-            //                                    {
-            //                                        refreshState.Owner.HeldItems.Remove(bomb);
-            //                                        break;
-            //                                    }
-            //                                    else if (refreshState.Owner.CarriedItems.Contains(bomb))
-            //                                    {
-            //                                        refreshState.Owner.CarriedItems.Remove(bomb);
-            //                                    }
-            //                                }
-            //                            }
-            //                        });
-
-            //                        // Checks if the item needs to be reloaded
-            //                        ((CreatureTarget)alchemicalShotAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
-            //                        {
-            //                            if (!IsItemLoaded(item))
-            //                            {
-            //                                return Usability.NotUsable("Needs to be reloaded.");
-            //                            }
-            //                            else if (bombsWorn.Count == 0)
-            //                            {
-            //                                return Usability.NotUsable("You have no more alchemical bombs.");
-            //                            }
-
-            //                            return Usability.Usable;
-            //                        });
-
-            //                        return alchemicalShotAction;
-            //                    }
-
-            //                    return null;
-            //                };
-            //            }
-            //        };
-
-            //    };
-            //});
+                    return null;
+                }
+            };
+            hitTheDirtFeat.WithPermanentQEffect(hitTheDirtFeat.FlavorText, delegate (QEffect self)
+            {
+                self.YouAreTargeted = async (QEffect hitTheDirtEffect, CombatAction action) =>
+                {
+                    if (hitTheDirtEffect.Owner.HasLineOfEffectTo(action.Owner.Occupies) < CoverKind.Blocked && action.Owner.VisibleToHumanPlayer && await hitTheDirtEffect.Owner.Battle.AskForConfirmation(hitTheDirtEffect.Owner, IllustrationName.Reaction, "Use reaction to gain +2 circumstance bonus to AC for this attack then leap and fall prone? ", "Use reaction"))
+                    {
+                        hitTheDirtEffect.Owner.AddQEffect(circumstanceBonus);
+                    }
+                };
+                self.AfterYouAreTargeted = async (QEffect cleanupEffects, CombatAction action) =>
+                {
+                    cleanupEffects.Owner.RemoveAllQEffects(qe => qe == circumstanceBonus);
+                    cleanupEffects.Owner.AddQEffect(QEffect.Prone());
+                    await CommonCombatActions.Leap(cleanupEffects.Owner).AllExecute();
+                };
+            });
         }
 
         /// <summary>

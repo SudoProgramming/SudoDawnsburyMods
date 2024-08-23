@@ -242,8 +242,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             AddPairedShotsLogic(pairedShotsFeat);
             yield return pairedShotsFeat;
 
-            // TODO
-            yield return new TrueFeat(RunningReloadFeatName, 4, "You can reload your weapon on the move.", "You Stride, Step, or Sneak, then Interact to reload.", [GunslingerTrait]).WithActionCost(1);
+            TrueFeat runningReloadFeat = new TrueFeat(RunningReloadFeatName, 4, "You can reload your weapon on the move.", "You Stride, Step, or Sneak, then Interact to reload.", [GunslingerTrait]).WithActionCost(1);
+            AddRunningReloadLogic(runningReloadFeat);
+            yield return runningReloadFeat;
         }
 
         /// <summary>
@@ -576,6 +577,46 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     cleanupEffects.Owner.AddQEffect(QEffect.Prone());
                     await CommonCombatActions.Leap(cleanupEffects.Owner).AllExecute();
                 };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Running Reload feat
+        /// </summary>
+        /// <param name="runningReloadFeat">The Running Reload true feat object</param>
+        private static void AddRunningReloadLogic(TrueFeat runningReloadFeat)
+        {
+            runningReloadFeat.WithOnCreature(creature =>
+            {
+
+                creature.AddQEffect(new QEffect()
+                {
+                    StateCheck = (QEffect permanentState) =>
+                    {
+                        foreach (Item heldItem in permanentState.Owner.HeldItems)
+                        {
+                            permanentState.ProvideMainAction = (QEffect runningReloadEffect) =>
+                            {
+                                if (IsItemFirearmOrCrossbow(heldItem) && !IsItemLoaded(heldItem) && heldItem.WeaponProperties != null)
+                                {
+                                    ActionPossibility runningReloadPossibility = new ActionPossibility(new CombatAction(runningReloadEffect.Owner, new SideBySideIllustration(IllustrationName.RightArrow, IllustrationName.Action), "Running Reload", [GunslingerTrait, Trait.Basic], runningReloadFeat.RulesText, Target.Self()).WithActionCost(1).WithEffectOnSelf(async (action, self) =>
+                                    {
+                                        if (!await self.StrideAsync("Choose where to Stride with Running Reload.", allowCancel: true))
+                                        {
+                                            action.RevertRequested = true;
+                                        }
+                                        else
+                                        {
+                                            await self.CreateReload(heldItem).AllExecute();
+                                        }
+                                    }));
+                                }
+
+                                return null;
+                            };
+                        }
+                    }
+                });
             });
         }
 

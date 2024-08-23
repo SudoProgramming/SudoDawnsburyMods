@@ -90,7 +90,7 @@ This module adds the Gunslinger class. This is a Work in Progress:
 - [ ] Risky Reload
 - [X] Quick Draw
 - [X] Warning Shot
-- [ ] Alchemical Shot
+- [X] Alchemical Shot
 - [ ] Instant Backup
 - [X] Paired Shots
     - RAW Difference: The precision damage is applied from both strikes.

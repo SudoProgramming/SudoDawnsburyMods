@@ -94,7 +94,7 @@ This module adds the Gunslinger class. This is a Work in Progress:
 - [ ] Instant Backup
 - [X] Paired Shots
     - RAW Difference: The precision damage is applied from both strikes.
-- [ ] Running Reload
+- [X] Running Reload
 
 ### Sub Class Feats
 - [ ] Way of the Drifter

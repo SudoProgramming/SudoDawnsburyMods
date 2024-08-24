@@ -532,11 +532,20 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         alchemicalShotAction.Illustration = new SideBySideIllustration(item.Illustration, bomb.Illustration);
                                         alchemicalShotAction.Description = alchemicalShotFeat.RulesText;
 
-                                        alchemicalShotAction.WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
+                                        alchemicalShotAction.WithEffectOnEachTarget(async delegate (CombatAction pistolTwirl, Creature attacker, Creature defender, CheckResult result)
                                         {
-                                            if (targets.ChosenCreature != null)
+                                            if (defender != null)
                                             {
-                                                targets.ChosenCreature.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
+                                                
+                                                if (result >= CheckResult.Success)
+                                                {
+                                                    defender.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
+                                                }
+                                                else if (result == CheckResult.CriticalFailure)
+                                                {
+                                                    attacker.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
+                                                    item.Traits.Add(Firearms.MisfiredTrait);
+                                                }
                                                 DischargeItem(item);
                                                 for (int i = 0; i < permanentState.Owner.HeldItems.Count; i++)
                                                 {
@@ -551,6 +560,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                                     }
                                                 }
                                             }
+
                                         });
 
                                         // Checks if the item needs to be reloaded

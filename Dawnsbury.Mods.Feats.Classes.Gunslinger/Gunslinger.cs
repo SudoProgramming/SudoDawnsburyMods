@@ -23,6 +23,14 @@ using System.Linq;
 using System;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
 using Dawnsbury.Core.Mechanics.Damage;
+using System.Formats.Asn1;
+using Dawnsbury.Core.Coroutines.Requests;
+using System.Collections;
+using Dawnsbury.Core.CharacterBuilder.Spellcasting;
+using Dawnsbury.Core.Coroutines.Options;
+using Dawnsbury.Core.Intelligence;
+using System.Threading.Tasks;
+using System.Text;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -140,6 +148,26 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         public static readonly Trait GunslingerTrait = ModManager.RegisterTrait("Gunslinger", new TraitProperties("Gunslinger", relevant: true) { IsClassTrait = true });
 
         /// <summary>
+        /// The Hit the Dirt persistent QEffect ID
+        /// </summary>
+        public static readonly QEffectId HitTheDirtQEID = ModManager.RegisterEnumMember<QEffectId>("Hit the Dirt QEID");
+
+        /// <summary>
+        /// The Sword and Pistol Ranged Buff persistent QEffect ID 
+        /// </summary>
+        public static readonly QEffectId SwordAndPistolRangedBuffQEID = ModManager.RegisterEnumMember<QEffectId>("Sword and Pistol - Ranged QEID");
+
+        /// <summary>
+        /// The Sword and Pistol Melee Buff persistent QEffect ID 
+        /// </summary>
+        public static readonly QEffectId SwordAndPistolMeleeBuffQEID = ModManager.RegisterEnumMember<QEffectId>("Sword and Pistol - Melee QEID");
+
+        /// <summary>
+        /// A technical trait for does not provoke
+        /// </summary>
+        private static readonly Trait TemporaryDoesNotProvokeTrait = ModManager.RegisterTrait("Temporary Does Not Provoke", new TraitProperties("Temporary Does Not Provoke", false));
+
+        /// <summary>
         /// Creates the Gunslinger Feats
         /// </summary>
         /// <returns>The Enumerable of Gunslinger Feats</returns>
@@ -210,8 +238,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             AddHitTheDirtLogic(hitTheDirtFeat);
             yield return hitTheDirtFeat;
 
-            // TODO
-            yield return new TrueFeat(SwordAndPistolFeatName, 1, "You're comfortable wielding a firearm or crossbow in one hand and a melee weapon in the other, combining melee attacks with shots from the firearm.", "When you make a successful ranged Strike against an enemy within your reach with your one-handed firearm or one-handed crossbow, that enemy is flat-footed against your next melee attack with a one-handed melee weapon.\n\nWhen you make a successful melee Strike against an enemy with your one-handed melee weapon, the next ranged Strike you make against that enemy with a one-handed firearm or one-handed crossbow doesn't trigger reactions that would trigger on a ranged attack, such as Attack of Opportunity. Either of these benefits is lost if not used by the end of your next turn.", [GunslingerTrait]);
+            TrueFeat swordAndPistolFeat = new TrueFeat(SwordAndPistolFeatName, 1, "You're comfortable wielding a firearm or crossbow in one hand and a melee weapon in the other, combining melee attacks with shots from the firearm.", "When you make a successful ranged Strike against an enemy within your reach with your one-handed firearm or one-handed crossbow, that enemy is flat-footed against your next melee attack with a one-handed melee weapon.\n\nWhen you make a successful melee Strike against an enemy with your one-handed melee weapon, the next ranged Strike you make against that enemy with a one-handed firearm or one-handed crossbow doesn't trigger reactions that would trigger on a ranged attack, such as Attack of Opportunity. Either of these benefits is lost if not used by the end of your next turn.", [GunslingerTrait]);
+            AddSwordAndPistolLogic(swordAndPistolFeat);
+            yield return swordAndPistolFeat;
 
             //// TODO
             //yield return new TrueFeat(DefensiveArmamentsFeatName, 2, "You use bulky firearms or crossbows to shield your body from your foes' attacks.", "Any two-handed firearms and two-handed crossbows you wield gain the parry trait. If an appropriate weapon already has the parry trait, increase the circumstance bonus to AC it grants when used to parry from +1 to +2.", [GunslingerTrait]);
@@ -307,7 +336,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             if (target != null)
                             {
                                 bool shouldDodge = true;
-                                if (target.OwningFaction != target.Battle.You)
+                                if (!target.OwningFaction.IsHumanControlled)
                                 {
                                     if (cover <= 0 && target.WieldsItem(Trait.Ranged))
                                     {
@@ -550,32 +579,43 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="hitTheDirtFeat">The Hit the Dirt true feat object</param>
         private static void AddHitTheDirtLogic(TrueFeat hitTheDirtFeat)
         {
-            QEffect circumstanceBonus = new QEffect(ExpirationCondition.ExpiresAtEndOfAnyTurn)
-            {
-                BonusToDefenses = (QEffect q, CombatAction? action, Defense defense) =>
-                {
-                    if (action.HasTrait(Trait.Ranged))
-                    {
-                        return new Bonus(2, BonusType.Circumstance, "Hit the Dirt", true);
-                    }
-
-                    return null;
-                }
-            };
             hitTheDirtFeat.WithPermanentQEffect(hitTheDirtFeat.FlavorText, delegate (QEffect self)
             {
                 self.YouAreTargeted = async (QEffect hitTheDirtEffect, CombatAction action) =>
                 {
-                    if (hitTheDirtEffect.Owner.HasLineOfEffectTo(action.Owner.Occupies) < CoverKind.Blocked && action.Owner.VisibleToHumanPlayer && await hitTheDirtEffect.Owner.Battle.AskForConfirmation(hitTheDirtEffect.Owner, IllustrationName.Reaction, "Use reaction to gain +2 circumstance bonus to AC for this attack then leap and fall prone? ", "Use reaction"))
+                    if (hitTheDirtEffect.Owner.HasLineOfEffectTo(action.Owner.Occupies) < CoverKind.Blocked && action.Owner.VisibleToHumanPlayer && action.HasTrait(Trait.Ranged) && await hitTheDirtEffect.Owner.Battle.AskToUseReaction(hitTheDirtEffect.Owner, "Use reaction to gain +2 circumstance bonus to AC for this attack then leap and fall prone?"))
                     {
-                        hitTheDirtEffect.Owner.AddQEffect(circumstanceBonus);
+                        hitTheDirtEffect.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfAnyTurn)
+                        {
+                            Id = HitTheDirtQEID,
+                            BonusToDefenses = (QEffect q, CombatAction? action, Defense defense) =>
+                            {
+                                if (action?.HasTrait(Trait.Ranged) ?? false)
+                                {
+                                    return new Bonus(2, BonusType.Circumstance, "Hit the Dirt", true);
+                                }
+
+                                return null;
+                            }
+                        });
                     }
                 };
                 self.AfterYouAreTargeted = async (QEffect cleanupEffects, CombatAction action) =>
                 {
-                    cleanupEffects.Owner.RemoveAllQEffects(qe => qe == circumstanceBonus);
-                    cleanupEffects.Owner.AddQEffect(QEffect.Prone());
-                    await CommonCombatActions.Leap(cleanupEffects.Owner).AllExecute();
+                    if (cleanupEffects.Owner.HasEffect(HitTheDirtQEID))
+                    {
+                        cleanupEffects.Owner.RemoveAllQEffects(qe => qe.Id == HitTheDirtQEID);
+                        int leapDistance = ((cleanupEffects.Owner.Speed >= 6) ? 3 : 2) + (cleanupEffects.Owner.HasEffect(QEffectId.PowerfulLeap) ? 1 : 0);
+                        CombatAction leapAction = CommonCombatActions.Leap(cleanupEffects.Owner);
+                        leapAction.EffectOnChosenTargets = null;
+                        Tile? tileToLeapTo = await GetHitTheDirtTileAsync(cleanupEffects.Owner, leapAction, leapDistance);
+                        if (tileToLeapTo != null)
+                        {
+                            await cleanupEffects.Owner.SingleTileMove(tileToLeapTo, leapAction);
+                        }
+                        
+                        cleanupEffects.Owner.AddQEffect(QEffect.Prone());
+                    }
                 };
             });
         }
@@ -597,9 +637,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         {
                             permanentState.ProvideMainAction = (QEffect runningReloadEffect) =>
                             {
-                                if (IsItemFirearmOrCrossbow(heldItem) && !IsItemLoaded(heldItem) && heldItem.WeaponProperties != null)
+                                if (IsItemFirearmOrCrossbow(heldItem) && (!IsItemLoaded(heldItem) || IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
                                 {
-                                    ActionPossibility runningReloadPossibility = new ActionPossibility(new CombatAction(runningReloadEffect.Owner, new SideBySideIllustration(IllustrationName.RightArrow, IllustrationName.Action), "Running Reload", [GunslingerTrait, Trait.Basic], runningReloadFeat.RulesText, Target.Self()).WithActionCost(1).WithEffectOnSelf(async (action, self) =>
+                                    return new ActionPossibility(new CombatAction(runningReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.WarpStep), "Running Reload", [GunslingerTrait, Trait.Basic], runningReloadFeat.RulesText, Target.Self()).WithActionCost(1).WithEffectOnSelf(async (action, self) =>
                                     {
                                         if (!await self.StrideAsync("Choose where to Stride with Running Reload.", allowCancel: true))
                                         {
@@ -607,7 +647,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         }
                                         else
                                         {
-                                            await self.CreateReload(heldItem).AllExecute();
+                                            if (heldItem.HasTrait(Firearms.DoubleBarrelTrait))
+                                            {
+                                                heldItem.EphemeralItemProperties.AmmunitionLeftInMagazine++;
+                                                heldItem.EphemeralItemProperties.NeedsReload = false;
+
+                                            }
+                                            else
+                                            {
+                                                await self.CreateReload(heldItem).WithActionCost(0).AllExecute();
+                                            }
                                         }
                                     }));
                                 }
@@ -617,6 +666,84 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         }
                     }
                 });
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Sword and Pistol feat
+        /// </summary>
+        /// <param name="swordAndPistolFeat">The Sword and Pistol true feat object</param>
+        private static void AddSwordAndPistolLogic(TrueFeat swordAndPistolFeat)
+        {
+            swordAndPistolFeat.WithPermanentQEffect(swordAndPistolFeat.FlavorText, delegate (QEffect self)
+            {
+                self.BeforeYourActiveRoll = async (QEffect addingEffects, CombatAction action, Creature defender) =>
+                {
+                    if (action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(Firearms.FirearmTrait) || action.HasTrait(Trait.Crossbow)) && addingEffects.Owner.DistanceTo(defender) == 1 && addingEffects.Owner.QEffects.Count(qe => qe.Id == SwordAndPistolMeleeBuffQEID && qe.Tag != null && qe.Tag == defender) == 0)
+                    {
+                        addingEffects.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
+                        {
+                            Id = SwordAndPistolMeleeBuffQEID,
+                            CannotExpireThisTurn = true,
+                            Tag = defender,
+                            BeforeYourActiveRoll = async (QEffect rollEffect, CombatAction action, Creature attackedCreature) =>
+                            {
+                                if (action.HasTrait(Trait.Strike) && action.HasTrait(Trait.Melee) && !action.HasTrait(Trait.TwoHanded) && defender == attackedCreature)
+                                {
+                                    QEffect flatFooted = QEffect.FlatFooted("Sword and Pistol");
+                                    flatFooted.ExpiresAt = ExpirationCondition.Immediately;
+                                    attackedCreature.AddQEffect(flatFooted);
+                                    rollEffect.Owner.RemoveAllQEffects(qe => qe.Id == SwordAndPistolMeleeBuffQEID && qe.Tag != null && qe.Tag == defender);
+                                }
+                            }
+                        });
+                    }
+                    else if (action.HasTrait(Trait.Melee) && !action.HasTrait(Trait.TwoHanded) && addingEffects.Owner.QEffects.Count(qe => qe.Id == SwordAndPistolRangedBuffQEID && qe.Tag != null && qe.Tag == defender) == 0)
+                    {
+                        addingEffects.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
+                        {
+                            Id = SwordAndPistolRangedBuffQEID,
+                            CannotExpireThisTurn = true,
+                            Tag = defender,
+                            StateCheck = (QEffect q) =>
+                            {
+                                if (addingEffects.Owner.HasEffect(SwordAndPistolRangedBuffQEID))
+                                {
+                                    foreach (Item item in addingEffects.Owner.HeldItems.Concat(addingEffects.Owner.CarriedItems))
+                                    {
+                                        if (!item.HasTrait(Trait.DoesNotProvoke) && item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.TwoHanded) && (item.HasTrait(Firearms.FirearmTrait) || item.HasTrait(Trait.Crossbow)))
+                                        {
+                                            item.Traits.Add(TemporaryDoesNotProvokeTrait);
+                                            item.Traits.Add(Trait.DoesNotProvoke);
+                                        }
+                                    }
+                                }
+                            },
+                            YouBeginAction = async (QEffect startAction, CombatAction action) => 
+                            {
+                                if (action.ChosenTargets.ChosenCreature != null && action.ChosenTargets.ChosenCreature != defender)
+                                {
+                                    await startAction.Owner.ProvokeOpportunityAttacks(action);
+                                }
+                            },
+                            BeforeYourActiveRoll = async (QEffect rollEffect, CombatAction action, Creature attackedCreature) =>
+                            {
+                                if (action.HasTrait(Trait.Strike) && action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(Firearms.FirearmTrait) || action.HasTrait(Trait.Crossbow)) && defender == attackedCreature)
+                                {
+                                    foreach (Item item in addingEffects.Owner.HeldItems.Concat(addingEffects.Owner.CarriedItems))
+                                    {
+                                        if (item.HasTrait(TemporaryDoesNotProvokeTrait))
+                                        {
+                                            item.Traits.Remove(Trait.DoesNotProvoke);
+                                            item.Traits.Remove(TemporaryDoesNotProvokeTrait);
+                                        }
+                                    }
+                                    rollEffect.Owner.RemoveAllQEffects(qe => qe.Id == SwordAndPistolRangedBuffQEID && qe.Tag != null && qe.Tag == defender);
+                                }
+                            }
+                        });;
+                    }
+                };
             });
         }
 
@@ -676,6 +803,22 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         }
 
         /// <summary>
+        /// Determines if the item has a multi ammo reload and if it is reloadable
+        /// </summary>
+        /// <param name="item">The item being check</param>
+        /// <returns>True if the item isn't a multi ammo weapon or if the multi ammo weapon is reloadable.</returns>
+        private static bool IsMultiAmmoWeaponReloadable(Item item)
+        {
+            int maxMagazineSize = item.HasTrait(Firearms.DoubleBarrelTrait) ? 2 : 5;
+            if ((item.HasTrait(Firearms.DoubleBarrelTrait) || item.HasTrait(Trait.Repeating)) && item.EphemeralItemProperties.AmmunitionLeftInMagazine == maxMagazineSize)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Adds any of the given traits if it is missing from the traits
         /// </summary>
         /// <param name="traits">Traits being added to</param>
@@ -706,6 +849,54 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
                 item.EphemeralItemProperties.AmmunitionLeftInMagazine--;
             }
+        }
+
+        /// <summary>
+        /// Gets a selected tile for Hit the Dirt asyncronisly
+        /// </summary>
+        /// <param name="self">The creature leaping</param>
+        /// <param name="leapAction">The leap action</param>
+        /// <param name="distance">The allowed leap distance</param>
+        /// <returns>The tile for hit the dirt</returns>
+        public static async Task<Tile?> GetHitTheDirtTileAsync(Creature self, CombatAction leapAction, int distance)
+        {
+            List<Tile> tiles = self.Battle.Map.AllTiles.Where(tile => self.Occupies.DistanceTo(tile) <= distance && tile.IsFree).ToList();
+            List<Option> leapOptions = new List<Option>();
+            Dictionary<Option, Tile> selectedTileMapping = new Dictionary<Option, Tile>();
+            foreach (Tile tile in tiles)
+            {
+                Option tileOption = leapAction.CreateUseOptionOn(tile).WithIllustration(leapAction.Illustration);
+                if (tileOption != null)
+                {
+                    leapOptions.Add(tileOption);
+                    selectedTileMapping.Add(tileOption, tile);
+                }
+            }
+
+
+
+            Option? selectedOption = (await self.Battle.SendRequest(new AdvancedRequest(self, "Choose the tile to leap to.", leapOptions)
+            {
+                IsMainTurn = false,
+                IsStandardMovementRequest = false,
+                TopBarIcon = IllustrationName.WarpStep,
+                TopBarText = "Choose the tile to leap to."
+            })).ChosenOption;
+
+            if (selectedOption != null)
+            {
+                if (selectedOption is CancelOption cancel)
+                {
+                    return null;
+                }
+
+                if (selectedTileMapping.ContainsKey(selectedOption))
+                {
+                    return selectedTileMapping[selectedOption];
+                }
+            }
+
+            return null;
         }
     }
 }

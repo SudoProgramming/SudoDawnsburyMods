@@ -30,6 +30,7 @@ using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Core.Coroutines.Options;
 using Dawnsbury.Core.Intelligence;
 using System.Threading.Tasks;
+using System.Text;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -160,6 +161,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// The Sword and Pistol Melee Buff persistent QEffect ID 
         /// </summary>
         public static readonly QEffectId SwordAndPistolMeleeBuffQEID = ModManager.RegisterEnumMember<QEffectId>("Sword and Pistol - Melee QEID");
+
+        /// <summary>
+        /// A technical trait for does not provoke
+        /// </summary>
+        private static readonly Trait TemporaryDoesNotProvokeTrait = ModManager.RegisterTrait("Temporary Does Not Provoke", new TraitProperties("Temporary Does Not Provoke", false));
 
         /// <summary>
         /// Creates the Gunslinger Feats
@@ -330,7 +336,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             if (target != null)
                             {
                                 bool shouldDodge = true;
-                                if (target.OwningFaction != target.Battle.You)
+                                if (!target.OwningFaction.IsHumanControlled)
                                 {
                                     if (cover <= 0 && target.WieldsItem(Trait.Ranged))
                                     {
@@ -577,14 +583,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.YouAreTargeted = async (QEffect hitTheDirtEffect, CombatAction action) =>
                 {
-                    if (hitTheDirtEffect.Owner.HasLineOfEffectTo(action.Owner.Occupies) < CoverKind.Blocked && action.Owner.VisibleToHumanPlayer && action.HasTrait(Trait.Melee) && await hitTheDirtEffect.Owner.Battle.AskToUseReaction(hitTheDirtEffect.Owner, "Use reaction to gain +2 circumstance bonus to AC for this attack then leap and fall prone?"))
+                    if (hitTheDirtEffect.Owner.HasLineOfEffectTo(action.Owner.Occupies) < CoverKind.Blocked && action.Owner.VisibleToHumanPlayer && action.HasTrait(Trait.Ranged) && await hitTheDirtEffect.Owner.Battle.AskToUseReaction(hitTheDirtEffect.Owner, "Use reaction to gain +2 circumstance bonus to AC for this attack then leap and fall prone?"))
                     {
                         hitTheDirtEffect.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfAnyTurn)
                         {
                             Id = HitTheDirtQEID,
                             BonusToDefenses = (QEffect q, CombatAction? action, Defense defense) =>
                             {
-                                if (action?.HasTrait(Trait.Melee) ?? false) // Set to Melee for testing
+                                if (action?.HasTrait(Trait.Ranged) ?? false)
                                 {
                                     return new Bonus(2, BonusType.Circumstance, "Hit the Dirt", true);
                                 }
@@ -671,43 +677,71 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         {
             swordAndPistolFeat.WithPermanentQEffect(swordAndPistolFeat.FlavorText, delegate (QEffect self)
             {
-                self.BeforeYourActiveRoll = (QEffect addingEffects, CombatAction action, Creature defender) =>
+                self.BeforeYourActiveRoll = async (QEffect addingEffects, CombatAction action, Creature defender) =>
                 {
-                    if (action.HasTrait(Trait.Ranged))
+                    if (action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(Firearms.FirearmTrait) || action.HasTrait(Trait.Crossbow)) && addingEffects.Owner.DistanceTo(defender) == 1 && addingEffects.Owner.QEffects.Count(qe => qe.Id == SwordAndPistolMeleeBuffQEID && qe.Tag != null && qe.Tag == defender) == 0)
                     {
-                        addingEffects.Owner.AddQEffect(new QEffect(ExpirationCondition.CountsDownAtEndOfYourTurn)
+                        addingEffects.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
                         {
                             Id = SwordAndPistolMeleeBuffQEID,
-                            ExpiresAt = ExpirationCondition.CountsDownAtStartOfSourcesTurn,
-                            RoundsLeft = 2,
-                        });
-                    }
-                    else if (action.HasTrait(Trait.Melee))
-                    {
-                        addingEffects.Owner.AddQEffect(new QEffect(ExpirationCondition.CountsDownAtEndOfYourTurn)
-                        {
-                            Id = SwordAndPistolMeleeBuffQEID,
-                            ExpiresAt = ExpirationCondition.CountsDownAtStartOfSourcesTurn,
-                            RoundsLeft = 2,
-                            BeforeYourActiveRoll = (QEffect rollEffect, CombatAction action, Creature attackedCreature) =>
+                            CannotExpireThisTurn = true,
+                            Tag = defender,
+                            BeforeYourActiveRoll = async (QEffect rollEffect, CombatAction action, Creature attackedCreature) =>
                             {
-                                if (action.HasTrait(Trait.Strike) && action.HasTrait(Trait.Melee) && defender == attackedCreature)
-                                { 
-                                    
+                                if (action.HasTrait(Trait.Strike) && action.HasTrait(Trait.Melee) && !action.HasTrait(Trait.TwoHanded) && defender == attackedCreature)
+                                {
+                                    QEffect flatFooted = QEffect.FlatFooted("Sword and Pistol");
+                                    flatFooted.ExpiresAt = ExpirationCondition.Immediately;
+                                    attackedCreature.AddQEffect(flatFooted);
+                                    rollEffect.Owner.RemoveAllQEffects(qe => qe.Id == SwordAndPistolMeleeBuffQEID && qe.Tag != null && qe.Tag == defender);
                                 }
-
-                                return null;
                             }
                         });
                     }
-
-                    return null;
-                };
-                self.AfterYouMakeAttackRoll = (QEffect afterAttackEffect, CheckBreakdownResult result) =>
-                {
-                    if (result.CheckResult <= CheckResult.Failure)
+                    else if (action.HasTrait(Trait.Melee) && !action.HasTrait(Trait.TwoHanded) && addingEffects.Owner.QEffects.Count(qe => qe.Id == SwordAndPistolRangedBuffQEID && qe.Tag != null && qe.Tag == defender) == 0)
                     {
-                        afterAttackEffect.Owner.RemoveAllQEffects(qe => qe.Id == SwordAndPistolMeleeBuffQEID || qe.Id == SwordAndPistolRangedBuffQEID);
+                        addingEffects.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
+                        {
+                            Id = SwordAndPistolRangedBuffQEID,
+                            CannotExpireThisTurn = true,
+                            Tag = defender,
+                            StateCheck = (QEffect q) =>
+                            {
+                                if (addingEffects.Owner.HasEffect(SwordAndPistolRangedBuffQEID))
+                                {
+                                    foreach (Item item in addingEffects.Owner.HeldItems.Concat(addingEffects.Owner.CarriedItems))
+                                    {
+                                        if (!item.HasTrait(Trait.DoesNotProvoke) && item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.TwoHanded) && (item.HasTrait(Firearms.FirearmTrait) || item.HasTrait(Trait.Crossbow)))
+                                        {
+                                            item.Traits.Add(TemporaryDoesNotProvokeTrait);
+                                            item.Traits.Add(Trait.DoesNotProvoke);
+                                        }
+                                    }
+                                }
+                            },
+                            YouBeginAction = async (QEffect startAction, CombatAction action) => 
+                            {
+                                if (action.ChosenTargets.ChosenCreature != null && action.ChosenTargets.ChosenCreature != defender)
+                                {
+                                    await startAction.Owner.ProvokeOpportunityAttacks(action);
+                                }
+                            },
+                            BeforeYourActiveRoll = async (QEffect rollEffect, CombatAction action, Creature attackedCreature) =>
+                            {
+                                if (action.HasTrait(Trait.Strike) && action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(Firearms.FirearmTrait) || action.HasTrait(Trait.Crossbow)) && defender == attackedCreature)
+                                {
+                                    foreach (Item item in addingEffects.Owner.HeldItems.Concat(addingEffects.Owner.CarriedItems))
+                                    {
+                                        if (item.HasTrait(TemporaryDoesNotProvokeTrait))
+                                        {
+                                            item.Traits.Remove(Trait.DoesNotProvoke);
+                                            item.Traits.Remove(TemporaryDoesNotProvokeTrait);
+                                        }
+                                    }
+                                    rollEffect.Owner.RemoveAllQEffects(qe => qe.Id == SwordAndPistolRangedBuffQEID && qe.Tag != null && qe.Tag == defender);
+                                }
+                            }
+                        });;
                     }
                 };
             });

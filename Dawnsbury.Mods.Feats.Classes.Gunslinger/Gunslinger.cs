@@ -31,6 +31,7 @@ using Dawnsbury.Core.Coroutines.Options;
 using Dawnsbury.Core.Intelligence;
 using System.Threading.Tasks;
 using System.Text;
+using Dawnsbury.Audio;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -248,8 +249,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             // TODO
             yield return new TrueFeat(FakeOutFeatName, 2, "With a skilled flourish of your weapon, you force an enemy to acknowledge you as a threat.", "{b}Trigger{/b} An ally is about to use an action that requires an attack roll, targeting a creature within your weapon's first range increment.\n\n{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nMake an attack roll to Aid the triggering attack. If you dealt damage to that enemy since the start of your last turn, you gain a +1 circumstance bonus to this roll.\n\n{i}Aid{/i}\n\n{b}Critical Success{/b} Your ally a +2 circumstance bonus\n{b}Success{/b} Your ally a +1 circumstance bonus\n{b}Critical Failure{/b} Your ally a -1 circumstance penalty\n", [GunslingerTrait, Trait.Visual]).WithActionCost(-2);
 
-            // TODO
-            yield return new TrueFeat(PistolTwirlFeatName, 2, "Your quick gestures and flair for performance distract your opponent, leaving it vulnerable to your follow-up attacks.", "{b}Requirements{/b} You're wielding a loaded one-handed ranged weapon.\n\nYou Feint against an opponent within the required weapon's first range increment, rather than an opponent within melee reach. If you succeed, the foe is flat-footed against your melee and ranged attacks, rather than only your melee attacks. On a critical failure, you're flat-footed against the target's melee and ranged attacks, rather than only its melee attacks.", [GunslingerTrait]).WithActionCost(1).WithPrerequisite((CalculatedCharacterSheetValues sheet) => (sheet.Proficiencies.AllProficiencies[Trait.Deception] >= Proficiency.Trained), "trained in Deception");
+
+            TrueFeat pistolTwirlFeat = new TrueFeat(PistolTwirlFeatName, 2, "Your quick gestures and flair for performance distract your opponent, leaving it vulnerable to your follow-up attacks.", "{b}Requirements{/b} You're wielding a loaded one-handed ranged weapon.\n\nYou Feint against an opponent within the required weapon's first range increment, rather than an opponent within melee reach. If you succeed, the foe is flat-footed against your melee and ranged attacks, rather than only your melee attacks. On a critical failure, you're flat-footed against the target's melee and ranged attacks, rather than only its melee attacks.", [GunslingerTrait]).WithActionCost(1);
+            pistolTwirlFeat.WithPrerequisite((CalculatedCharacterSheetValues sheet) => (sheet.Proficiencies.AllProficiencies[Trait.Deception] >= Proficiency.Trained), "trained in Deception");
+            AddPistolTwirlLogic(pistolTwirlFeat);
+            yield return pistolTwirlFeat;
 
             // TODO
             yield return new TrueFeat(RiskyReloadFeatName, 2, "You've practiced a technique for rapidly reloading your firearm, but attempting to use this technique is a dangerous gamble with your firearm's functionality.", "{b}Requirements{/b} You're wielding a firearm.\n\nInteract to reload a firearm, then make a Strike with that firearm. If the Strike fails, the firearm misfires. " + missfireDescriptionText, [GunslingerTrait, Trait.Flourish]).WithActionCost(1);
@@ -299,7 +303,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
-                    if (IsItemFirearmOrCrossbow(item) && IsItemLoaded(item) && item.WeaponProperties != null)
+                    if (IsItemFirearmOrCrossbow(item) && IsItemLoaded(item) && !item.HasTrait(Trait.TwoHanded) && item.WeaponProperties != null)
                     {
                         QEffect technicalEffectForOncePerRound = new QEffect("Technical Cover Fire", "[this condition has no description]")
                         {
@@ -743,6 +747,78 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             }
                         });;
                     }
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Pistol Twirl feat
+        /// </summary>
+        /// <param name="pistolTwirlFeat">The Pistol Twirl true feat object</param>
+        private static void AddPistolTwirlLogic(TrueFeat pistolTwirlFeat)
+        {
+            pistolTwirlFeat.WithPermanentQEffect(pistolTwirlFeat.FlavorText, delegate (QEffect self)
+            {
+                self.ProvideStrikeModifier = (Item item) =>
+                {
+                    if (IsItemFirearmOrCrossbow(item) && IsItemLoaded(item) && item.WeaponProperties != null)
+                    {
+                        CombatAction pistolTwirlAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.Feint), "Pistol Twirl", [GunslingerTrait], pistolTwirlFeat.RulesText, Target.Ranged(item.WeaponProperties.RangeIncrement)).WithActionCost(1)
+                        .WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Deception), Checks.DefenseDC(Defense.Perception)))
+                        .WithEffectOnEachTarget(async delegate (CombatAction pistolTwirl, Creature attacker, Creature defender, CheckResult result)
+                        {
+                            switch (result)
+                            {
+                                case CheckResult.CriticalSuccess:
+                                    defender.AddQEffect(new QEffect(ExpirationCondition.CountsDownAtEndOfYourTurn)
+                                    {
+                                        Value = 2,
+                                        YouAreTargeted = async (QEffect targeted, CombatAction action) =>
+                                        {
+                                            if (action.Owner != null && action.Owner == attacker && (action.HasTrait(Trait.Melee) || action.HasTrait(Trait.Ranged)))
+                                            {
+                                                QEffect flatFooted = QEffect.FlatFooted("Pistol Twirl");
+                                                flatFooted.ExpiresAt = ExpirationCondition.Immediately;
+                                                defender.AddQEffect(flatFooted);
+                                            }
+                                        }
+                                    });
+                                    break;
+                                case CheckResult.Success:
+                                    defender.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfAnyTurn)
+                                    {
+                                        YouAreTargeted = async (QEffect targeted, CombatAction action) =>
+                                        {
+                                            if (action.Owner != null && action.Owner == attacker && (action.HasTrait(Trait.Melee) || action.HasTrait(Trait.Ranged)))
+                                            {
+                                                QEffect flatFooted = QEffect.FlatFooted("Pistol Twirl");
+                                                flatFooted.ExpiresAt = ExpirationCondition.Immediately;
+                                                defender.AddQEffect(flatFooted);
+                                            }
+                                        }
+                                    });
+                                    break;
+                                case CheckResult.CriticalFailure:
+                                    attacker.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
+                                    {
+                                        CannotExpireThisTurn = true,
+                                        YouAreTargeted = async (QEffect targeted, CombatAction action) =>
+                                        {
+                                            if (action.Owner != null && action.Owner == defender && (action.HasTrait(Trait.Melee) || action.HasTrait(Trait.Ranged)))
+                                            {
+                                                QEffect flatFooted = QEffect.FlatFooted("Pistol Twirl");
+                                                flatFooted.ExpiresAt = ExpirationCondition.Immediately;
+                                                attacker.AddQEffect(flatFooted);
+                                            }
+                                        }
+                                    });
+                                    break;
+                            }
+                        });
+                        return pistolTwirlAction;
+                    }
+
+                    return null;
                 };
             });
         }

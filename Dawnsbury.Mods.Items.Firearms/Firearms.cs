@@ -691,62 +691,54 @@ namespace Dawnsbury.Mods.Items.Firearms
             // Adds a QEffect that will track all the logic for the Scatter trait
             if (item.WeaponProperties != null)
             {
-                // Adds Spalsh damage for scatter for everything in 5 ft range
-                string scatterSplashDamage = item.WeaponProperties.DamageDieCount.ToString();
-                item.WeaponProperties.AdditionalSplashDamageFormula = scatterSplashDamage;
-
-                // Adds additional logic scatter damage within 10 feet
-                if (item.HasTrait(Scatter10Trait))
+                // The result of any scatter attack will be 
+                CheckBreakdownResult? lastAttackResult = null;
+                self.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
                 {
-                    // The result of any scatter 10 attack will be 
-                    CheckBreakdownResult? lastAttackResult = null;
-                    self.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
+                    // The last attack result will be saved here
+                    AfterYouMakeAttackRoll = async (QEffect self, CheckBreakdownResult result) =>
                     {
-                        // The last attack result will be saved here
-                        AfterYouMakeAttackRoll = async (QEffect self, CheckBreakdownResult result) =>
-                        {
-                            lastAttackResult = result;
-                        },
+                        lastAttackResult = result;
+                    },
 
-                        // After a strike with the scatter 10 ft item the targeted crature is looked at
-                        AfterYouTakeAction = async (QEffect self, CombatAction action) =>
+                    // After a strike with the scatter item the targeted crature is looked at
+                    AfterYouTakeAction = async (QEffect self, CombatAction action) =>
+                    {
+                        if (action.Item == item)
                         {
-                            if (action.Item == item)
+                            if ((lastAttackResult == null || (lastAttackResult.CheckResult == CheckResult.Success || lastAttackResult.CheckResult == CheckResult.CriticalSuccess) && action.Name.ToLower().Contains("strike") && action.ChosenTargets.ChosenCreature != null && item.WeaponProperties != null))
                             {
-                                if ((lastAttackResult == null || (lastAttackResult.CheckResult == CheckResult.Success || lastAttackResult.CheckResult == CheckResult.CriticalSuccess) && action.Name.ToLower().Contains("strike") && action.ChosenTargets.ChosenCreature != null && item.WeaponProperties != null))
+                                Creature? targetCreature = action.ChosenTargets.ChosenCreature;
+                                if (targetCreature != null)
                                 {
-                                    Creature? targetCreature = action.ChosenTargets.ChosenCreature;
-                                    if (targetCreature != null)
+                                    // The best damage against the original target, the map, and tile with the targeted creature is saved for the next checks
+                                    List<DamageKind> damageOptions = item.DetermineDamageKinds();
+                                    DamageKind bestDamageToTarget = targetCreature.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(damageOptions);
+                                    Map map = targetCreature.Battle.Map;
+                                    Tile? tile = map.AllTiles.FirstOrDefault(tile => tile.PrimaryOccupant == targetCreature);
+
+
+                                    // Check tile is looped through to see how close it was to the target. If it was exactly 10 feet away the calculated splash damage is applied to any creatures
+                                    if (tile != null)
                                     {
-                                        // The best damage against the original target, the map, and tile with the targeted creature is saved for the next checks
-                                        List<DamageKind> damageOptions = item.DetermineDamageKinds();
-                                        DamageKind bestDamageToTarget = targetCreature.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(damageOptions);
-                                        Map map = targetCreature.Battle.Map;
-                                        Tile? tile = map.AllTiles.FirstOrDefault(tile => tile.PrimaryOccupant == targetCreature);
-
-
-                                        // Check tile is looped through to see how close it was to the target. If it was exactly 10 feet away the calculated splash damage is applied to any creatures
-                                        if (tile != null)
+                                        Tile[] tilesToScatterTo = map.AllTiles.Where(tileToCheck => tile.DistanceTo(tileToCheck) <= 2).ToArray();
+                                        foreach (Tile tileToScatterTo in tilesToScatterTo)
                                         {
-                                            Tile[] tilesToScatterTo = map.AllTiles.Where(tileToCheck => tile.DistanceTo(tileToCheck) == 2).ToArray();
-                                            foreach (Tile tileToScatterTo in tilesToScatterTo)
+                                            Creature? potentalSplashTarget = tileToScatterTo.PrimaryOccupant;
+                                            if (potentalSplashTarget != null && potentalSplashTarget is Creature splashTarget && splashTarget != targetCreature)
                                             {
-                                                Creature? potentalSplashTarget = tileToScatterTo.PrimaryOccupant;
-                                                if (potentalSplashTarget != null && potentalSplashTarget is Creature splashTarget)
-                                                {
-                                                    await splashTarget.DealDirectDamage(action, DiceFormula.FromText(scatterSplashDamage), splashTarget, CheckResult.Success, bestDamageToTarget);
-                                                }
+                                                await splashTarget.DealDirectDamage(action, DiceFormula.FromText(item.WeaponProperties.DamageDieCount.ToString()), splashTarget, CheckResult.Success, bestDamageToTarget);
                                             }
                                         }
                                     }
-
-                                    // Updates the last attack to null
-                                    lastAttackResult = null;
                                 }
+
+                                // Updates the last attack to null
+                                lastAttackResult = null;
                             }
                         }
-                    });;
-                }
+                    }
+                });
             }
         }
 

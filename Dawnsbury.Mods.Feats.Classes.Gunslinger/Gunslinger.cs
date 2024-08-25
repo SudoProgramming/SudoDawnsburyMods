@@ -32,6 +32,7 @@ using Dawnsbury.Core.Intelligence;
 using System.Threading.Tasks;
 using System.Text;
 using Dawnsbury.Audio;
+using Dawnsbury.Core.Mechanics.Rules;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -255,8 +256,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             AddPistolTwirlLogic(pistolTwirlFeat);
             yield return pistolTwirlFeat;
 
-            // TODO
-            yield return new TrueFeat(RiskyReloadFeatName, 2, "You've practiced a technique for rapidly reloading your firearm, but attempting to use this technique is a dangerous gamble with your firearm's functionality.", "{b}Requirements{/b} You're wielding a firearm.\n\nInteract to reload a firearm, then make a Strike with that firearm. If the Strike fails, the firearm misfires. " + misfireDescriptionText, [GunslingerTrait, Trait.Flourish]).WithActionCost(1);
+            TrueFeat riskyReloadFeat = new TrueFeat(RiskyReloadFeatName, 2, "You've practiced a technique for rapidly reloading your firearm, but attempting to use this technique is a dangerous gamble with your firearm's functionality.", "{b}Requirements{/b} You're wielding a firearm.\n\nInteract to reload a firearm, then make a Strike with that firearm. If the Strike fails, the firearm misfires. " + misfireDescriptionText, [GunslingerTrait, Trait.Flourish]).WithActionCost(1);
+            AddRiskyReloadLogic(riskyReloadFeat);
+            yield return riskyReloadFeat;
 
             TrueFeat warningShotFeat = new TrueFeat(WarningShotFeatName, 2, "Who needs words when the roar of a gun is so much more succinct?", "{b}Requirements{/b} You're wielding a loaded firearm.\n\nYou attempt to Demoralize a foe by firing your weapon into the air, using the firearm's maximum range rather than the usual range of 30 feet. This check doesn't take the –4 circumstance penalty if the target doesn't share a language with you.", [GunslingerTrait]);
             warningShotFeat.WithActionCost(1).WithPrerequisite((CalculatedCharacterSheetValues sheet) => (sheet.Proficiencies.AllProficiencies[Trait.Intimidation] >= Proficiency.Trained), "trained in Intimidation");
@@ -652,9 +654,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     {
                         foreach (Item heldItem in permanentState.Owner.HeldItems)
                         {
-                            permanentState.ProvideMainAction = (QEffect runningReloadEffect) =>
+                            // Adds an action to clean firearm to remove the Misfired trait
+                            permanentState.ProvideActionIntoPossibilitySection = delegate (QEffect runningReloadEffect, PossibilitySection section)
                             {
-                                if (Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
                                 {
                                     return new ActionPossibility(new CombatAction(runningReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.WarpStep), "Running Reload", [GunslingerTrait, Trait.Basic], runningReloadFeat.RulesText, Target.Self()).WithActionCost(1).WithItem(heldItem).WithEffectOnSelf(async (action, self) =>
                                     {
@@ -774,7 +777,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
-                    if (Firearms.IsItemFirearmOrCrossbow(item) && Firearms.IsItemLoaded(item) && item.WeaponProperties != null)
+                    if (Firearms.IsItemFirearmOrCrossbow(item) && Firearms.IsItemLoaded(item) && !item.HasTrait(Trait.TwoHanded) && item.WeaponProperties != null)
                     {
                         CombatAction pistolTwirlAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.Feint), "Pistol Twirl", [GunslingerTrait], pistolTwirlFeat.RulesText, Target.Ranged(item.WeaponProperties.RangeIncrement)).WithActionCost(1).WithItem(item)
                         .WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Deception), Checks.DefenseDC(Defense.Perception)))
@@ -837,6 +840,57 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         }
 
         /// <summary>
+        /// Adds the logic for the Risky Reload feat
+        /// </summary>
+        /// <param name="riskyReloadFeat">The Risky Reload true feat object</param>
+        private static void AddRiskyReloadLogic(TrueFeat riskyReloadFeat)
+        {
+            riskyReloadFeat.WithOnCreature(creature =>
+            {
+                creature.AddQEffect(new QEffect()
+                {
+                    StateCheck = (QEffect permanentState) =>
+                    {
+                        foreach (Item heldItem in permanentState.Owner.HeldItems)
+                        {
+                            // Adds an action to clean firearm to remove the Misfired trait
+                            permanentState.ProvideActionIntoPossibilitySection = delegate (QEffect riskyReloadEffect, PossibilitySection section)
+                            {
+                                if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                {
+                                    CombatAction basicStrike = riskyReloadEffect.Owner.CreateStrike(heldItem);
+                                    CombatAction riskyReloadAction = new CombatAction(riskyReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.TrueStrike), "Risky Reload", [Trait.Flourish, Trait.Basic], riskyReloadFeat.RulesText, basicStrike.Target).WithActionCost(1).WithItem(heldItem);
+                                    return new ActionPossibility(riskyReloadAction
+                                    .WithEffectOnEachTarget(async delegate (CombatAction riskyReload, Creature attacker, Creature defender, CheckResult result)
+                                    {
+                                        if (heldItem.HasTrait(Firearms.DoubleBarrelTrait))
+                                        {
+                                            heldItem.EphemeralItemProperties.AmmunitionLeftInMagazine++;
+                                            heldItem.EphemeralItemProperties.NeedsReload = false;
+
+                                        }
+                                        else
+                                        {
+                                            await attacker.CreateReload(heldItem).WithActionCost(0).AllExecute();
+                                        }
+
+                                        CheckResult strikeResult = await riskyReload.Owner.MakeStrike(defender, heldItem);
+                                        if (strikeResult <= CheckResult.Failure && !heldItem.HasTrait(Firearms.MisfiredTrait))
+                                        {
+                                            heldItem.Traits.Add(Firearms.MisfiredTrait);
+                                        }
+                                    }));
+                                }
+
+                                return null;
+                            };
+                        }
+                    }
+                });
+            });
+        }
+
+        /// <summary>
         /// Patches Quick Draw to be selectable by Gunslinger
         /// </summary>
         /// <param name="quickDrawFeat">The Quick Draw feat</param>
@@ -865,16 +919,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// Determines if the item has a multi ammo reload and if it is reloadable
         /// </summary>
         /// <param name="item">The item being check</param>
-        /// <returns>True if the item isn't a multi ammo weapon or if the multi ammo weapon is reloadable.</returns>
+        /// <returns>True if the item is a multi ammo reloadable item and false otherwise.</returns>
         private static bool IsMultiAmmoWeaponReloadable(Item item)
         {
             int maxMagazineSize = item.HasTrait(Firearms.DoubleBarrelTrait) ? 2 : 5;
-            if ((item.HasTrait(Firearms.DoubleBarrelTrait) || item.HasTrait(Trait.Repeating)) && item.EphemeralItemProperties.AmmunitionLeftInMagazine == maxMagazineSize)
+            if ((item.HasTrait(Firearms.DoubleBarrelTrait) || item.HasTrait(Trait.Repeating)) && item.EphemeralItemProperties.AmmunitionLeftInMagazine <= maxMagazineSize)
             {
-                return false;
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         /// <summary>

@@ -87,7 +87,7 @@ This module adds the Gunslinger class. This is a Work in Progress:
     - Needs the parry trait added
 - [ ] Fake Out
 - [X] Pistol Twirl
-- [ ] Risky Reload
+- [X] Risky Reload
 - [X] Quick Draw
 - [X] Warning Shot
 - [X] Alchemical Shot

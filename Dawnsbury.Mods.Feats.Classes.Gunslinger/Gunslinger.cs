@@ -34,6 +34,7 @@ using System.Text;
 using Dawnsbury.Audio;
 using Dawnsbury.Core.Mechanics.Rules;
 using static System.Net.Mime.MediaTypeNames;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -909,6 +910,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 {
                     if (GetReloadAIDs().Contains(action.ActionId) && !crossbowCrackshotEffect.Owner.HasEffect(CrossbowCrackShotQEID))
                     {
+                        // HACK: Currently the base Dawnsbury Reload action has no attachment to the item that was reloaded
+                        if (action.Item == null)
+                        {
+                            action.Item = crossbowCrackshotEffect.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(Trait.Crossbow) && Firearms.IsItemLoaded(item));
+                        }
                         if (action.Item != null && action.Item.HasTrait(Trait.Crossbow) && action.Item.WeaponProperties != null) // Base Reload has null action.Item
                         {
                             Item crossbow = action.Item;
@@ -934,9 +940,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     }
 
                                     return null;
-                                }
+                                },
                             });
                         }
+                    }
+                };
+                self.StateCheck = (QEffect state) =>
+                {
+                    QEffect? cbcsEffect = state.Owner.QEffects.FirstOrDefault(qe => qe.Id == CrossbowCrackShotQEID);
+                    if (cbcsEffect != null && cbcsEffect.ExpiresAt == ExpirationCondition.Immediately && cbcsEffect.Tag != null && cbcsEffect.Tag is Item crossbow && crossbow.WeaponProperties != null)
+                    {
+   
+                        state.Owner.RemoveAllQEffects(qe => qe.Id == CrossbowCrackShotQEID);
                     }
                 };
                 self.EndOfAnyTurn = (QEffect endOfTurn) =>
@@ -944,15 +959,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     if (endOfTurn.Owner.HasEffect(CrossbowCrackShotQEID))
                     {
                         QEffect? cbcsEffect = endOfTurn.Owner.QEffects.FirstOrDefault(qe => qe.Id == CrossbowCrackShotQEID);
-                        if (cbcsEffect != null)
-                        {
-                            cbcsEffect.ExpiresAt = ExpirationCondition.Immediately;
-                        }
-                        if (cbcsEffect.Tag != null && cbcsEffect.Tag is Item crossbow && crossbow.WeaponProperties != null)
+                        if (cbcsEffect != null && cbcsEffect.Tag != null && cbcsEffect.Tag is Item crossbow && crossbow.WeaponProperties != null)
                         {
                             crossbow.WeaponProperties.WithRangeIncrement(crossbow.WeaponProperties.RangeIncrement - 2);
                         }
-                       
+                        if (cbcsEffect != null)
+                        {
+                            endOfTurn.Owner.RemoveAllQEffects(qe => qe.Id == CrossbowCrackShotQEID);
+                        }
                     }
                 };
             });

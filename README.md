@@ -42,7 +42,6 @@ This module adds firearm weapons from Guns and Gears along with the traits for t
 - [Harmona Gun](https://2e.aonprd.com/Weapons.aspx?ID=202)
 - [Jezail](https://2e.aonprd.com/Weapons.aspx?ID=203)
 - [Mithral Tree](https://2e.aonprd.com/Weapons.aspx?ID=204)
-    - RAW Difference: Does NOT have the Parry trait. Adding this is in Firearms Future Plans
 - [Pepperbox](https://2e.aonprd.com/Weapons.aspx?ID=205)
 - [Slide Pistol](https://2e.aonprd.com/Weapons.aspx?ID=206)
 
@@ -90,7 +89,8 @@ This module adds the Gunslinger class. This is a Work in Progress:
 - [X] Quick Draw
 - [X] Warning Shot
 - [X] Alchemical Shot
-- [ ] Instant Backup
+- [X] Instant Backup
+    - RAW Difference: You instead gain a free action to draw any weapon (not just one handed) till the end of your turn.
 - [X] Paired Shots
     - RAW Difference: The precision damage is applied from both strikes.
 - [X] Running Reload

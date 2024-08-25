@@ -781,6 +781,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                                 parryTarget.AddQEffect(new QEffect("Parry", "While wielding this weapon, if your proficiency with it is trained or better, you can spend a single action to position your weapon defensively, gaining a +1 circumstance bonus to AC until the start of your next turn.")
                                 {
                                     Id = ParryQEID,
+                                    Tag = item,
                                     ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn,
                                     BonusToDefenses = (QEffect bonusToAC, CombatAction? action, Defense defense) =>
                                     {

@@ -80,7 +80,7 @@ This module adds the Gunslinger class. This is a Work in Progress:
 
 ### Class Feats
 - [X] Cover Fire
-- [ ] Crossbow Crack Shot
+- [X] Crossbow Crack Shot
 - [X] Hit the Dirt
 - [X] Sword and Pistol
 - [ ] Defensive Armaments

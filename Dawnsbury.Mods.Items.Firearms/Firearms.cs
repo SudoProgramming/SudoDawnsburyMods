@@ -115,6 +115,8 @@ namespace Dawnsbury.Mods.Items.Firearms
         /// </summary>
         public static readonly Trait MisfiredTrait = ModManager.RegisterTrait("Misfired", new TraitProperties("Misfired", true, "This firearm was misfired and is now jammed. You must use an Interact action to clear the jam before you can reload the weapon and fire again.", relevantForShortBlock: true));
 
+        public static readonly ActionId DoubleBarrelReloadAID = ModManager.RegisterEnumMember<ActionId>("Double Barrel Realod AID");
+
         // HACK: Repeating is hard coded to 5 round magazines, so right now the magazine will just be left to 5
         //public static readonly Trait Magazine6Trait = ModManager.RegisterTrait("Magazine6", new TraitProperties("Magazine", true, "This repeating weapon has a magazine capacity of 6 instead of 5.", relevantForShortBlock: true));
 
@@ -547,7 +549,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                     {
                         if (item.HasTrait(DoubleBarrelTrait) && !item.EphemeralItemProperties.NeedsReload && item.EphemeralItemProperties.AmmunitionLeftInMagazine != 2)
                         {
-                            return new ActionPossibility(new CombatAction(self.Owner, item.Illustration, "Reload (1/2)", new Trait[1] { Trait.Manipulate }, "Reload the weapon with another piece of ammunition.", Target.Self((Creature cr, AI ai) => 10f)).WithActionCost(1).WithActionId(ActionId.Reload).WithEffectOnSelf(delegate
+                            return new ActionPossibility(new CombatAction(self.Owner, item.Illustration, "Reload (1/2)", new Trait[1] { Trait.Manipulate }, "Reload the weapon with another piece of ammunition.", Target.Self((Creature cr, AI ai) => 10f)).WithActionId(DoubleBarrelReloadAID).WithItem(item).WithActionCost(1).WithActionId(ActionId.Reload).WithEffectOnSelf(delegate
                             {
                                 item.EphemeralItemProperties.ReloadActionsAlreadyTaken++;
                                 item.EphemeralItemProperties.ReloadActionsAlreadyTaken = 0;

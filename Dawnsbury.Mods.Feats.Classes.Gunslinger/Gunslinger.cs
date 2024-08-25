@@ -35,6 +35,8 @@ using Dawnsbury.Audio;
 using Dawnsbury.Core.Mechanics.Rules;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Dawnsbury.Auxiliary;
+using System.Transactions;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -170,6 +172,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// </summary>
         public static readonly QEffectId CrossbowCrackShotQEID = ModManager.RegisterEnumMember<QEffectId>("Crossbow Crack Shot QEID");
 
+
+
         /// <summary>
         /// A technical trait for does not provoke
         /// </summary>
@@ -280,8 +284,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             AddAlchemicalShotLogic(alchemicalShotFeat);
             yield return alchemicalShotFeat;
 
-            // TODO
-            yield return new TrueFeat(InstantBackupFeatName, 4, "Even as your firearm misfires, you quickly draw a backup weapon.", "Release the misfired weapon if you so choose, and Interact to draw a one-handed weapon.\n\n" + misfireDescriptionText, [GunslingerTrait]).WithActionCost(-2);
+            TrueFeat instantBackupFeat = new TrueFeat(InstantBackupFeatName, 4, "Even as your firearm misfires, you quickly draw a backup weapon.", "Release the misfired weapon, if you do you can draw a weapons as a free action till the end of your turn..\n\n" + misfireDescriptionText, [GunslingerTrait]).WithActionCost(-2);
+            yield return instantBackupFeat;
 
             TrueFeat pairedShotsFeat = new TrueFeat(PairedShotsFeatName, 4, "Your shots hit simultaneously.", "{b}Requirements{/b} You're wielding two weapons, each of which can be either a loaded one-handed firearm or loaded one-handed crossbow.\n\nMake two Strikes, one with each of your two ranged weapons, each using your current multiple attack penalty. Both Strikes must have the same target.\n\nIf both attacks hit, combine their damage and then add any applicable effects from both weapons. Combine the damage from both Strikes and apply resistances and weaknesses only once. This counts as two attacks when calculating your multiple attack penalty.", [GunslingerTrait]).WithActionCost(2);
             AddPairedShotsLogic(pairedShotsFeat);
@@ -548,16 +552,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         {
                                             if (defender != null)
                                             {
-                                                
-                                                if (result >= CheckResult.Success)
-                                                {
-                                                    defender.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
-                                                }
-                                                else if (result == CheckResult.CriticalFailure)
-                                                {
-                                                    attacker.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
-                                                    item.Traits.Add(Firearms.MisfiredTrait);
-                                                }
                                                 DischargeItem(item);
                                                 for (int i = 0; i < permanentState.Owner.HeldItems.Count; i++)
                                                 {
@@ -570,6 +564,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                                     {
                                                         permanentState.Owner.CarriedItems.Remove(bomb);
                                                     }
+                                                }
+                                                if (result >= CheckResult.Success)
+                                                {
+                                                    defender.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
+                                                }
+                                                else if (result == CheckResult.CriticalFailure)
+                                                {
+                                                    attacker.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
+                                                    item.Traits.Add(Firearms.MisfiredTrait);
+                                                    await HandleInstantBackupTrigger(attacker, item);
                                                 }
                                             }
 
@@ -642,8 +646,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         {
                             await cleanupEffects.Owner.SingleTileMove(tileToLeapTo, leapAction);
                         }
-                        
-                        cleanupEffects.Owner.AddQEffect(QEffect.Prone());
+
+                        await cleanupEffects.Owner.FallProne();
                     }
                 };
             });
@@ -888,6 +892,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         if (strikeResult <= CheckResult.Failure && !heldItem.HasTrait(Firearms.MisfiredTrait))
                                         {
                                             heldItem.Traits.Add(Firearms.MisfiredTrait);
+                                            await HandleInstantBackupTrigger(attacker, heldItem);
                                         }
                                     }));
                                 }
@@ -1165,6 +1170,33 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             }
 
             return null;
+        }
+
+        public static async Task<bool> HandleInstantBackupTrigger(Creature self, Item misfiredItem)
+        {
+            if (await self.Battle.AskToUseReaction(self, "Release the misfired weapon, you can draw a weapons as a free action till the end of your turn."))
+            {
+                self.DropItem(misfiredItem);
+                if (!self.HasEffect(QEffectId.QuickDraw))
+                {
+                    self.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
+                    {
+                        Name = "Temporary Quick Draw",
+                        Id = QEffectId.QuickDraw,
+                        AfterYouTakeAction = async (QEffect tempQuickDrawEffect, CombatAction action) =>
+                        {
+                            if (action.Name.ToLower().StartsWith("draw"))
+                            {
+                                self.RemoveAllQEffects(qe => qe.Id == QEffectId.QuickDraw && qe.Name == "Temporary Quick Draw");
+                            }
+                        }
+                    });
+                }
+
+                return true;
+            }
+
+            return false;
         }
     }
 }

@@ -83,8 +83,7 @@ This module adds the Gunslinger class. This is a Work in Progress:
 - [X] Crossbow Crack Shot
 - [X] Hit the Dirt
 - [X] Sword and Pistol
-- [ ] Defensive Armaments
-    - Needs the parry trait added
+- [X] Defensive Armaments
 - [ ] Fake Out
 - [X] Pistol Twirl
 - [X] Risky Reload

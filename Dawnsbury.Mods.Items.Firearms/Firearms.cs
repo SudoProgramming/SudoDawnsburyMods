@@ -111,9 +111,16 @@ namespace Dawnsbury.Mods.Items.Firearms
         public static readonly Trait Scatter10Trait = ModManager.RegisterTrait("Scatter10", new TraitProperties("Scatter10", true, "This weapon fires a cluster of pellets in a wide spray. On a hit, the primary target of attacks with a scatter weapon take the listed damage, and the target and all other creatures within a 10-ft radius around it take 1 point of splash damage per weapon damage die.", relevantForShortBlock: true));
 
         /// <summary>
+        /// Adds the Parry trait for firearms
+        /// </summary>
+        public static readonly Trait ParryTrait = ModManager.RegisterTrait("Parry", new TraitProperties("Parry", true, "This weapon can be used defensively to block attacks. While wielding this weapon, if your proficiency with it is trained or better, you can spend a single action to position your weapon defensively, gaining a +1 circumstance bonus to AC until the start of your next turn.", relevantForShortBlock: true));
+
+        /// <summary>
         /// Adds the Scatter 10 trait for firearms
         /// </summary>
         public static readonly Trait MisfiredTrait = ModManager.RegisterTrait("Misfired", new TraitProperties("Misfired", true, "This firearm was misfired and is now jammed. You must use an Interact action to clear the jam before you can reload the weapon and fire again.", relevantForShortBlock: true));
+
+        public static readonly QEffectId ParryQEID = ModManager.RegisterEnumMember<QEffectId>("Parry QEID");
 
         public static readonly ActionId DoubleBarrelReloadAID = ModManager.RegisterEnumMember<ActionId>("Double Barrel Realod AID");
 
@@ -226,9 +233,8 @@ namespace Dawnsbury.Mods.Items.Firearms
                         .WithRangeIncrement(18)));
 
             //  - Mithral Tree
-            // TODO: Add Parry
             ModManager.RegisterNewItemIntoTheShop("Mithral Tree", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/MithralTree.png"), "Mithral Tree", 0, 5, Trait.Elf, Trait.FatalD10, ConcussiveTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/MithralTree.png"), "Mithral Tree", 0, 5, Trait.Elf, Trait.FatalD10, ConcussiveTrait, ParryTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
                         .WithRangeIncrement(30)));
 
@@ -327,6 +333,12 @@ namespace Dawnsbury.Mods.Items.Firearms
                             if (item.HasTrait(Scatter5Trait) || item.HasTrait(Scatter10Trait))
                             {
                                 AddScatterLogic(self, item);
+                            }
+
+                            // Adds logic for all weapons with the Parry trait
+                            if (item.HasTrait(ParryTrait))
+                            {
+                                AddParryLogic(self, item);
                             }
 
                             // Adds logic for all firearms with the Misfired trait
@@ -745,6 +757,52 @@ namespace Dawnsbury.Mods.Items.Firearms
         }
 
         /// <summary>
+        /// Adds the logic for all Parry weapons
+        /// </summary>
+        /// <param name="self">The state check</param>
+        /// <param name="item">The Parry trait item</param>
+        private static void AddParryLogic(QEffect self, Item item)
+        {
+            // Adds a QEffect that will track all the logic for the Scatter trait
+            if (item.WeaponProperties != null)
+            {
+                self.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
+                {
+                    // Adds a Switch Grip action to the items section to change switch between one-handed and two-handed
+                    ProvideActionIntoPossibilitySection = delegate (QEffect self, PossibilitySection section)
+                    {
+                        if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && !self.Owner.HasEffect(ParryQEID))
+                        {
+                            return new ActionPossibility(new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.SteelShield), "Parry", [], "While wielding this weapon, if your proficiency with it is trained or better, you can spend a single action to position your weapon defensively, gaining a +1 circumstance bonus to AC until the start of your next turn.", Target.Self())
+                            {
+                                ShortDescription = "This weapon can be used defensively to block attacks.",
+                            }.WithActionCost(1).WithEffectOnSelf((Action<Creature>) (parryTarget =>
+                            {
+                                parryTarget.AddQEffect(new QEffect("Parry", "While wielding this weapon, if your proficiency with it is trained or better, you can spend a single action to position your weapon defensively, gaining a +1 circumstance bonus to AC until the start of your next turn.")
+                                {
+                                    Id = ParryQEID,
+                                    Tag = item,
+                                    ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn,
+                                    BonusToDefenses = (QEffect bonusToAC, CombatAction? action, Defense defense) =>
+                                    {
+                                        if (defense == Defense.AC)
+                                        {
+                                            return new Bonus(1, BonusType.Circumstance, "Parry", true);
+                                        }
+
+                                        return null;
+                                    }
+                                });
+                            })));
+                        }
+
+                        return null;
+                    }
+                });
+            }
+        }
+
+        /// <summary>
         /// Adds the logic for all Misfired firearms
         /// </summary>
         /// <param name="self">The state check</param>
@@ -761,7 +819,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                     {
                         if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && IsItemFirearmOrCrossbow(item) && item.HasTrait(MisfiredTrait))
                         {
-                            return new ActionPossibility(new CombatAction(cleanFirearmEffect.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.Action), "Clean Firearm", [Trait.Basic, Trait.Manipulate], "Clean firearm to remove the misfired trait.", Target.Self()).WithActionCost(1).WithEffectOnSelf(async (action, self) =>
+                            return new ActionPossibility(new CombatAction(cleanFirearmEffect.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.Action), "Remove Jam", [Trait.Basic, Trait.Manipulate], "Remove the jam to remove the misfired trait.", Target.Self()).WithActionCost(1).WithEffectOnSelf(async (action, self) =>
                             {
                                 item.Traits.RemoveAll(trait => trait == MisfiredTrait);
                             }));
@@ -773,7 +831,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                     // Prevents taking any action with that item
                     PreventTakingAction = (CombatAction action) =>
                     {
-                        if (action.Name != "Clean Firearm" && ((action.HasTrait(FirearmTrait) || action.HasTrait(Trait.Crossbow)) && action.HasTrait(MisfiredTrait)) || (action.Item != null && IsItemFirearmOrCrossbow(action.Item) && action.Item.HasTrait(MisfiredTrait)))
+                        if (action.Name != "Remove Jam" && ((action.HasTrait(FirearmTrait) || action.HasTrait(Trait.Crossbow)) && action.HasTrait(MisfiredTrait)) || (action.Item != null && IsItemFirearmOrCrossbow(action.Item) && action.Item.HasTrait(MisfiredTrait)))
                         {
                             return "Jammed from a misfire";
                         }

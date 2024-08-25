@@ -34,6 +34,7 @@ using System.Text;
 using Dawnsbury.Audio;
 using Dawnsbury.Core.Mechanics.Rules;
 using static System.Net.Mime.MediaTypeNames;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -98,11 +99,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// </summary>
         public static readonly FeatName SwordAndPistolFeatName = ModManager.RegisterFeatName("Sword and Pistol", "Sword and Pistol");
 
-        ///// <summary>
-        ///// The Defensive Armaments class feat name
-        ///// TODO: Add Parry Trait
-        ///// </summary>
-        //public static readonly FeatName DefensiveArmamentsFeatName = ModManager.RegisterFeatName("Defensive Armaments", "Defensive Armaments");
+        /// <summary>
+        /// The Defensive Armaments class feat name
+        /// </summary>
+        public static readonly FeatName DefensiveArmamentsFeatName = ModManager.RegisterFeatName("Defensive Armaments", "Defensive Armaments");
 
         /// <summary>
         /// The Fake Out class feat name
@@ -174,6 +174,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// A technical trait for does not provoke
         /// </summary>
         private static readonly Trait TemporaryDoesNotProvokeTrait = ModManager.RegisterTrait("Temporary Does Not Provoke", new TraitProperties("Temporary Does Not Provoke", false));
+
+        private static readonly Trait TemporaryParryTrait = ModManager.RegisterTrait("Temporary Parry", new TraitProperties("Temporary Parry", false));
 
         /// <summary>
         /// Creates the Gunslinger Feats
@@ -251,8 +253,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             AddSwordAndPistolLogic(swordAndPistolFeat);
             yield return swordAndPistolFeat;
 
-            //// TODO
-            //yield return new TrueFeat(DefensiveArmamentsFeatName, 2, "You use bulky firearms or crossbows to shield your body from your foes' attacks.", "Any two-handed firearms and two-handed crossbows you wield gain the parry trait. If an appropriate weapon already has the parry trait, increase the circumstance bonus to AC it grants when used to parry from +1 to +2.", [GunslingerTrait]);
+            TrueFeat defensiveAramentsFeat = new TrueFeat(DefensiveArmamentsFeatName, 2, "You use bulky firearms or crossbows to shield your body from your foes' attacks.", "Any two-handed firearms and two-handed crossbows you wield gain the parry trait. If an appropriate weapon already has the parry trait, increase the circumstance bonus to AC it grants when used to parry from +1 to +2.", [GunslingerTrait]);
+            AddDefensiveAramentsLogic(defensiveAramentsFeat);
+            yield return defensiveAramentsFeat;
 
             // TODO
             yield return new TrueFeat(FakeOutFeatName, 2, "With a skilled flourish of your weapon, you force an enemy to acknowledge you as a threat.", "{b}Trigger{/b} An ally is about to use an action that requires an attack roll, targeting a creature within your weapon's first range increment.\n\n{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nMake an attack roll to Aid the triggering attack. If you dealt damage to that enemy since the start of your last turn, you gain a +1 circumstance bonus to this roll.\n\n{i}Aid{/i}\n\n{b}Critical Success{/b} Your ally a +2 circumstance bonus\n{b}Success{/b} Your ally a +1 circumstance bonus\n{b}Critical Failure{/b} Your ally a -1 circumstance penalty\n", [GunslingerTrait, Trait.Visual]).WithActionCost(-2);
@@ -909,6 +912,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 {
                     if (GetReloadAIDs().Contains(action.ActionId) && !crossbowCrackshotEffect.Owner.HasEffect(CrossbowCrackShotQEID))
                     {
+                        // HACK: Currently the base Dawnsbury Reload action has no attachment to the item that was reloaded
+                        if (action.Item == null)
+                        {
+                            action.Item = crossbowCrackshotEffect.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(Trait.Crossbow) && Firearms.IsItemLoaded(item));
+                        }
                         if (action.Item != null && action.Item.HasTrait(Trait.Crossbow) && action.Item.WeaponProperties != null) // Base Reload has null action.Item
                         {
                             Item crossbow = action.Item;
@@ -934,9 +942,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     }
 
                                     return null;
-                                }
+                                },
                             });
                         }
+                    }
+                };
+                self.StateCheck = (QEffect state) =>
+                {
+                    QEffect? cbcsEffect = state.Owner.QEffects.FirstOrDefault(qe => qe.Id == CrossbowCrackShotQEID);
+                    if (cbcsEffect != null && cbcsEffect.ExpiresAt == ExpirationCondition.Immediately && cbcsEffect.Tag != null && cbcsEffect.Tag is Item crossbow && crossbow.WeaponProperties != null)
+                    {
+   
+                        state.Owner.RemoveAllQEffects(qe => qe.Id == CrossbowCrackShotQEID);
                     }
                 };
                 self.EndOfAnyTurn = (QEffect endOfTurn) =>
@@ -944,16 +961,81 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     if (endOfTurn.Owner.HasEffect(CrossbowCrackShotQEID))
                     {
                         QEffect? cbcsEffect = endOfTurn.Owner.QEffects.FirstOrDefault(qe => qe.Id == CrossbowCrackShotQEID);
-                        if (cbcsEffect != null)
-                        {
-                            cbcsEffect.ExpiresAt = ExpirationCondition.Immediately;
-                        }
-                        if (cbcsEffect.Tag != null && cbcsEffect.Tag is Item crossbow && crossbow.WeaponProperties != null)
+                        if (cbcsEffect != null && cbcsEffect.Tag != null && cbcsEffect.Tag is Item crossbow && crossbow.WeaponProperties != null)
                         {
                             crossbow.WeaponProperties.WithRangeIncrement(crossbow.WeaponProperties.RangeIncrement - 2);
                         }
-                       
+                        if (cbcsEffect != null)
+                        {
+                            endOfTurn.Owner.RemoveAllQEffects(qe => qe.Id == CrossbowCrackShotQEID);
+                        }
                     }
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Defensive Araments feat
+        /// </summary>
+        /// <param name="defensiveAramentsFeat">The Defensive Araments true feat object</param>
+        private static void AddDefensiveAramentsLogic(TrueFeat defensiveAramentsFeat)
+        {
+            defensiveAramentsFeat.WithPermanentQEffect(defensiveAramentsFeat.FlavorText, delegate (QEffect self)
+            {
+                self.StateCheck = (QEffect state) =>
+                {
+                    foreach (Item item in state.Owner.HeldItems)
+                    {
+                        if (!item.HasTrait(Firearms.ParryTrait) && Firearms.IsItemFirearmOrCrossbow(item) && item.HasTrait(Trait.TwoHanded))
+                        {
+                            item.Traits.Add(Firearms.ParryTrait);
+                            item.Traits.Add(TemporaryParryTrait);
+                        }
+                    }
+                };
+
+                self.BonusToDefenses = (QEffect bonusToAC, CombatAction? action, Defense defense) =>
+                {
+                    QEffect? parryQEffect = bonusToAC.Owner.QEffects.FirstOrDefault(qe => qe.Id == Firearms.ParryQEID);
+                    if (defense == Defense.AC && bonusToAC.Owner.HasEffect(Firearms.ParryQEID) && parryQEffect != null && parryQEffect.Tag != null && parryQEffect.Tag is Item item)
+                    {
+                        if (item.HasTrait(Firearms.ParryTrait) && !item.HasTrait(TemporaryParryTrait))
+                        {
+                            return new Bonus(2, BonusType.Circumstance, "Parry (Defensive Armaments)", true);
+                        }
+                    }
+
+                    return null;
+                };
+
+                self.YouBeginAction = async (QEffect actionTakenCleanup, CombatAction action) =>
+                {
+                    // Checks if the last action was a drop or stow
+                    string actionName = action.Name.ToLower();
+                    if (actionName != null && (actionName.Contains("drop") || actionName.Contains("stow")))
+                    {
+                        // Collects all the temporary parry items for cleanup and handles it
+                        Item? tempParrytem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(TemporaryParryTrait));
+                        if (tempParrytem != null && actionName.Contains(tempParrytem.Name.ToLower()) && tempParrytem.HasTrait(TemporaryParryTrait))
+                        {
+                            tempParrytem.Traits.Remove(Firearms.ParryTrait);
+                            tempParrytem.Traits.Remove(TemporaryParryTrait);
+                            self.Owner.HeldItems.Remove(tempParrytem);
+                        }
+                    }
+                };
+
+                self.YouAreDealtLethalDamage = async (QEffect self, Creature attacker, DamageStuff damage, Creature defender) =>
+                {
+                    // Collects all the temporary parry items for cleanup and handles it
+                    Item? tempParrytem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(TemporaryParryTrait));
+                    if (tempParrytem != null && tempParrytem.HasTrait(TemporaryParryTrait))
+                    {
+                        tempParrytem.Traits.Remove(Firearms.ParryTrait);
+                        tempParrytem.Traits.Remove(TemporaryParryTrait);
+                    }
+
+                    return null;
                 };
             });
         }

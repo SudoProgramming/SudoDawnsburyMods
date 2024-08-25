@@ -33,6 +33,7 @@ using System.Threading.Tasks;
 using System.Text;
 using Dawnsbury.Audio;
 using Dawnsbury.Core.Mechanics.Rules;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -165,6 +166,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         public static readonly QEffectId SwordAndPistolMeleeBuffQEID = ModManager.RegisterEnumMember<QEffectId>("Sword and Pistol - Melee QEID");
 
         /// <summary>
+        /// The Crossbow Crack Shot persistent QEffect ID 
+        /// </summary>
+        public static readonly QEffectId CrossbowCrackShotQEID = ModManager.RegisterEnumMember<QEffectId>("Crossbow Crack Shot QEID");
+
+        /// <summary>
         /// A technical trait for does not provoke
         /// </summary>
         private static readonly Trait TemporaryDoesNotProvokeTrait = ModManager.RegisterTrait("Temporary Does Not Provoke", new TraitProperties("Temporary Does Not Provoke", false));
@@ -233,8 +239,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             AddCoverFireLogic(coverFireFeat);
             yield return coverFireFeat;
 
-            // TODO
-            yield return new TrueFeat(CrossbowCrackShotFeatName, 1, "You're exceptionally skilled with the crossbow.", "The first time each round that you Interact to reload a crossbow you are wielding, including Interact actions as part of your slinger's reload and similar effects, you increase the range increment for your next Strike with that weapon by 10 feet and deal 1 additional precision damage per weapon damage die with that Strike.\n\nIf your crossbow has the backstabber trait and you are attacking an off-guard target, backstabber deals 2 additional precision damage per weapon damage die instead of its normal effects.", [GunslingerTrait]);
+            TrueFeat crossbowCrackShotFeat = new TrueFeat(CrossbowCrackShotFeatName, 1, "You're exceptionally skilled with the crossbow.", "The first time each round that you Interact to reload a crossbow you are wielding, including Interact actions as part of your slinger's reload and similar effects, you increase the range increment for your next Strike with that weapon by 10 feet and deal 1 additional precision damage per weapon damage die with that Strike.\n\nIf your crossbow has the backstabber trait and you are attacking an off-guard target, backstabber deals 2 additional precision damage per weapon damage die instead of its normal effects.", [GunslingerTrait]);
+            AddCrossbowCrackShotLogic(crossbowCrackShotFeat);
+            yield return crossbowCrackShotFeat;
 
             TrueFeat hitTheDirtFeat = new TrueFeat(HitTheDirtFeatName, 1, "You fling yourself out of harm's way.", "You Leap. Your movement gives you a +2 circumstance bonus to AC against the triggering attack. Regardless of whether or not the triggering attack hits, you land prone after completing your Leap.", [GunslingerTrait]).WithActionCost(-2);
             AddHitTheDirtLogic(hitTheDirtFeat);
@@ -675,7 +682,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                             }
                                             else
                                             {
-                                                await self.CreateReload(heldItem).WithActionCost(0).AllExecute();
+                                                await self.CreateReload(heldItem).WithActionCost(0).WithItem(heldItem).AllExecute();
                                             }
                                         }
                                     }));
@@ -871,7 +878,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         }
                                         else
                                         {
-                                            await attacker.CreateReload(heldItem).WithActionCost(0).AllExecute();
+                                            await attacker.CreateReload(heldItem).WithActionCost(0).WithItem(heldItem).AllExecute();
                                         }
 
                                         CheckResult strikeResult = await riskyReload.Owner.MakeStrike(defender, heldItem);
@@ -887,6 +894,67 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         }
                     }
                 });
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Crossbow Crack Shot feat
+        /// </summary>
+        /// <param name="crossbowCrackShotFeat">The Crossbow Crack Shot true feat object</param>
+        private static void AddCrossbowCrackShotLogic(TrueFeat crossbowCrackShotFeat)
+        {
+            crossbowCrackShotFeat.WithPermanentQEffect(crossbowCrackShotFeat.FlavorText, delegate (QEffect self)
+            {
+                self.AfterYouTakeAction = async (QEffect crossbowCrackshotEffect, CombatAction action) =>
+                {
+                    if (GetReloadAIDs().Contains(action.ActionId) && !crossbowCrackshotEffect.Owner.HasEffect(CrossbowCrackShotQEID))
+                    {
+                        if (action.Item != null && action.Item.HasTrait(Trait.Crossbow) && action.Item.WeaponProperties != null) // Base Reload has null action.Item
+                        {
+                            Item crossbow = action.Item;
+                            crossbow.WeaponProperties.WithRangeIncrement(crossbow.WeaponProperties.RangeIncrement + 2);
+                            crossbowCrackshotEffect.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
+                            {
+                                Id = CrossbowCrackShotQEID,
+                                Tag = crossbow,
+                                BonusToDamage = (QEffect bonusToDamage, CombatAction action, Creature defender) =>
+                                {
+                                    if (action.Item != null && action.Item == crossbow)
+                                    {
+                                        Creature attacker = bonusToDamage.Owner;
+                                        QEffect? cbcsEffect = bonusToDamage.Owner.QEffects.FirstOrDefault(qe => qe.Id == CrossbowCrackShotQEID);
+                                        if (cbcsEffect != null)
+                                        {
+                                            cbcsEffect.ExpiresAt = ExpirationCondition.Immediately;
+                                        }
+
+                                        int backstabberDamage = (crossbow.HasTrait(Trait.Backstabber) && defender.IsFlatFootedTo(attacker, action)) ? 2 : 0;
+                                        crossbow.WeaponProperties.WithRangeIncrement(crossbow.WeaponProperties.RangeIncrement - 2);
+                                        return new Bonus(crossbow.WeaponProperties.DamageDieCount + backstabberDamage, BonusType.Untyped, "Crossbow Crack Shot" + ((backstabberDamage > 0) ? " (Backstabber)" : string.Empty) + " precision damage", true);
+                                    }
+
+                                    return null;
+                                }
+                            });
+                        }
+                    }
+                };
+                self.EndOfAnyTurn = (QEffect endOfTurn) =>
+                {
+                    if (endOfTurn.Owner.HasEffect(CrossbowCrackShotQEID))
+                    {
+                        QEffect? cbcsEffect = endOfTurn.Owner.QEffects.FirstOrDefault(qe => qe.Id == CrossbowCrackShotQEID);
+                        if (cbcsEffect != null)
+                        {
+                            cbcsEffect.ExpiresAt = ExpirationCondition.Immediately;
+                        }
+                        if (cbcsEffect.Tag != null && cbcsEffect.Tag is Item crossbow && crossbow.WeaponProperties != null)
+                        {
+                            crossbow.WeaponProperties.WithRangeIncrement(crossbow.WeaponProperties.RangeIncrement - 2);
+                        }
+                       
+                    }
+                };
             });
         }
 
@@ -962,6 +1030,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
                 item.EphemeralItemProperties.AmmunitionLeftInMagazine--;
             }
+        }
+
+        private static List<ActionId> GetReloadAIDs()
+        {
+            return [ActionId.Reload, Firearms.DoubleBarrelReloadAID];
         }
 
         /// <summary>

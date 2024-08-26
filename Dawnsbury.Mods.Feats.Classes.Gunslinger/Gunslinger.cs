@@ -37,6 +37,7 @@ using static System.Net.Mime.MediaTypeNames;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Dawnsbury.Auxiliary;
 using System.Transactions;
+using static Dawnsbury.Core.Mechanics.Core.CalculatedNumber;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -132,11 +133,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         public static readonly FeatName AlchemicalShotFeatName = ModManager.RegisterFeatName("Alchemical Shot", "Alchemical Shot");
 
         /// <summary>
-        /// The Instant Backup class feat name
-        /// </summary>
-        public static readonly FeatName InstantBackupFeatName = ModManager.RegisterFeatName("Instant Backup", "Instant Backup");
-
-        /// <summary>
         /// The Paired Shots class feat name
         /// HACK: Currently the percision damage is added from both attacks. Dawnsbury doesn't break out precision damage to check which is higher
         /// </summary>
@@ -172,7 +168,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// </summary>
         public static readonly QEffectId CrossbowCrackShotQEID = ModManager.RegisterEnumMember<QEffectId>("Crossbow Crack Shot QEID");
 
-
+        public static readonly QEffectId FakeOutQEID = ModManager.RegisterEnumMember<QEffectId>("Fake Out QEID");
 
         /// <summary>
         /// A technical trait for does not provoke
@@ -261,8 +257,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             AddDefensiveAramentsLogic(defensiveAramentsFeat);
             yield return defensiveAramentsFeat;
 
-            // TODO
-            yield return new TrueFeat(FakeOutFeatName, 2, "With a skilled flourish of your weapon, you force an enemy to acknowledge you as a threat.", "{b}Trigger{/b} An ally is about to use an action that requires an attack roll, targeting a creature within your weapon's first range increment.\n\n{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nMake an attack roll to Aid the triggering attack. If you dealt damage to that enemy since the start of your last turn, you gain a +1 circumstance bonus to this roll.\n\n{i}Aid{/i}\n\n{b}Critical Success{/b} Your ally a +2 circumstance bonus\n{b}Success{/b} Your ally a +1 circumstance bonus\n{b}Critical Failure{/b} Your ally a -1 circumstance penalty\n", [GunslingerTrait, Trait.Visual]).WithActionCost(-2);
+            TrueFeat fakeOutFeat = new TrueFeat(FakeOutFeatName, 2, "With a skilled flourish of your weapon, you force an enemy to acknowledge you as a threat.", "{b}Trigger{/b} An ally is about to use an action that requires an attack roll, targeting a creature within your weapon's first range increment.\n\n{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nMake an attack roll to Aid the triggering attack. If you dealt damage to that enemy since the start of your last turn, you gain a +1 circumstance bonus to this roll.\n\n{i}Aid{/i}\n\n{b}Critical Success{/b} Your ally a +2 circumstance bonus\n{b}Success{/b} Your ally a +1 circumstance bonus\n{b}Critical Failure{/b} Your ally a -1 circumstance penalty\n", [GunslingerTrait, Trait.Visual]).WithActionCost(-2);
+            AddFakeOutLogic(fakeOutFeat);
+            yield return fakeOutFeat;
 
 
             TrueFeat pistolTwirlFeat = new TrueFeat(PistolTwirlFeatName, 2, "Your quick gestures and flair for performance distract your opponent, leaving it vulnerable to your follow-up attacks.", "{b}Requirements{/b} You're wielding a loaded one-handed ranged weapon.\n\nYou Feint against an opponent within the required weapon's first range increment, rather than an opponent within melee reach. If you succeed, the foe is flat-footed against your melee and ranged attacks, rather than only your melee attacks. On a critical failure, you're flat-footed against the target's melee and ranged attacks, rather than only its melee attacks.", [GunslingerTrait]).WithActionCost(1);
@@ -283,9 +280,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             alchemicalShotFeat.WithActionCost(2);
             AddAlchemicalShotLogic(alchemicalShotFeat);
             yield return alchemicalShotFeat;
-
-            TrueFeat instantBackupFeat = new TrueFeat(InstantBackupFeatName, 4, "Even as your firearm misfires, you quickly draw a backup weapon.", "Release the misfired weapon, if you do you can draw a weapons as a free action till the end of your turn..\n\n" + misfireDescriptionText, [GunslingerTrait]).WithActionCost(-2);
-            yield return instantBackupFeat;
 
             TrueFeat pairedShotsFeat = new TrueFeat(PairedShotsFeatName, 4, "Your shots hit simultaneously.", "{b}Requirements{/b} You're wielding two weapons, each of which can be either a loaded one-handed firearm or loaded one-handed crossbow.\n\nMake two Strikes, one with each of your two ranged weapons, each using your current multiple attack penalty. Both Strikes must have the same target.\n\nIf both attacks hit, combine their damage and then add any applicable effects from both weapons. Combine the damage from both Strikes and apply resistances and weaknesses only once. This counts as two attacks when calculating your multiple attack penalty.", [GunslingerTrait]).WithActionCost(2);
             AddPairedShotsLogic(pairedShotsFeat);
@@ -573,7 +567,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                                 {
                                                     attacker.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
                                                     item.Traits.Add(Firearms.MisfiredTrait);
-                                                    await HandleInstantBackupTrigger(attacker, item);
                                                 }
                                             }
 
@@ -753,7 +746,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     }
                                 }
                             },
-                            YouBeginAction = async (QEffect startAction, CombatAction action) => 
+                            YouBeginAction = async (QEffect startAction, CombatAction action) =>
                             {
                                 if (action.ChosenTargets.ChosenCreature != null && action.ChosenTargets.ChosenCreature != defender)
                                 {
@@ -775,7 +768,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     rollEffect.Owner.RemoveAllQEffects(qe => qe.Id == SwordAndPistolRangedBuffQEID && qe.Tag != null && qe.Tag == defender);
                                 }
                             }
-                        });;
+                        }); ;
                     }
                 };
             });
@@ -892,7 +885,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         if (strikeResult <= CheckResult.Failure && !heldItem.HasTrait(Firearms.MisfiredTrait))
                                         {
                                             heldItem.Traits.Add(Firearms.MisfiredTrait);
-                                            await HandleInstantBackupTrigger(attacker, heldItem);
                                         }
                                     }));
                                 }
@@ -957,7 +949,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     QEffect? cbcsEffect = state.Owner.QEffects.FirstOrDefault(qe => qe.Id == CrossbowCrackShotQEID);
                     if (cbcsEffect != null && cbcsEffect.ExpiresAt == ExpirationCondition.Immediately && cbcsEffect.Tag != null && cbcsEffect.Tag is Item crossbow && crossbow.WeaponProperties != null)
                     {
-   
+
                         state.Owner.RemoveAllQEffects(qe => qe.Id == CrossbowCrackShotQEID);
                     }
                 };
@@ -1042,6 +1034,123 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
                     return null;
                 };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Fake Out feat
+        /// </summary>
+        /// <param name="fakeOutFeat">The Fake Out true feat object</param>
+        private static void AddFakeOutLogic(TrueFeat fakeOutFeat)
+        {
+            fakeOutFeat.WithPermanentQEffect(fakeOutFeat.FlavorText, delegate (QEffect fakeOutEffect)
+            {
+                fakeOutEffect.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    fakeOutEffect.Owner.AddQEffect(new QEffect()
+                    {
+                        Id = FakeOutQEID,
+                        Tag = new List<Creature>()
+                    });
+                };
+                fakeOutEffect.StartOfYourTurn = async (QEffect startOfTurn, Creature self) =>
+                {
+                    QEffect? fakeOutTrackingEffect = startOfTurn.Owner.QEffects.FirstOrDefault(qe => qe.Id == FakeOutQEID);
+                    if (fakeOutTrackingEffect != null)
+                    {
+                        fakeOutTrackingEffect.Tag = new List<Creature>();
+                    }
+                };
+                fakeOutEffect.BeforeYourActiveRoll = async (QEffect beforeAttackRoll, CombatAction action, Creature defender) =>
+                {
+                    QEffect? fakeOutTrackingEffect = beforeAttackRoll.Owner.QEffects.FirstOrDefault(qe => qe.Id == FakeOutQEID);
+                    if (fakeOutTrackingEffect != null && fakeOutEffect.Tag != null && fakeOutEffect.Tag is List<Creature> creatures)
+                    {
+                        creatures.Add(defender);
+                    }
+                };
+            });
+
+            ModManager.RegisterActionOnEachCreature(creature =>
+            {
+                if (creature.OwningFaction == null || creature.OwningFaction.IsHumanControlled)
+                {
+                    creature.AddQEffect(new QEffect()
+                    {
+                        BeforeYourActiveRoll = async (QEffect beforeAttackRoll, CombatAction action, Creature defender) =>
+                        {
+                            Creature[] alliesWithFakeout = beforeAttackRoll.Owner.Battle.AllCreatures.Where(battleCreature => battleCreature.OwningFaction == beforeAttackRoll.Owner.OwningFaction && battleCreature.HasEffect(FakeOutQEID) && battleCreature.Actions.CanTakeReaction()).ToArray();
+                            foreach (Creature ally in alliesWithFakeout)
+                            {
+                                if (ally == beforeAttackRoll.Owner || action.Name == "Aid Strike")
+                                {
+                                    continue;
+                                }
+
+                                QEffect? fakeOutTrackingEffect = ally.QEffects.FirstOrDefault(qe => qe.Id == FakeOutQEID);
+                                Item? mainWeapon = ally.HeldItems.FirstOrDefault(item => Firearms.IsItemFirearmOrCrossbow(item));
+                                if (mainWeapon != null && Firearms.IsItemLoaded(mainWeapon) && fakeOutTrackingEffect != null && fakeOutTrackingEffect.Tag != null && fakeOutTrackingEffect.Tag is List<Creature> creaturesAttacked)
+                                {
+                                    string fakeOutTargetTextAddition = (creaturesAttacked.Contains(defender)) ? " (+1 circumstance bonus to this)" : string.Empty;
+                                    if (await creature.Battle.AskToUseReaction(ally, "Make an attack roll to Aid the triggering attack." + fakeOutTargetTextAddition))
+                                    {
+                                        CombatAction basicStrike = ally.CreateStrike(mainWeapon);
+                                        CombatAction aidStrike = new CombatAction(ally, new SimpleIllustration(IllustrationName.None), "Aid Strike", [], "{b}Critical Success{/b} Your ally gains a +2 circumstance bonus to the triggering action.\n\n\"{b}Success{/b} Your ally gains a +1 circumstance bonus to the triggering action.\n\n\"{b}Critical Failure{/b} Your ally gains a -1 circumstance penalty to the triggering action.\n\n", action.Target);
+                                        aidStrike.ActionCost = 0;
+                                        aidStrike.Item = mainWeapon;
+                                        aidStrike.Traits = basicStrike.Traits;
+                                        aidStrike.Traits.CombatAction = aidStrike;
+                                        aidStrike.ChosenTargets = action.ChosenTargets;
+                                        aidStrike.Description = StrikeRules.CreateBasicStrikeDescription(basicStrike.StrikeModifiers, additionalSuccessText: "Your ally gains a +1 circumstance bonus to the triggering action.",  additionalCriticalSuccessText: "Your ally gains a +2 circumstance bonus to the triggering action.", additionalAftertext: "{b}Critical Failure{/b} \"Your ally gains a -1 circumstance penalty to the triggering action.");
+                                        CalculatedNumberProducer attackCheck = Checks.Attack(mainWeapon);
+                                        attackCheck.WithExtraBonus((Func<CombatAction, Creature, Creature?, Bonus?>)((combatAction, demoralizer, target) => ((creaturesAttacked.Contains(defender)) ? new Bonus(1, BonusType.Circumstance, "Attacked last round") : (Bonus)null)));
+                                        aidStrike.WithActiveRollSpecification(new ActiveRollSpecification(attackCheck, Checks.DefenseDC(Defense.AC)));
+                                        aidStrike.WithEffectOnEachTarget(async delegate (CombatAction aidAction, Creature attacker, Creature defender, CheckResult result)
+                                        {
+                                            switch (result)
+                                            {
+                                                case CheckResult.CriticalSuccess:
+                                                    beforeAttackRoll.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                                    {
+                                                        BonusToAttackRolls = (QEffect bonusToAttackRoll, CombatAction action, Creature? creature) =>
+                                                        {
+                                                            return new Bonus(2, BonusType.Circumstance, "Aid", true);
+                                                        }
+                                                    });
+                                                    break;
+                                                case CheckResult.Success:
+                                                    beforeAttackRoll.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                                    {
+                                                        BonusToAttackRolls = (QEffect bonusToAttackRoll, CombatAction action, Creature? creature) =>
+                                                        {
+                                                            return new Bonus(1, BonusType.Circumstance, "Aid", true);
+                                                        }
+                                                    });
+                                                    break;
+                                                case CheckResult.CriticalFailure:
+                                                    beforeAttackRoll.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                                    {
+                                                        BonusToAttackRolls = (QEffect bonusToAttackRoll, CombatAction action, Creature? creature) =>
+                                                        {
+                                                            return new Bonus(-1, BonusType.Circumstance, "Aid", false);
+                                                        }
+                                                    });
+                                                    break;
+                                            }
+
+                                            if (aidAction.Item != null)
+                                            {
+                                                DischargeItem(aidAction.Item);
+                                            }
+                                        });
+
+                                        await aidStrike.AllExecute();
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
             });
         }
 
@@ -1170,33 +1279,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             }
 
             return null;
-        }
-
-        public static async Task<bool> HandleInstantBackupTrigger(Creature self, Item misfiredItem)
-        {
-            if (await self.Battle.AskToUseReaction(self, "Release the misfired weapon, you can draw a weapons as a free action till the end of your turn."))
-            {
-                self.DropItem(misfiredItem);
-                if (!self.HasEffect(QEffectId.QuickDraw))
-                {
-                    self.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
-                    {
-                        Name = "Temporary Quick Draw",
-                        Id = QEffectId.QuickDraw,
-                        AfterYouTakeAction = async (QEffect tempQuickDrawEffect, CombatAction action) =>
-                        {
-                            if (action.Name.ToLower().StartsWith("draw"))
-                            {
-                                self.RemoveAllQEffects(qe => qe.Id == QEffectId.QuickDraw && qe.Name == "Temporary Quick Draw");
-                            }
-                        }
-                    });
-                }
-
-                return true;
-            }
-
-            return false;
         }
     }
 }

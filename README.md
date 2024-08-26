@@ -83,14 +83,13 @@ This module adds the Gunslinger class. This is a Work in Progress:
 - [X] Hit the Dirt
 - [X] Sword and Pistol
 - [X] Defensive Armaments
-- [ ] Fake Out
+- [X] Fake Out
 - [X] Pistol Twirl
 - [X] Risky Reload
 - [X] Quick Draw
 - [X] Warning Shot
 - [X] Alchemical Shot
-- [X] Instant Backup
-    - RAW Difference: You instead gain a free action to draw any weapon (not just one handed) till the end of your turn.
+- [ ] Black Powder Boost
 - [X] Paired Shots
     - RAW Difference: The precision damage is applied from both strikes.
 - [X] Running Reload

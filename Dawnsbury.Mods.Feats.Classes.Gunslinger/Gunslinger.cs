@@ -1082,7 +1082,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             Creature[] alliesWithFakeout = beforeAttackRoll.Owner.Battle.AllCreatures.Where(battleCreature => battleCreature.OwningFaction == beforeAttackRoll.Owner.OwningFaction && battleCreature.HasEffect(FakeOutQEID) && battleCreature.Actions.CanTakeReaction()).ToArray();
                             foreach (Creature ally in alliesWithFakeout)
                             {
-                                if (ally == beforeAttackRoll.Owner || action.Name == "Aid Strike")
+                                if (ally == beforeAttackRoll.Owner || action.Name == "Aid Strike" || ally.HasLineOfEffectTo(defender.Occupies) == CoverKind.Blocked || !defender.VisibleToHumanPlayer)
                                 {
                                     continue;
                                 }

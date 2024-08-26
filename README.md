@@ -94,6 +94,7 @@ This module adds the Gunslinger class. This is a Work in Progress:
 - [X] Running Reload
 
 ### Sub Class Feats
+- [ ] Ways Base Class
 - [ ] Way of the Drifter
 - [ ] Way of the Pistolero
 - [ ] Way of the Sniper

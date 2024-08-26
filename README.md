@@ -89,7 +89,6 @@ This module adds the Gunslinger class. This is a Work in Progress:
 - [X] Quick Draw
 - [X] Warning Shot
 - [X] Alchemical Shot
-- [ ] Black Powder Boost
 - [X] Paired Shots
     - RAW Difference: The precision damage is applied from both strikes.
 - [X] Running Reload

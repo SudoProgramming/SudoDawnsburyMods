@@ -62,7 +62,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     this.Feat = this.CreateDrifterFeat();
                     this.Feat.WithDrifersReloadingStrikeLogic();
                     this.Feat.WithDrifersIntoTheFrayLogic();
-                    this.Feat.WithWaySkill(Trait.Acrobatics);
+                    this.Feat.WithWaySkill(FeatName.Acrobatics);
+                    break;
+                case GunslingerWayID.Pistolero:
+                    this.Feat = this.CreatePistoleroFeat();
+                    this.Feat.WithPistolerosRaconteursReloadLogic();
+                    this.Feat.WithPistolerosTenPacesLogic();
+                    this.Feat.WithWaySkillOptions(new List<FeatName> { FeatName.Deception, FeatName.Intimidation });
                     break;
                 default:
                     break;
@@ -86,6 +92,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             this.SlingersReloadRulesText = "Reloading Strike {icon:Action}\n{b}Requirements{/b} You're wielding a firearm or crossbow in one hand, and your other hand either wields a one-handed melee weapon or is empty.\n\nStrike an opponent within reach with your one-handed melee weapon (or, if your other hand is empty, with an unarmed attack), and then Interact to reload.";
             this.InitialDeedRulesText = "Into the Fray {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nYou can stride as a free action toward an enemy.";
             this.WaySkillRulesText = "Acrobatics\nYou become trained in Acrobatics.";
+            return CreateGenericWayFeat();
+        }
+
+        protected Feat CreatePistoleroFeat()
+        {
+            this.FeatName = WayOfThePistoleroFeatName;
+            this.FlavorText = "Whether you're a professional duelist or a pistol-twirling entertainer, you have quick feet and quicker hands that never seem to let you down, and an equally sharp wit and tongue that jab your foes. You might leave a hand free or cultivate the ambidexterity for twin weapons. Either way, you stay close enough to your enemies to leverage your superior reflexes while leaving enough space to safely fire.";
+            this.SlingersReloadRulesText = "Raconteur's Reload {icon:Action}\nInteract to reload and then attempt a Deception check to Create a Diversion or an Intimidation check to Demoralize.";
+            this.InitialDeedRulesText = "Ten Paces {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nYou gain a +2 circumstance bonus to your initiative roll, and you can Step up to 10 feet as a free action.";
+            this.WaySkillRulesText = "Deception or Intimidation\nYou become trained in your choice between Deception or Intimidation.";
             return CreateGenericWayFeat();
         }
 

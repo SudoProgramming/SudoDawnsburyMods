@@ -160,13 +160,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         {
             GunslingerWay wayOfTheDrifter = new GunslingerWay(GunslingerWayID.Drifter);
 
-
-            //// TODO
-            Feat wayOfThePistoleroFeat = new Feat(GunslingerWay.WayOfThePistoleroFeatName, "Whether you're a professional duelist or a pistol-twirling entertainer, you have quick feet and quicker hands that never seem to let you down, and an equally sharp wit and tongue that jab your foes. You might leave a hand free or cultivate the ambidexterity for twin weapons. Either way, you stay close enough to your enemies to leverage your superior reflexes while leaving enough space to safely fire.",
-            "You gain the {i}Slinger's Reload, Initial Deed, and Way Skill{/i} below:\n\n" +
-            "{b}Slinger's Reload{/b} Raconteur's Reload {icon:Action}\nInteract to reload and then attempt a Deception check to Create a Diversion or an Intimidation check to Demoralize.\n\n" +
-            "{b}Initial Deed{/b} Ten Paces {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nYou gain a +2 circumstance bonus to your initiative roll, and you can Step up to 10 feet as a free action.\n\n" +
-            "{b}Way Skill{/b} Deception or Intimidation\nYou become trained in your choice between Deception or Intimidation.", new List<Trait>(), null);
+            GunslingerWay wayOfThePistolero = new GunslingerWay(GunslingerWayID.Pistolero);
 
             //// TODO
             //Feat wayOfTheSniperFeat = new Feat(WayOfTheSniperFeatName, "You practice a style of shooting that relies on unerring accuracy and perfect placement of your first shot. You keep hidden or at a distance, staying out of the fray and bringing unseen death to your foes.",
@@ -196,7 +190,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 3,
                 "{b}1. Gunslinger's Way{/b} All gunslingers have a particular way they follow, a combination of philosophy and combat style that defines both how they fight and the weapons they excel with. At 1st level, your way grants you an initial deed, a unique reload action called a slinger's reload, and proficiency with a particular skill. You also gain advanced and greater deeds at later levels, as well as access to way-specific feats.\n\n" +
                 "{b}2. Singular Expertise{/b} You have particular expertise with guns and crossbows that grants you greater proficiency with them and the ability to deal more damage. You gain a +1 circumstance bonus to damage rolls with firearms and crossbows.\r\n\r\nThis intense focus on firearms and crossbows prevents you from reaching the same heights with other weapons. Your proficiency with unarmed attacks and with weapons other than firearms and crossbows can't be higher than trained, even if you gain an ability that would increase your proficiency in one or more other weapons to match your highest weapon proficiency (such as the weapon expertise feats many ancestries have). If you have gunslinger weapon mastery, the limit is expert, and if you have gunslinging legend, the limit is master.\n\n" +
-                "{b}3. Gunslinger Feat{/b}", new List<Feat>() { wayOfTheDrifter.Feat })
+                "{b}3. Gunslinger Feat{/b}", new List<Feat>() { wayOfTheDrifter.Feat, wayOfThePistolero.Feat })
                 .WithOnSheet(delegate (CalculatedCharacterSheetValues sheet)
                 {
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("GunslingerFeat1", "Gunslinger feat", 1, (Feat ft) => ft.HasTrait(GunslingerTrait)));
@@ -629,26 +623,28 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     {
                         foreach (Item heldItem in permanentState.Owner.HeldItems)
                         {
-                            // Adds an action to clean firearm to remove the Misfired trait
-                            permanentState.ProvideActionIntoPossibilitySection = delegate (QEffect runningReloadEffect, PossibilitySection section)
+                            permanentState.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
                             {
-                                if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                ProvideActionIntoPossibilitySection = delegate (QEffect runningReloadEffect, PossibilitySection section)
                                 {
-                                    return new ActionPossibility(new CombatAction(runningReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.WarpStep), "Running Reload", [GunslingerTrait, Trait.Basic], runningReloadFeat.RulesText, Target.Self()).WithActionCost(1).WithItem(heldItem).WithEffectOnSelf(async (action, self) =>
+                                    if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
                                     {
-                                        if (!await self.StrideAsync("Choose where to Stride with Running Reload.", allowCancel: true))
+                                        return new ActionPossibility(new CombatAction(runningReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.WarpStep), "Running Reload", [GunslingerTrait, Trait.Basic], runningReloadFeat.RulesText, Target.Self()).WithActionCost(1).WithItem(heldItem).WithEffectOnSelf(async (action, self) =>
                                         {
-                                            action.RevertRequested = true;
-                                        }
-                                        else
-                                        {
-                                            AwaitReloadItem(self, heldItem);
-                                        }
-                                    }));
-                                }
+                                            if (!await self.StrideAsync("Choose where to Stride with Running Reload.", allowCancel: true))
+                                            {
+                                                action.RevertRequested = true;
+                                            }
+                                            else
+                                            {
+                                                AwaitReloadItem(self, heldItem);
+                                            }
+                                        }));
+                                    }
 
-                                return null;
-                            };
+                                    return null;
+                                }
+                            });
                         }
                     }
                 });
@@ -819,37 +815,39 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     {
                         foreach (Item heldItem in permanentState.Owner.HeldItems)
                         {
-                            // Adds an action to clean firearm to remove the Misfired trait
-                            permanentState.ProvideActionIntoPossibilitySection = delegate (QEffect riskyReloadEffect, PossibilitySection section)
+                            permanentState.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
                             {
-                                if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                ProvideActionIntoPossibilitySection = delegate (QEffect riskyReloadEffect, PossibilitySection section)
                                 {
-                                    CombatAction basicStrike = riskyReloadEffect.Owner.CreateStrike(heldItem);
-                                    CombatAction riskyReloadAction = new CombatAction(riskyReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.TrueStrike), "Risky Reload", [Trait.Flourish, Trait.Basic], riskyReloadFeat.RulesText, basicStrike.Target).WithActionCost(1).WithItem(heldItem);
-                                    return new ActionPossibility(riskyReloadAction
-                                    .WithEffectOnEachTarget(async delegate (CombatAction riskyReload, Creature attacker, Creature defender, CheckResult result)
+                                    if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
                                     {
-                                        if (heldItem.HasTrait(Firearms.DoubleBarrelTrait))
+                                        CombatAction basicStrike = riskyReloadEffect.Owner.CreateStrike(heldItem);
+                                        CombatAction riskyReloadAction = new CombatAction(riskyReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.TrueStrike), "Risky Reload", [Trait.Flourish, Trait.Basic], riskyReloadFeat.RulesText, basicStrike.Target).WithActionCost(1).WithItem(heldItem);
+                                        return new ActionPossibility(riskyReloadAction
+                                        .WithEffectOnEachTarget(async delegate (CombatAction riskyReload, Creature attacker, Creature defender, CheckResult result)
                                         {
-                                            heldItem.EphemeralItemProperties.AmmunitionLeftInMagazine++;
-                                            heldItem.EphemeralItemProperties.NeedsReload = false;
+                                            if (heldItem.HasTrait(Firearms.DoubleBarrelTrait))
+                                            {
+                                                heldItem.EphemeralItemProperties.AmmunitionLeftInMagazine++;
+                                                heldItem.EphemeralItemProperties.NeedsReload = false;
 
-                                        }
-                                        else
-                                        {
-                                            await attacker.CreateReload(heldItem).WithActionCost(0).WithItem(heldItem).AllExecute();
-                                        }
+                                            }
+                                            else
+                                            {
+                                                await attacker.CreateReload(heldItem).WithActionCost(0).WithItem(heldItem).AllExecute();
+                                            }
 
-                                        CheckResult strikeResult = await riskyReload.Owner.MakeStrike(defender, heldItem);
-                                        if (strikeResult <= CheckResult.Failure && !heldItem.HasTrait(Firearms.MisfiredTrait))
-                                        {
-                                            heldItem.Traits.Add(Firearms.MisfiredTrait);
-                                        }
-                                    }));
+                                            CheckResult strikeResult = await riskyReload.Owner.MakeStrike(defender, heldItem);
+                                            if (strikeResult <= CheckResult.Failure && !heldItem.HasTrait(Firearms.MisfiredTrait))
+                                            {
+                                                heldItem.Traits.Add(Firearms.MisfiredTrait);
+                                            }
+                                        }));
+                                    }
+
+                                    return null;
                                 }
-
-                                return null;
-                            };
+                            });
                         }
                     }
                 });
@@ -1135,22 +1133,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 }
 
 
-            }
-        }
-
-        /// <summary>
-        /// Adds any of the given traits if it is missing from the traits
-        /// </summary>
-        /// <param name="traits">Traits being added to</param>
-        /// <param name="traitsToAdd">An array of traits to add</param>
-        private static void AddTraitIfNeeded(Traits traits, Trait[] traitsToAdd)
-        {
-            foreach (Trait trait in traitsToAdd)
-            {
-                if (!traits.Contains(trait))
-                {
-                    traits.Add(trait);
-                }
             }
         }
 

@@ -2,7 +2,9 @@
 using Dawnsbury.Core.Animations.Movement;
 using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.CharacterBuilder.Feats;
+using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb;
+using Dawnsbury.Core.CharacterBuilder.Selections.Options;
 using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Core.Coroutines.Options;
 using Dawnsbury.Core.Coroutines.Requests;
@@ -27,6 +29,7 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Extensions
 {
@@ -35,22 +38,24 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Extensions
     /// </summary>
     public static class GunslingerWayExtensions
     {
-        //public GunslingerWay(Feat wayFeat, Action<Feat> slingersReloadLogic, Action<Feat> initialDeedLogic, Trait[] waySkillsOptions)
-        //{
-        //    slingersReloadLogic(wayFeat);
-        //    initialDeedLogic(wayFeat);
-        //    if (waySkillsOptions.Length == 1)
-        //    {
-        //        wayFeat.WithOnSheet((CalculatedCharacterSheetValues character) =>
-        //        {
-        //            character.SetProficiency(waySkillsOptions[0], Proficiency.Trained);
-        //        });
-        //    }
-        //    else if (waySkillsOptions.Length > 1)
-        //    {
-        //        // Add new Option
-        //    }
-        //}
+        public static void WithWaySkill(this Feat wayFeat, FeatName waySkillFeat)
+        {
+            wayFeat.WithOnSheet((CalculatedCharacterSheetValues character) =>
+            {
+                if (!character.HasFeat(waySkillFeat))
+                {
+                    character.GrantFeat(waySkillFeat);
+                }
+            });
+        }
+
+        public static void WithWaySkillOptions(this Feat wayFeat, List<FeatName> waySkillFeats)
+        {
+            wayFeat.WithOnSheet((CalculatedCharacterSheetValues character) =>
+            {
+                character.AddSelectionOption((SelectionOption) new SingleFeatSelectionOption(wayFeat.Name + " Way Skill Selection", "Way Skill", 1, (feat => waySkillFeats.Contains(feat.FeatName))));
+            });
+        }
 
         public static void WithDrifersReloadingStrikeLogic(this Feat drifterFeat)
         {
@@ -130,14 +135,62 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Extensions
             });
         }
 
-        public static void WithWaySkill(this Feat wayFeat, Trait skill)
+        public static void WithPistolerosRaconteursReloadLogic(this Feat pistoleroFeat)
         {
-            wayFeat.WithOnSheet((CalculatedCharacterSheetValues character) =>
+            pistoleroFeat.WithOnCreature(creature =>
             {
-                if (!character.HasFeat(FeatName.Acrobatics))
+                creature.AddQEffect(new QEffect()
                 {
-                    character.GrantFeat(FeatName.Acrobatics);
-                }
+                    StateCheck = (QEffect permanentState) =>
+                    {
+                        foreach (Item heldItem in permanentState.Owner.HeldItems)
+                        {
+                            permanentState.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
+                            {
+                                ProvideMainAction = (QEffect raconteursReloadEffect) =>
+                                {
+                                    if (Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                    {
+                                        CombatAction raconteursReloadAction = CommonCombatActions.Demoralize(permanentState.Owner);
+                                        raconteursReloadAction.Name = "Raconteur's Reload";
+                                        raconteursReloadAction.Item = heldItem;
+                                        raconteursReloadAction.ActionCost = 1;
+                                        raconteursReloadAction.Illustration = new SideBySideIllustration(heldItem.Illustration, IllustrationName.Demoralize);
+                                        raconteursReloadAction.Description = "Interact to reload and then attempt a Deception check to Create a Diversion or an Intimidation check to Demoralize.";
+                                        raconteursReloadAction.Target = Target.Ranged(heldItem.WeaponProperties.MaximumRange);
+                                        raconteursReloadAction.WithEffectOnSelf((Creature self) =>
+                                        {
+                                            Gunslinger.AwaitReloadItem(self, heldItem);
+                                        });
+
+                                        return new ActionPossibility(raconteursReloadAction);
+                                    }
+
+                                    return null;
+                                }
+                            });
+                        }
+                    }
+                });
+            });
+        }
+
+        public static void WithPistolerosTenPacesLogic(this Feat pistoleroFeat)
+        {
+            pistoleroFeat.WithPermanentQEffect("Pistolero's Ten Paces", delegate (QEffect self)
+            {
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    if (await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Step up to 10 ft as a free action?", "Yes"))
+                    {
+                        await self.Owner.StrideAsync("Choose where to 5 ft. Step. (1/2)", allowStep: true, maximumFiveFeet: true, allowPass: true);
+                        await self.Owner.StrideAsync("Choose where to 5 ft. Step. (2/2)", allowStep: true, maximumFiveFeet: true, allowPass: true);
+                    }
+                };
+                self.BonusToInitiative = (QEffect bonusToInitiative) =>
+                {
+                    return new Bonus(2, BonusType.Circumstance, "Ten Paces", true);
+                };
             });
         }
 

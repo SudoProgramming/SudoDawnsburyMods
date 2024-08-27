@@ -38,6 +38,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using Dawnsbury.Auxiliary;
 using System.Transactions;
 using static Dawnsbury.Core.Mechanics.Core.CalculatedNumber;
+using Dawnsbury.Mods.Feats.Classes.Gunslinger.Enums;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -55,32 +56,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// The Gunslinger Class Selection Feat
         /// </summary>
         public static readonly FeatName GunslingerClassFeatName = ModManager.RegisterFeatName("GunslingerClassFeat", "Gunslinger");
-
-        /// <summary>
-        /// The Way of the Drifter Subclass Feat Name
-        /// </summary>
-        public static readonly FeatName WayOfTheDrifterFeatName = ModManager.RegisterFeatName("Way of the Drifter", "Way of the Drifter");
-
-        /// <summary>
-        /// The Way of the Pistolero Subclass Feat Name
-        /// </summary>
-        public static readonly FeatName WayOfThePistoleroFeatName = ModManager.RegisterFeatName("Way of the Pistolero", "Way of the Pistolero");
-
-        /// <summary>
-        /// The Way of the Sniper Subclass Feat Name
-        /// </summary>
-        public static readonly FeatName WayOfTheSniperFeatName = ModManager.RegisterFeatName("Way of the Sniper", "Way of the Sniper");
-
-        ///// <summary>
-        ///// The Way of the Triggerbrand Subclass Feat Name
-        ///// TODO: Add Combination Weapons and this Subclass
-        ///// </summary>
-        //public static readonly FeatName WayOfTheTriggerbrandFeatName = ModManager.RegisterFeatName("Way of the Triggerbrand", "Way of the Triggerbrand");
-
-        /// <summary>
-        /// The Way of the Vanguard Subclass Feat Name
-        /// </summary>
-        public static readonly FeatName WayOfTheVanguardFeatName = ModManager.RegisterFeatName("Way of the Vanguard", "Way of the Vanguard");
 
         /// <summary>
         /// The Hit the Dirt class feat name
@@ -183,6 +158,36 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <returns>The Enumerable of Gunslinger Feats</returns>
         public static IEnumerable<Feat> CreateGunslingerFeats()
         {
+            GunslingerWay wayOfTheDrifter = new GunslingerWay(GunslingerWayID.Drifter);
+
+
+            //// TODO
+            Feat wayOfThePistoleroFeat = new Feat(GunslingerWay.WayOfThePistoleroFeatName, "Whether you're a professional duelist or a pistol-twirling entertainer, you have quick feet and quicker hands that never seem to let you down, and an equally sharp wit and tongue that jab your foes. You might leave a hand free or cultivate the ambidexterity for twin weapons. Either way, you stay close enough to your enemies to leverage your superior reflexes while leaving enough space to safely fire.",
+            "You gain the {i}Slinger's Reload, Initial Deed, and Way Skill{/i} below:\n\n" +
+            "{b}Slinger's Reload{/b} Raconteur's Reload {icon:Action}\nInteract to reload and then attempt a Deception check to Create a Diversion or an Intimidation check to Demoralize.\n\n" +
+            "{b}Initial Deed{/b} Ten Paces {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nYou gain a +2 circumstance bonus to your initiative roll, and you can Step up to 10 feet as a free action.\n\n" +
+            "{b}Way Skill{/b} Deception or Intimidation\nYou become trained in your choice between Deception or Intimidation.", new List<Trait>(), null);
+
+            //// TODO
+            //Feat wayOfTheSniperFeat = new Feat(WayOfTheSniperFeatName, "You practice a style of shooting that relies on unerring accuracy and perfect placement of your first shot. You keep hidden or at a distance, staying out of the fray and bringing unseen death to your foes.",
+            //"You gain the {i}Slinger's Reload, Initial Deed, and Way Skill{/i} below:\n\n" +
+            //"{b}Slinger's Reload{/b} Covered Reload {icon:Action}\nEither Take Cover or attempt to Hide, then Interact to reload.\n\n" +
+            //"{b}Initial Deed{/b} One Shot, One Kill {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nYou instead roll Stealth for initiative. On your first turn, your first Strike with that weapon deals an additional 1d6 precision damage.\n\n" +
+            //"{b}Way Skill{/b} Stealth\nYou become trained in Stealth.", new List<Trait>(), null);
+
+            //// TODO
+            ////Feat wayOfTheTriggerbrandFeat = new Feat(WayOfTheTriggerbrandFeatName, "You prefer firearms that work well as weapons in both melee and ranged combat, particularly those that allow you to exercise a bit of style and flair. You might be a survivor who cobbled your weapon together from the City of Smog's street scrap or a noble wielder of a master smith's bespoke commission for duels among Alkenstar's elite.",
+            ////"You gain the {i}Slinger's Reload, Initial Deed, and Way Skill{/i} below:\n\n" +
+            ////"{b}Slinger's Reload{/b} Touch and Go {icon:Action}\n{b}Requirements{/b} You're wielding a combination weapon.\n\nYou can Step toward an enemy, you can Interact to change your weapon between melee or ranged modes, and you then Interact to reload.\n\n" +
+            ////"{b}Initial Deed{/b} Spring the Trap {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nYou choose which mode your combination weapon is set to. On your first turn, your movement and ranged attacks don't trigger reactions.\n\n" +
+            ////"{b}Way Skill{/b} Thievery\nYou become trained in Thievery.", new List<Trait>(), null);
+
+            //// TODO
+            //Feat wayOfTheVanguardFeat = new Feat(WayOfTheVanguardFeatName, "You practice a unique combat style originated by dwarven siege engineers, using heavy weapons with wide attack areas to blast holes through enemy lines, clear an opening for your allies, and defend the conquered territory.",
+            //"You gain the {i}Slinger's Reload, Initial Deed, and Way Skill{/i} below:\n\n" +
+            //"{b}Slinger's Reload{/b} Clear a Path {icon:Action}\n{b}Requirements{/b} You're wielding a two-handed firearm or two-handed crossbow.\n\nYou make an Athletics check to Shove an opponent within your reach using your weapon, then Interact to reload. For this Shove, you don't need a free hand, and you add the weapon's item bonus on attack rolls (if any) to the Athletics check. If your last action was a ranged Strike with the weapon, use the same multiple attack penalty as that Strike for the Shove; the Shove still counts toward your multiple attack penalty on further attacks as normal.\n\n" +
+            //"{b}Initial Deed{/b} Into the Fray {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nGain a +1 circumstance bonus to AC until the start of your first turn, or a +2 circumstance bonus if the chosen weapon has the parry trait.\n\n" +
+            //"{b}Way Skill{/b} Athletics\nYou become trained in Athletics.", new List<Trait>(), null);
 
             yield return new ClassSelectionFeat(GunslingerClassFeatName, "While some fear projectile weapons, you savor the searing flash, wild kick, and cloying smoke that accompanies a gunshot, or snap of the cable and telltale thunk of your crossbow just before your bolt finds purchase. Ready to draw a bead on an enemy at every turn, you rely on your reflexes, steady hand, and knowledge of your weapons to riddle your foes with holes.",
                 GunslingerTrait, new EnforcedAbilityBoost(Ability.Dexterity), 8,
@@ -191,43 +196,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 3,
                 "{b}1. Gunslinger's Way{/b} All gunslingers have a particular way they follow, a combination of philosophy and combat style that defines both how they fight and the weapons they excel with. At 1st level, your way grants you an initial deed, a unique reload action called a slinger's reload, and proficiency with a particular skill. You also gain advanced and greater deeds at later levels, as well as access to way-specific feats.\n\n" +
                 "{b}2. Singular Expertise{/b} You have particular expertise with guns and crossbows that grants you greater proficiency with them and the ability to deal more damage. You gain a +1 circumstance bonus to damage rolls with firearms and crossbows.\r\n\r\nThis intense focus on firearms and crossbows prevents you from reaching the same heights with other weapons. Your proficiency with unarmed attacks and with weapons other than firearms and crossbows can't be higher than trained, even if you gain an ability that would increase your proficiency in one or more other weapons to match your highest weapon proficiency (such as the weapon expertise feats many ancestries have). If you have gunslinger weapon mastery, the limit is expert, and if you have gunslinging legend, the limit is master.\n\n" +
-                "{b}3. Gunslinger Feat{/b}", new List<Feat>()
-                {
-                    // TODO
-                    new Feat(WayOfTheDrifterFeatName, "You're a wanderer traveling from land to land with your gun and a melee weapon as company. Maybe you learned to fight with blade and pistol as a Shackles pirate, mastered the hand cannon and katana in Minkai, or practiced with a hatchet and clan pistol in Dongun Hold. You win battles by relying on mobility and flexible use of your weapons.",
-                    "You gain the {i}Slinger's Reload, Initial Deed, and Way Skill{/i} below:\n\n" +
-                    "{b}Slinger's Reload{/b} Reloading Strike {icon:Action}\n{b}Requirements{/b} You're wielding a firearm or crossbow in one hand, and your other hand either wields a one-handed melee weapon or is empty.\n\nStrike an opponent within reach with your one-handed melee weapon (or, if your other hand is empty, with an unarmed attack), and then Interact to reload.\n\n" +
-                    "{b}Initial Deed{/b} Into the Fray {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nYou can stride as a free action toward an enemy.\n\n" +
-                    "{b}Way Skill{/b} Acrobatics\nYou become trained in Acrobatics.", new List<Trait>(), null),
-
-                    // TODO
-                    new Feat(WayOfThePistoleroFeatName, "Whether you're a professional duelist or a pistol-twirling entertainer, you have quick feet and quicker hands that never seem to let you down, and an equally sharp wit and tongue that jab your foes. You might leave a hand free or cultivate the ambidexterity for twin weapons. Either way, you stay close enough to your enemies to leverage your superior reflexes while leaving enough space to safely fire.",
-                    "You gain the {i}Slinger's Reload, Initial Deed, and Way Skill{/i} below:\n\n" +
-                    "{b}Slinger's Reload{/b} Raconteur's Reload {icon:Action}\nInteract to reload and then attempt a Deception check to Create a Diversion or an Intimidation check to Demoralize.\n\n" +
-                    "{b}Initial Deed{/b} Ten Paces {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nYou gain a +2 circumstance bonus to your initiative roll, and you can Step up to 10 feet as a free action.\n\n" +
-                    "{b}Way Skill{/b} Deception or Intimidation\nYou become trained in your choice between Deception or Intimidation.", new List<Trait>(), null),
-
-                    // TODO
-                    new Feat(WayOfTheSniperFeatName, "You practice a style of shooting that relies on unerring accuracy and perfect placement of your first shot. You keep hidden or at a distance, staying out of the fray and bringing unseen death to your foes.",
-                    "You gain the {i}Slinger's Reload, Initial Deed, and Way Skill{/i} below:\n\n" +
-                    "{b}Slinger's Reload{/b} Covered Reload {icon:Action}\nEither Take Cover or attempt to Hide, then Interact to reload.\n\n" +
-                    "{b}Initial Deed{/b} One Shot, One Kill {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nYou instead roll Stealth for initiative. On your first turn, your first Strike with that weapon deals an additional 1d6 precision damage.\n\n" +
-                    "{b}Way Skill{/b} Stealth\nYou become trained in Stealth.", new List<Trait>(), null),
-
-                    // TODO
-                    //new Feat(WayOfTheTriggerbrandFeatName, "You prefer firearms that work well as weapons in both melee and ranged combat, particularly those that allow you to exercise a bit of style and flair. You might be a survivor who cobbled your weapon together from the City of Smog's street scrap or a noble wielder of a master smith's bespoke commission for duels among Alkenstar's elite.",
-                    //"You gain the {i}Slinger's Reload, Initial Deed, and Way Skill{/i} below:\n\n" +
-                    //"{b}Slinger's Reload{/b} Touch and Go {icon:Action}\n{b}Requirements{/b} You're wielding a combination weapon.\n\nYou can Step toward an enemy, you can Interact to change your weapon between melee or ranged modes, and you then Interact to reload.\n\n" +
-                    //"{b}Initial Deed{/b} Spring the Trap {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nYou choose which mode your combination weapon is set to. On your first turn, your movement and ranged attacks don't trigger reactions.\n\n" +
-                    //"{b}Way Skill{/b} Thievery\nYou become trained in Thievery.", new List<Trait>(), null),
-
-                    // TODO
-                    new Feat(WayOfTheVanguardFeatName, "You practice a unique combat style originated by dwarven siege engineers, using heavy weapons with wide attack areas to blast holes through enemy lines, clear an opening for your allies, and defend the conquered territory.",
-                    "You gain the {i}Slinger's Reload, Initial Deed, and Way Skill{/i} below:\n\n" +
-                    "{b}Slinger's Reload{/b} Clear a Path {icon:Action}\n{b}Requirements{/b} You're wielding a two-handed firearm or two-handed crossbow.\n\nYou make an Athletics check to Shove an opponent within your reach using your weapon, then Interact to reload. For this Shove, you don't need a free hand, and you add the weapon's item bonus on attack rolls (if any) to the Athletics check. If your last action was a ranged Strike with the weapon, use the same multiple attack penalty as that Strike for the Shove; the Shove still counts toward your multiple attack penalty on further attacks as normal.\n\n" +
-                    "{b}Initial Deed{/b} Into the Fray {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nGain a +1 circumstance bonus to AC until the start of your first turn, or a +2 circumstance bonus if the chosen weapon has the parry trait.\n\n" +
-                    "{b}Way Skill{/b} Athletics\nYou become trained in Athletics.", new List<Trait>(), null)
-                }).WithOnSheet(delegate (CalculatedCharacterSheetValues sheet)
+                "{b}3. Gunslinger Feat{/b}", new List<Feat>() { wayOfTheDrifter.Feat })
+                .WithOnSheet(delegate (CalculatedCharacterSheetValues sheet)
                 {
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("GunslingerFeat1", "Gunslinger feat", 1, (Feat ft) => ft.HasTrait(GunslingerTrait)));
                     sheet.AddAtLevel(3, delegate (CalculatedCharacterSheetValues values)
@@ -236,7 +206,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     });
                 });
 
-            // TODO
             TrueFeat coverFireFeat = new TrueFeat(CoverFireFeatName, 1, "You lay down suppressive fire to protect allies by forcing foes to take cover from your wild attacks.", "{b}Frequency{/b} once per round\n\n{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nMake a firearm or crossbow Strike; the target must decide before you roll your attack whether it will duck out of the way.\n\nIf the target ducks, it gains a +2 circumstance bonus to AC against your attack, or a +4 circumstance bonus to AC if it has cover. It also takes a –2 circumstance penalty to ranged attack rolls until the end of its next turn.\n\nIf the target chooses not to duck, you gain a +1 circumstance bonus to your attack roll for that Strike.", [GunslingerTrait]).WithActionCost(1);
             AddCoverFireLogic(coverFireFeat);
             yield return coverFireFeat;
@@ -465,12 +434,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="pairedShotsFeat">The Paired Shots true feat object</param>
         private static void AddPairedShotsLogic(TrueFeat pairedShotsFeat)
         {
-            // TODO Check for Misfired
             pairedShotsFeat.WithPermanentQEffect(pairedShotsFeat.FlavorText, delegate (QEffect self)
             {
                 self.ProvideMainAction = (QEffect pairedShotEffect) =>
                 {
-                    if (pairedShotEffect.Owner.HeldItems.Count(item => Firearms.IsItemFirearmOrCrossbow(item) && Firearms.IsItemLoaded(item) && item.WeaponProperties != null) != 2)
+                    if (pairedShotEffect.Owner.HeldItems.Count(item => Firearms.IsItemFirearmOrCrossbow(item) && Firearms.IsItemLoaded(item) && !item.HasTrait(Firearms.MisfiredTrait) && item.WeaponProperties != null) != 2)
                     {
                         return null;
                     }
@@ -664,7 +632,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             // Adds an action to clean firearm to remove the Misfired trait
                             permanentState.ProvideActionIntoPossibilitySection = delegate (QEffect runningReloadEffect, PossibilitySection section)
                             {
-                                if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
                                 {
                                     return new ActionPossibility(new CombatAction(runningReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.WarpStep), "Running Reload", [GunslingerTrait, Trait.Basic], runningReloadFeat.RulesText, Target.Self()).WithActionCost(1).WithItem(heldItem).WithEffectOnSelf(async (action, self) =>
                                     {
@@ -674,16 +642,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         }
                                         else
                                         {
-                                            if (heldItem.HasTrait(Firearms.DoubleBarrelTrait))
-                                            {
-                                                heldItem.EphemeralItemProperties.AmmunitionLeftInMagazine++;
-                                                heldItem.EphemeralItemProperties.NeedsReload = false;
-
-                                            }
-                                            else
-                                            {
-                                                await self.CreateReload(heldItem).WithActionCost(0).WithItem(heldItem).AllExecute();
-                                            }
+                                            AwaitReloadItem(self, heldItem);
                                         }
                                     }));
                                 }
@@ -863,7 +822,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             // Adds an action to clean firearm to remove the Misfired trait
                             permanentState.ProvideActionIntoPossibilitySection = delegate (QEffect riskyReloadEffect, PossibilitySection section)
                             {
-                                if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
                                 {
                                     CombatAction basicStrike = riskyReloadEffect.Owner.CreateStrike(heldItem);
                                     CombatAction riskyReloadAction = new CombatAction(riskyReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.TrueStrike), "Risky Reload", [Trait.Flourish, Trait.Basic], riskyReloadFeat.RulesText, basicStrike.Target).WithActionCost(1).WithItem(heldItem);
@@ -1095,7 +1054,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     if (await creature.Battle.AskToUseReaction(ally, "Make an attack roll to Aid the triggering attack." + fakeOutTargetTextAddition))
                                     {
                                         CombatAction basicStrike = ally.CreateStrike(mainWeapon);
-                                        CombatAction aidStrike = new CombatAction(ally, new SimpleIllustration(IllustrationName.None), "Aid Strike", [], "{b}Critical Success{/b} Your ally gains a +2 circumstance bonus to the triggering action.\n\n\"{b}Success{/b} Your ally gains a +1 circumstance bonus to the triggering action.\n\n\"{b}Critical Failure{/b} Your ally gains a -1 circumstance penalty to the triggering action.\n\n", action.Target);
+                                        CombatAction aidStrike = new CombatAction(ally, new SimpleIllustration(IllustrationName.None), "Aid Strike (" + mainWeapon.Name + ")", [], "{b}Critical Success{/b} Your ally gains a +2 circumstance bonus to the triggering action.\n\n\"{b}Success{/b} Your ally gains a +1 circumstance bonus to the triggering action.\n\n\"{b}Critical Failure{/b} Your ally gains a -1 circumstance penalty to the triggering action.\n\n", action.Target);;
                                         aidStrike.ActionCost = 0;
                                         aidStrike.Item = mainWeapon;
                                         aidStrike.Traits = basicStrike.Traits;
@@ -1180,22 +1139,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         }
 
         /// <summary>
-        /// Determines if the item has a multi ammo reload and if it is reloadable
-        /// </summary>
-        /// <param name="item">The item being check</param>
-        /// <returns>True if the item is a multi ammo reloadable item and false otherwise.</returns>
-        private static bool IsMultiAmmoWeaponReloadable(Item item)
-        {
-            int maxMagazineSize = item.HasTrait(Firearms.DoubleBarrelTrait) ? 2 : 5;
-            if ((item.HasTrait(Firearms.DoubleBarrelTrait) || item.HasTrait(Trait.Repeating)) && item.EphemeralItemProperties.AmmunitionLeftInMagazine <= maxMagazineSize)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// Adds any of the given traits if it is missing from the traits
         /// </summary>
         /// <param name="traits">Traits being added to</param>
@@ -1225,6 +1168,20 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 }
 
                 item.EphemeralItemProperties.AmmunitionLeftInMagazine--;
+            }
+        }
+
+        public static async void AwaitReloadItem(Creature self, Item item)
+        {
+            if (item.HasTrait(Firearms.DoubleBarrelTrait))
+            {
+                item.EphemeralItemProperties.AmmunitionLeftInMagazine++;
+                item.EphemeralItemProperties.NeedsReload = false;
+
+            }
+            else
+            {
+                await self.CreateReload(item).WithActionCost(0).WithItem(item).AllExecute();
             }
         }
 

@@ -409,6 +409,22 @@ namespace Dawnsbury.Mods.Items.Firearms
         }
 
         /// <summary>
+        /// Determines if the item has a multi ammo reload and if it is reloadable
+        /// </summary>
+        /// <param name="item">The item being check</param>
+        /// <returns>True if the item is a multi ammo reloadable item and false otherwise.</returns>
+        public static bool IsMultiAmmoWeaponReloadable(Item item)
+        {
+            int maxMagazineSize = item.HasTrait(Firearms.DoubleBarrelTrait) ? 2 : 5;
+            if ((item.HasTrait(Firearms.DoubleBarrelTrait) || item.HasTrait(Trait.Repeating)) && item.EphemeralItemProperties.AmmunitionLeftInMagazine <= maxMagazineSize)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Adds the Double Barrel Fire Attack for all firearms with the Double Barrel trait
         /// </summary>
         /// <param name="self">The state check</param>

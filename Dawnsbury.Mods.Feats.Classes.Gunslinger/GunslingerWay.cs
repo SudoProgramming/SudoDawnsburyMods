@@ -70,6 +70,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     this.Feat.WithPistolerosTenPacesLogic();
                     this.Feat.WithWaySkillOptions(new List<FeatName> { FeatName.Deception, FeatName.Intimidation });
                     break;
+                case GunslingerWayID.Sniper:
+                    this.Feat = this.CreateSniperFeat();
+                    this.Feat.WithSnipersCoveredReloadLogic();
+                    this.Feat.WithSnipersOneShotOneKillLogic();
+                    this.Feat.WithWaySkill(FeatName.Stealth);
+                    break;
+                case GunslingerWayID.Vanguard:
+                    this.Feat = this.CreateVanguardFeat();
+                    this.Feat.WithVanguardClearAPathLogic();
+                    this.Feat.WithVanguardLivingFortificationLogic();
+                    this.Feat.WithWaySkill(FeatName.Athletics);
+                    break;
                 default:
                     break;
             }
@@ -102,6 +114,26 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             this.SlingersReloadRulesText = "Raconteur's Reload {icon:Action}\nInteract to reload and then attempt a Deception check to Create a Diversion or an Intimidation check to Demoralize.";
             this.InitialDeedRulesText = "Ten Paces {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nYou gain a +2 circumstance bonus to your initiative roll, and you can Step up to 10 feet as a free action.";
             this.WaySkillRulesText = "Deception or Intimidation\nYou become trained in your choice between Deception or Intimidation.";
+            return CreateGenericWayFeat();
+        }
+
+        protected Feat CreateSniperFeat()
+        {
+            this.FeatName = WayOfTheSniperFeatName;
+            this.FlavorText = "You practice a style of shooting that relies on unerring accuracy and perfect placement of your first shot. You keep hidden or at a distance, staying out of the fray and bringing unseen death to your foes.";
+            this.SlingersReloadRulesText = "Covered Reload {icon:Action}\nReload then, either Take Cover or attempt to Hide.";
+            this.InitialDeedRulesText = "One Shot, One Kill {icon:FreeAction}\nYou have the choice of rolling Stealth or Perception for initiative.\n\nIf you roll Stealth as initiative, you deal 1d6 percision damage with your first strike from a firearm or crossbow on your first turn.\n\nYou can begin hidden to creatures who rolled lower than you in initiative if you have standard cover or greater to them.";
+            this.WaySkillRulesText = "Stealth\nYou become trained in Stealth.";
+            return CreateGenericWayFeat();
+        }
+
+        protected Feat CreateVanguardFeat()
+        {
+            this.FeatName = WayOfTheVanguardFeatName;
+            this.FlavorText = "You practice a unique combat style originated by dwarven siege engineers, using heavy weapons with wide attack areas to blast holes through enemy lines, clear an opening for your allies, and defend the conquered territory.";
+            this.SlingersReloadRulesText = "Clear a Path {icon:Action}\n{b}Requirements{/b} You're wielding a two-handed firearm or two-handed crossbow.\n\nYou make an Athletics check to Shove an opponent within your reach using your weapon, then Interact to reload. For this Shove, you don't need a free hand, and you add the weapon's item bonus on attack rolls (if any) to the Athletics check. If your last action was a ranged Strike with the weapon, use the same multiple attack penalty as that Strike for the Shove; the Shove still counts toward your multiple attack penalty on further attacks as normal.";
+            this.InitialDeedRulesText = "Living Fortification {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nGain a +1 circumstance bonus to AC until the start of your first turn, or a +2 circumstance bonus if the chosen weapon has the parry trait.";
+            this.WaySkillRulesText = "Athletics\nYou become trained in Athletics.";
             return CreateGenericWayFeat();
         }
 

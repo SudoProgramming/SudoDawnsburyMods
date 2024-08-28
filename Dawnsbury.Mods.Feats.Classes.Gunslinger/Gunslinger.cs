@@ -39,6 +39,7 @@ using Dawnsbury.Auxiliary;
 using System.Transactions;
 using static Dawnsbury.Core.Mechanics.Core.CalculatedNumber;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.Enums;
+using Dawnsbury.Mods.Feats.Classes.Gunslinger.Extensions;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -162,12 +163,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
             GunslingerWay wayOfThePistolero = new GunslingerWay(GunslingerWayID.Pistolero);
 
-            //// TODO
-            //Feat wayOfTheSniperFeat = new Feat(WayOfTheSniperFeatName, "You practice a style of shooting that relies on unerring accuracy and perfect placement of your first shot. You keep hidden or at a distance, staying out of the fray and bringing unseen death to your foes.",
-            //"You gain the {i}Slinger's Reload, Initial Deed, and Way Skill{/i} below:\n\n" +
-            //"{b}Slinger's Reload{/b} Covered Reload {icon:Action}\nEither Take Cover or attempt to Hide, then Interact to reload.\n\n" +
-            //"{b}Initial Deed{/b} One Shot, One Kill {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nYou instead roll Stealth for initiative. On your first turn, your first Strike with that weapon deals an additional 1d6 precision damage.\n\n" +
-            //"{b}Way Skill{/b} Stealth\nYou become trained in Stealth.", new List<Trait>(), null);
+            GunslingerWay wayOfTheSniper = new GunslingerWay(GunslingerWayID.Sniper);
 
             //// TODO
             ////Feat wayOfTheTriggerbrandFeat = new Feat(WayOfTheTriggerbrandFeatName, "You prefer firearms that work well as weapons in both melee and ranged combat, particularly those that allow you to exercise a bit of style and flair. You might be a survivor who cobbled your weapon together from the City of Smog's street scrap or a noble wielder of a master smith's bespoke commission for duels among Alkenstar's elite.",
@@ -176,12 +172,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             ////"{b}Initial Deed{/b} Spring the Trap {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nYou choose which mode your combination weapon is set to. On your first turn, your movement and ranged attacks don't trigger reactions.\n\n" +
             ////"{b}Way Skill{/b} Thievery\nYou become trained in Thievery.", new List<Trait>(), null);
 
-            //// TODO
-            //Feat wayOfTheVanguardFeat = new Feat(WayOfTheVanguardFeatName, "You practice a unique combat style originated by dwarven siege engineers, using heavy weapons with wide attack areas to blast holes through enemy lines, clear an opening for your allies, and defend the conquered territory.",
-            //"You gain the {i}Slinger's Reload, Initial Deed, and Way Skill{/i} below:\n\n" +
-            //"{b}Slinger's Reload{/b} Clear a Path {icon:Action}\n{b}Requirements{/b} You're wielding a two-handed firearm or two-handed crossbow.\n\nYou make an Athletics check to Shove an opponent within your reach using your weapon, then Interact to reload. For this Shove, you don't need a free hand, and you add the weapon's item bonus on attack rolls (if any) to the Athletics check. If your last action was a ranged Strike with the weapon, use the same multiple attack penalty as that Strike for the Shove; the Shove still counts toward your multiple attack penalty on further attacks as normal.\n\n" +
-            //"{b}Initial Deed{/b} Into the Fray {icon:FreeAction}\n{b}Trigger{/b} You roll initiative\nGain a +1 circumstance bonus to AC until the start of your first turn, or a +2 circumstance bonus if the chosen weapon has the parry trait.\n\n" +
-            //"{b}Way Skill{/b} Athletics\nYou become trained in Athletics.", new List<Trait>(), null);
+            yield return new Feat(GunslingerWayExtensions.GunslingerSniperStealthInitiative, "You keep hidden or at a distance, staying out of the fray and bringing unseen death to your foes.", "You roll Stealth as initiative, you deal 1d6 percision damage with your first strike from a firearm or crossbow on your first turn.\n\nYou can begin hidden to creatures who rolled lower than you in initiative if you have standard cover or greater to them.", [], null);
+
+            yield return new Feat(GunslingerWayExtensions.GunslingerSniperPerceptionInitiative, "You stay alert and ready for a fight.", "You will roll perception as initiative as normal, and will gain no other benefits from One Shot, One Kill.", [], null);
 
             yield return new ClassSelectionFeat(GunslingerClassFeatName, "While some fear projectile weapons, you savor the searing flash, wild kick, and cloying smoke that accompanies a gunshot, or snap of the cable and telltale thunk of your crossbow just before your bolt finds purchase. Ready to draw a bead on an enemy at every turn, you rely on your reflexes, steady hand, and knowledge of your weapons to riddle your foes with holes.",
                 GunslingerTrait, new EnforcedAbilityBoost(Ability.Dexterity), 8,
@@ -190,7 +183,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 3,
                 "{b}1. Gunslinger's Way{/b} All gunslingers have a particular way they follow, a combination of philosophy and combat style that defines both how they fight and the weapons they excel with. At 1st level, your way grants you an initial deed, a unique reload action called a slinger's reload, and proficiency with a particular skill. You also gain advanced and greater deeds at later levels, as well as access to way-specific feats.\n\n" +
                 "{b}2. Singular Expertise{/b} You have particular expertise with guns and crossbows that grants you greater proficiency with them and the ability to deal more damage. You gain a +1 circumstance bonus to damage rolls with firearms and crossbows.\r\n\r\nThis intense focus on firearms and crossbows prevents you from reaching the same heights with other weapons. Your proficiency with unarmed attacks and with weapons other than firearms and crossbows can't be higher than trained, even if you gain an ability that would increase your proficiency in one or more other weapons to match your highest weapon proficiency (such as the weapon expertise feats many ancestries have). If you have gunslinger weapon mastery, the limit is expert, and if you have gunslinging legend, the limit is master.\n\n" +
-                "{b}3. Gunslinger Feat{/b}", new List<Feat>() { wayOfTheDrifter.Feat, wayOfThePistolero.Feat })
+                "{b}3. Gunslinger Feat{/b}", new List<Feat>() { wayOfTheDrifter.Feat, wayOfThePistolero.Feat, wayOfTheSniper.Feat })
                 .WithOnSheet(delegate (CalculatedCharacterSheetValues sheet)
                 {
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("GunslingerFeat1", "Gunslinger feat", 1, (Feat ft) => ft.HasTrait(GunslingerTrait)));
@@ -226,7 +219,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
 
             TrueFeat pistolTwirlFeat = new TrueFeat(PistolTwirlFeatName, 2, "Your quick gestures and flair for performance distract your opponent, leaving it vulnerable to your follow-up attacks.", "{b}Requirements{/b} You're wielding a loaded one-handed ranged weapon.\n\nYou Feint against an opponent within the required weapon's first range increment, rather than an opponent within melee reach. If you succeed, the foe is flat-footed against your melee and ranged attacks, rather than only your melee attacks. On a critical failure, you're flat-footed against the target's melee and ranged attacks, rather than only its melee attacks.", [GunslingerTrait]).WithActionCost(1);
-            pistolTwirlFeat.WithPrerequisite((CalculatedCharacterSheetValues sheet) => (sheet.Proficiencies.AllProficiencies[Trait.Deception] >= Proficiency.Trained), "trained in Deception");
+            pistolTwirlFeat.WithPrerequisite((CalculatedCharacterSheetValues sheet) => (sheet.Proficiencies.AllProficiencies.ContainsKey(Trait.Deception) && sheet.Proficiencies.AllProficiencies[Trait.Deception] >= Proficiency.Trained), "trained in Deception");
             AddPistolTwirlLogic(pistolTwirlFeat);
             yield return pistolTwirlFeat;
 
@@ -235,7 +228,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             yield return riskyReloadFeat;
 
             TrueFeat warningShotFeat = new TrueFeat(WarningShotFeatName, 2, "Who needs words when the roar of a gun is so much more succinct?", "{b}Requirements{/b} You're wielding a loaded firearm.\n\nYou attempt to Demoralize a foe by firing your weapon into the air, using the firearm's maximum range rather than the usual range of 30 feet. This check doesn't take the –4 circumstance penalty if the target doesn't share a language with you.", [GunslingerTrait]);
-            warningShotFeat.WithActionCost(1).WithPrerequisite((CalculatedCharacterSheetValues sheet) => (sheet.Proficiencies.AllProficiencies[Trait.Intimidation] >= Proficiency.Trained), "trained in Intimidation");
+            warningShotFeat.WithActionCost(1).WithPrerequisite((CalculatedCharacterSheetValues sheet) => (sheet.Proficiencies.AllProficiencies.ContainsKey(Trait.Intimidation) && sheet.Proficiencies.AllProficiencies[Trait.Intimidation] >= Proficiency.Trained), "trained in Intimidation");
             AddWarningShotLogic(warningShotFeat);
             yield return warningShotFeat;
 

@@ -100,7 +100,7 @@ This module adds the Gunslinger class. This is a Work in Progress:
 - [X] Way of the Sniper
 - [ ] Way of the Triggerbrand
     - Needs combination weapons
-- [ ] Way of the Vanguard
+- [X] Way of the Vanguard
 
 ### Dependencies
 This module depends on the Firearms mod

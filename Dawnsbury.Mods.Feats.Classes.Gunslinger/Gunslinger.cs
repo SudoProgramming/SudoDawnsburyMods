@@ -40,6 +40,7 @@ using System.Transactions;
 using static Dawnsbury.Core.Mechanics.Core.CalculatedNumber;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.Enums;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.Extensions;
+using Dawnsbury.Core.Roller;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -57,6 +58,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// The Gunslinger Class Selection Feat
         /// </summary>
         public static readonly FeatName GunslingerClassFeatName = ModManager.RegisterFeatName("GunslingerClassFeat", "Gunslinger");
+
+        public static readonly FeatName SingularExpertiseFeatName = ModManager.RegisterFeatName("Singular Expertise", "Singular Expertise");
 
         /// <summary>
         /// The Hit the Dirt class feat name
@@ -178,6 +181,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
             yield return new Feat(GunslingerWayExtensions.GunslingerSniperPerceptionInitiative, "You stay alert and ready for a fight.", "You will roll perception as initiative as normal, and will gain no other benefits from One Shot, One Kill.", [], null);
 
+            Feat singularExpertiseFeat = new Feat(SingularExpertiseFeatName, "You have particular expertise with guns and crossbows that grants you greater proficiency with them and the ability to deal more damage.", "You gain a +1 circumstance bonus to damage rolls with firearms and crossbows.", [], null);
+            AddSingularExpertiseLogic(singularExpertiseFeat);
+            yield return singularExpertiseFeat;
+
             yield return new ClassSelectionFeat(GunslingerClassFeatName, "While some fear projectile weapons, you savor the searing flash, wild kick, and cloying smoke that accompanies a gunshot, or snap of the cable and telltale thunk of your crossbow just before your bolt finds purchase. Ready to draw a bead on an enemy at every turn, you rely on your reflexes, steady hand, and knowledge of your weapons to riddle your foes with holes.",
                 GunslingerTrait, new EnforcedAbilityBoost(Ability.Dexterity), 8,
                 [Trait.Will, Trait.Unarmed, Trait.Simple, Trait.Martial, Firearms.AdvancedCrossbowTrait, Firearms.AdvancedFirearmTrait, Trait.UnarmoredDefense, Trait.LightArmor, Trait.MediumArmor],
@@ -188,6 +195,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 "{b}3. Gunslinger Feat{/b}", new List<Feat>() { wayOfTheDrifter.Feat, wayOfThePistolero.Feat, wayOfTheSniper.Feat, wayOfTheVanguard.Feat })
                 .WithOnSheet(delegate (CalculatedCharacterSheetValues sheet)
                 {
+                    sheet.AddFeat(singularExpertiseFeat, null);
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("GunslingerFeat1", "Gunslinger feat", 1, (Feat ft) => ft.HasTrait(GunslingerTrait)));
                     sheet.AddAtLevel(3, delegate (CalculatedCharacterSheetValues values)
                     {
@@ -259,6 +267,22 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 PatchQuickDraw(feat);
             }
+        }
+
+        private static void AddSingularExpertiseLogic(Feat singularExpertiseFeat)
+        {
+            singularExpertiseFeat.WithPermanentQEffect(singularExpertiseFeat.FlavorText, delegate (QEffect self)
+            {
+                self.BonusToDamage = (QEffect self, CombatAction action, Creature defender) =>
+                {
+                    if (action.HasTrait(Firearms.FirearmTrait) || action.HasTrait(Trait.Crossbow) || (action.Item != null && action.Item.WeaponProperties != null && Firearms.IsItemFirearmOrCrossbow(action.Item)))
+                    {
+                        return new Bonus(1, BonusType.Circumstance, "Singular Expertise");
+                    }
+
+                    return null;                   
+                };
+            });
         }
 
         /// <summary>
@@ -492,17 +516,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                             WeaponProperties = new WeaponProperties(item.WeaponProperties.Damage, alchemicalDamageType).WithRangeIncrement(item.WeaponProperties.RangeIncrement)
                                         };
 
-                                        CombatAction alchemicalShotAction = permanentState.Owner.CreateStrike(alchemicalBombLoadedWeapon);
+                                        CombatAction alchemicalShotAction = new CombatAction(permanentState.Owner, new SideBySideIllustration(item.Illustration, bomb.Illustration), "Alchemical Shot (" + bomb.Name + ")", [Trait.Basic], alchemicalShotFeat.RulesText, Target.Ranged(item.WeaponProperties.MaximumRange));
                                         alchemicalShotAction.Item = item;
-                                        alchemicalShotAction.Name = "Alchemical Shot (" + bomb.Name + ")";
                                         alchemicalShotAction.ActionCost = 2;
-                                        alchemicalShotAction.Illustration = new SideBySideIllustration(item.Illustration, bomb.Illustration);
-                                        alchemicalShotAction.Description = alchemicalShotFeat.RulesText;
 
                                         alchemicalShotAction.WithEffectOnEachTarget(async delegate (CombatAction pistolTwirl, Creature attacker, Creature defender, CheckResult result)
                                         {
                                             if (defender != null)
                                             {
+                                                result = await permanentState.Owner.MakeStrike(defender, alchemicalBombLoadedWeapon);
                                                 DischargeItem(item);
                                                 for (int i = 0; i < permanentState.Owner.HeldItems.Count; i++)
                                                 {

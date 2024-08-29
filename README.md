@@ -97,7 +97,7 @@ This module adds the Gunslinger class. This is a Work in Progress:
 - [X] Ways Base Class
 - [X] Way of the Drifter
 - [X] Way of the Pistolero
-- [ ] Way of the Sniper
+- [X] Way of the Sniper
 - [ ] Way of the Triggerbrand
     - Needs combination weapons
 - [ ] Way of the Vanguard

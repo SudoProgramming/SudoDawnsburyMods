@@ -22,6 +22,7 @@ using Dawnsbury.Core.Possibilities;
 using Dawnsbury.Core.Roller;
 using Dawnsbury.Core.Tiles;
 using Dawnsbury.Display.Illustrations;
+using Dawnsbury.IO;
 using Dawnsbury.Modding;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.Enums;
 using Dawnsbury.Mods.Items.Firearms;
@@ -162,23 +163,126 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Extensions
                         {
                             permanentState.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
                             {
-                                ProvideMainAction = (QEffect raconteursReloadEffect) =>
+                                ProvideMainAction = (QEffect raconteursReloadDemoralizeEffect) =>
                                 {
                                     if (Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
                                     {
-                                        CombatAction raconteursReloadAction = CommonCombatActions.Demoralize(permanentState.Owner);
-                                        raconteursReloadAction.Name = "Raconteur's Reload";
-                                        raconteursReloadAction.Item = heldItem;
-                                        raconteursReloadAction.ActionCost = 1;
-                                        raconteursReloadAction.Illustration = new SideBySideIllustration(heldItem.Illustration, IllustrationName.Demoralize);
-                                        raconteursReloadAction.Description = "Interact to reload and then attempt a Deception check to Create a Diversion or an Intimidation check to Demoralize.";
-                                        raconteursReloadAction.Target = Target.Ranged(heldItem.WeaponProperties.MaximumRange);
-                                        raconteursReloadAction.WithEffectOnSelf((Creature self) =>
+                                        CombatAction demoralizeAction = CommonCombatActions.Demoralize(permanentState.Owner);
+                                        demoralizeAction.ActionCost = 1;
+                                        demoralizeAction.Name = "Raconteur's Reload (Demoralize)";
+                                        demoralizeAction.Illustration = new SideBySideIllustration(heldItem.Illustration, demoralizeAction.Illustration);
+                                        demoralizeAction.Description = "Interact to reload and then attempt an Intimidation check to Demoralize.";
+                                        demoralizeAction.WithEffectOnSelf((Func<Creature, Task>)(async innerSelf =>
                                         {
-                                            Gunslinger.AwaitReloadItem(self, heldItem);
-                                        });
+                                            Gunslinger.AwaitReloadItem(raconteursReloadDemoralizeEffect.Owner, heldItem);
+                                        }));
 
-                                        return new ActionPossibility(raconteursReloadAction);
+                                        return new ActionPossibility(demoralizeAction);
+                                    }
+
+                                    return null;
+                                }
+                            });
+                            permanentState.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
+                            {
+                                ProvideMainAction = (QEffect raconteursReloadDiversionEffect) =>
+                                {
+                                    if (Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                    {
+                                        Creature self = raconteursReloadDiversionEffect.Owner;
+                                        CombatAction createADiversion = new CombatAction(self, (Illustration)IllustrationName.CreateADiversion, "Create a Diversion", new Trait[6]
+                                        {
+                                            Trait.Basic,
+                                            Trait.Mental,
+                                            Trait.AttackDoesNotTargetAC,
+                                            Trait.AlwaysHits,
+                                            Trait.Auditory,
+                                            Trait.Linguistic
+                                        }, "Choose any number of enemy creatures you can see.\n\nMake one Deception check against the Perception DC of all those creatures. On a success, you become Hidden to those creatures.\n\nWhether or not you succeed,  creatures you attempt to divert gain a +4 circumstance bonus to their Perception DCs against your attempts to Create a Diversion for the rest of the encounter.", (Target)Target.MultipleCreatureTargets(Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100)).WithMinimumTargets(1).WithMustBeDistinct().WithSimultaneousAnimation()).WithSoundEffect(SfxName.Feint).WithActionId(ActionId.CreateADiversion).WithEffectOnChosenTargets((Func<Creature, ChosenTargets, Task>)(async (creature, targets) =>
+                                        {
+                                            int roll = R.NextD20();
+                                            foreach (Creature chosenCreature in targets.ChosenCreatures)
+                                            {
+                                                CheckBreakdown breakdown = CombatActionExecution.BreakdownAttack(new CombatAction(self, (Illustration)null, "Create a Diversion", new Trait[1]
+                                                {
+                                                    Trait.Basic
+                                                }, "[this condition has no description]", (Target)Target.Self()).WithActionId(ActionId.CreateADiversion).WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Deception), Checks.DefenseDC(Defense.Perception))), chosenCreature);
+                                                CheckBreakdownResult breakdownResult = new CheckBreakdownResult(breakdown, roll);
+                                                string str1 = breakdown.DescribeWithFinalRollTotal(breakdownResult);
+                                                StringBuilder stringHandler;
+                                                StringBuilder local;
+                                                int d20Roll;
+                                                if (breakdownResult.CheckResult >= CheckResult.Success)
+                                                {
+                                                    self.DetectionStatus.HiddenTo.Add(chosenCreature);
+                                                    Tile occupies = chosenCreature.Occupies;
+                                                    Color lightBlue = Color.LightBlue;
+                                                    string str2 = self?.ToString();
+                                                    string str3 = chosenCreature?.ToString();
+                                                    stringHandler = new StringBuilder(10);
+                                                    stringHandler.Append(" (");
+                                                    d20Roll = breakdownResult.D20Roll;
+                                                    string str4 = d20Roll.ToString() + breakdown.TotalCheckBonus.WithPlus();
+                                                    local = new StringBuilder(stringHandler.ToString());
+                                                    local.Append(str4);
+                                                    stringHandler.Append("=");
+                                                    stringHandler.Append(breakdownResult.D20Roll + breakdown.TotalCheckBonus);
+                                                    stringHandler.Append(" vs. ");
+                                                    stringHandler.Append(breakdown.TotalDC);
+                                                    stringHandler.Append(").");
+                                                    string stringAndClear = stringHandler.ToString();
+                                                    string log = str2 + " successfully hid from " + str3 + stringAndClear;
+                                                    string logDetails = str1;
+                                                    occupies.Overhead("hidden from", lightBlue, log, "Create a Diversion", logDetails);
+                                                }
+                                                else
+                                                {
+                                                    Tile occupies = chosenCreature.Occupies;
+                                                    Color red = Color.Red;
+                                                    string str5 = self?.ToString();
+                                                    string str6 = chosenCreature?.ToString();
+                                                    stringHandler = new StringBuilder(10);
+                                                    stringHandler.Append(" (");
+                                                    d20Roll = breakdownResult.D20Roll;
+                                                    string str7 = d20Roll.ToString() + breakdown.TotalCheckBonus.WithPlus();
+                                                    local = new StringBuilder(stringHandler.ToString());
+                                                    local.Append(str7);
+                                                    stringHandler.Append("=");
+                                                    stringHandler.Append(breakdownResult.D20Roll + breakdown.TotalCheckBonus);
+                                                    stringHandler.Append(" vs. ");
+                                                    stringHandler.Append(breakdown.TotalDC);
+                                                    stringHandler.Append(").");
+                                                    string stringAndClear = stringHandler.ToString();
+                                                    string log = str5 + " failed to hide from " + str6 + stringAndClear;
+                                                    string logDetails = str1;
+                                                    occupies.Overhead("diversion failed", red, log, "Create a Diversion", logDetails);
+                                                }
+                                                chosenCreature.AddQEffect(new QEffect()
+                                                {
+                                                    BonusToDefenses = (Func<QEffect, CombatAction, Defense, Bonus>)((effect, action, defense) =>
+                                                    {
+                                                        if (defense != Defense.Perception || action == null || action.ActionId != ActionId.CreateADiversion || action.Owner != creature)
+                                                            return (Bonus)null;
+                                                        if (creature.HasEffect(QEffectId.ConfabulatorLegendary))
+                                                            return (Bonus)null;
+                                                        if (creature.HasEffect(QEffectId.ConfabulatorMaster))
+                                                            return new Bonus(1, BonusType.Circumstance, "Fool me twice... (Confabulator master)");
+                                                        return creature.HasEffect(QEffectId.ConfabulatorExpert) ? new Bonus(2, BonusType.Circumstance, "Fool me twice... (Confabulator)") : new Bonus(4, BonusType.Circumstance, "Fool me twice...");
+                                                    })
+                                                });
+                                            }
+                                        }));
+
+                                        createADiversion.ActionCost = 1;
+                                        createADiversion.Name = "Raconteur's Reload (Diversion)";
+                                        createADiversion.Illustration = new SideBySideIllustration(heldItem.Illustration, createADiversion.Illustration);
+                                        createADiversion.Description = "Interact to reload and then attempt a Deception check to Create a Diversion.";
+                                        createADiversion.WithEffectOnSelf((Func<Creature, Task>)(async innerSelf =>
+                                        {
+                                            Gunslinger.AwaitReloadItem(raconteursReloadDiversionEffect.Owner, heldItem);
+                                        }));
+
+                                        return new ActionPossibility(createADiversion);
                                     }
 
                                     return null;

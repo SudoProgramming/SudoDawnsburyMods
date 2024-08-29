@@ -50,6 +50,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Extensions
 
         public static readonly QEffectId OneShotOneKillQEID = ModManager.RegisterEnumMember<QEffectId>("One Shot, One Kill QEID");
 
+        public static readonly QEffectId ClearAPathQEID = ModManager.RegisterEnumMember<QEffectId>("Clear a Path QEID");
+
         public static void WithWaySkill(this Feat wayFeat, FeatName waySkillFeat)
         {
             wayFeat.WithOnSheet((CalculatedCharacterSheetValues character) =>
@@ -434,12 +436,105 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Extensions
 
         public static void WithVanguardClearAPathLogic(this Feat vanguardFeat)
         {
+            vanguardFeat.WithOnCreature(creature =>
+            {
+                creature.AddQEffect(new QEffect()
+                {
+                    StateCheck = (QEffect permanentState) =>
+                    {
+                        Creature owner = permanentState.Owner;
+                        if (owner.HeldItems.Count == 1 && owner.HeldItems.Any(item => item.HasTrait(Trait.TwoHanded) && Firearms.IsItemFirearmOrCrossbow(item)))
+                        {
+                            Item item = owner.HeldItems[0];
+                            owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
+                            {
+                                ProvideMainAction = (QEffect clearAPathEffect) =>
+                                {
+                                    if ((!Firearms.IsItemLoaded(item) || Firearms.IsMultiAmmoWeaponReloadable(item)) && item.WeaponProperties != null)
+                                    {
+                                        CombatAction clearAPathAction = Possibilities.CreateShove(owner);
+                                        clearAPathAction.Name = "Clear a Path";
+                                        clearAPathAction.Item = item;
+                                        clearAPathAction.ActionCost = 1;
+                                        clearAPathAction.Illustration = new SideBySideIllustration(item.Illustration, clearAPathAction.Illustration);
+                                        clearAPathAction.Description = "Attempt an Athletics check to Shove an opponent within your reach using your weapon. You add the weapon's item bonus on attack rolls (if any) to the Athletics check. If your last action was a ranged Strike with the weapon, use the same multiple attack penalty as that Strike for the Shove; the Shove still counts toward your multiple attack penalty on further attacks as normal. Then Interact to reload.";
+                                        StrikeModifiers strikeModifiers = clearAPathAction.StrikeModifiers;
+                                        strikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.Immediately)
+                                        {
+                                            BonusToSkillChecks = (Skill skill, CombatAction action, Creature? target) =>
+                                            {
+                                                if (skill == Skill.Athletics && action.Item != null && action.Item.WeaponProperties != null && action.Item.WeaponProperties.ItemBonus > 0)
+                                                {
+                                                    return new Bonus(action.Item.WeaponProperties.ItemBonus, BonusType.Item, "Clear a Path", true);
+                                                }
+                                                return null;
+                                            }
+                                        };
+                                        clearAPathAction.WithEffectOnSelf((Creature self) =>
+                                        {
+                                            Gunslinger.AwaitReloadItem(self, item);
+                                        });
 
+                                        return new ActionPossibility(clearAPathAction);
+                                    }
+
+                                    return null;
+                                },
+                                BeforeYourActiveRoll = async (QEffect beforeRoll, CombatAction action, Creature target) =>
+                                {
+                                    List<CombatAction> actionsUsed = beforeRoll.Owner.Actions.ActionHistoryThisTurn.ToList();
+                                    if (actionsUsed.Count > 0)
+                                    {
+                                        CombatAction lastAction = actionsUsed.Last();
+                                        if (action.Name == "Clear a Path" && beforeRoll.Owner.Actions.AttackedThisManyTimesThisTurn > 0 && lastAction.HasTrait(Trait.Ranged) && lastAction.Name.ToLower().Contains("strike") && lastAction.Item != null && action.Item != null && action.Item == lastAction.Item)
+                                        {
+                                            beforeRoll.Owner.Actions.AttackedThisManyTimesThisTurn--;
+                                            beforeRoll.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
+                                            {
+                                                Id = ClearAPathQEID,
+                                                Tag = lastAction.Item,
+                                            });
+                                        }
+                                    }
+                                },
+                                AfterYouTakeAction = async (QEffect afterRoll, CombatAction action) => 
+                                {
+                                    if (action.Name == "Clear a Path" && afterRoll.Owner.HasEffect(ClearAPathQEID))
+                                    {
+                                        afterRoll.Owner.RemoveAllQEffects(qe => qe.Id == ClearAPathQEID);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            });
         }
 
         public static void WithVanguardLivingFortificationLogic(this Feat vanguardFeat)
         {
+            vanguardFeat.WithPermanentQEffect("Living Fortification", delegate (QEffect self)
+            {
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    int bonus = startOfCombat.Owner.HeldItems.Any(item => item.HasTrait(Firearms.ParryTrait)) ? 2 : 1;
+                    startOfCombat.Owner.Battle.Log(startOfCombat.Owner.Name + " raises their weapon defensive. (Living Fortification)");
+                    startOfCombat.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
+                    {
+                        BonusToDefenses = (QEffect bonusToDefenses, CombatAction? action, Defense defense) =>
+                        {
+                            if (defense == Defense.AC)
+                            {
+                                return new Bonus(bonus, BonusType.Circumstance, "Living Fortification", true);
+                            }
 
+                            return null;
+                        }
+                    });
+                    
+                };
+                self.ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn;
+            });
         }
 
         public static async Task<Tile?> GetAnEnemiesTileAsync(Creature self, string messageString)

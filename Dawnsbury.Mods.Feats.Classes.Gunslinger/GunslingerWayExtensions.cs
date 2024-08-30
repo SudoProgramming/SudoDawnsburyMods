@@ -679,7 +679,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Extensions
             List<Option> options = new List<Option>();
             foreach (Tile tile in self.Battle.Map.AllTiles)
             {
-                if (tile.IsFree && IsTileCloserToAnyOfTheseTiles(startingTile, tile, enemyTiles) && (new LongMovement(self, tile, new MovementStyle() { MaximumSquares = self.Speed }, null, false).Path != null))
+                if (tile.IsFree && IsTileCloserToAnyOfTheseTiles(startingTile, tile, enemyTiles) && (new LongMovement(self, [tile], new MovementStyle() { MaximumSquares = self.Speed }, null).Path != null))
                 {
                     options.Add(new TileOption(tile, "Tile (" + tile.X + "," + tile.Y + ")", null, (AIUsefulness)(float)int.MinValue, true));
                 }

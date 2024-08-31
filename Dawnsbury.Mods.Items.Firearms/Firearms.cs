@@ -416,7 +416,7 @@ namespace Dawnsbury.Mods.Items.Firearms
         public static bool IsMultiAmmoWeaponReloadable(Item item)
         {
             int maxMagazineSize = item.HasTrait(Firearms.DoubleBarrelTrait) ? 2 : 5;
-            if ((item.HasTrait(Firearms.DoubleBarrelTrait) || item.HasTrait(Trait.Repeating)) && item.EphemeralItemProperties.AmmunitionLeftInMagazine <= maxMagazineSize)
+            if ((item.HasTrait(Firearms.DoubleBarrelTrait) || item.HasTrait(Trait.Repeating)) && item.EphemeralItemProperties.AmmunitionLeftInMagazine < maxMagazineSize)
             {
                 return true;
             }

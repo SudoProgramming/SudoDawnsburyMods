@@ -2,12 +2,11 @@
 using Dawnsbury.Core.CharacterBuilder.FeatsDb;
 using Dawnsbury.Modding;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
     /// <summary>
-    /// Loads the Guns and Gears content
+    /// Loads the Gunslinger content
     /// </summary>
     public class GunslingerLoader
     {
@@ -18,7 +17,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         public static void LoadMod()
         {
             AddFeats(Gunslinger.CreateGunslingerFeats());
-            AllFeats.All.ForEach(Gunslinger.PatchFeats);
+            AllFeats.All.ForEach(Gunslinger.PatchFeat);
         }
 
         /// <summary>

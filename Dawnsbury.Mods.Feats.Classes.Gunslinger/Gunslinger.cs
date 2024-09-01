@@ -23,6 +23,8 @@ using Dawnsbury.Mods.Feats.Classes.Gunslinger.Enums;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways;
 using Dawnsbury.Mods.Items.Firearms;
+using Dawnsbury.Mods.Items.Firearms.Utilities;
+using Dawnsbury.Mods.Items.Firearms.RegisteredComponents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,8 +76,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             // Creates the class selection feat for the Gunslinger
             yield return new ClassSelectionFeat(GunslingerFeatNames.GunslingerClass, "While some fear projectile weapons, you savor the searing flash, wild kick, and cloying smoke that accompanies a gunshot, or snap of the cable and telltale thunk of your crossbow just before your bolt finds purchase. Ready to draw a bead on an enemy at every turn, you rely on your reflexes, steady hand, and knowledge of your weapons to riddle your foes with holes.",
                 GunslingerTraits.Gunslinger, new EnforcedAbilityBoost(Ability.Dexterity), 8,
-                [Trait.Will, Trait.Unarmed, Trait.Simple, Trait.Martial, Firearms.AdvancedCrossbowTrait, Firearms.AdvancedFirearmTrait, Trait.UnarmoredDefense, Trait.LightArmor, Trait.MediumArmor],
-                [Trait.Perception, Trait.Fortitude, Trait.Reflex, Firearms.SimpleCrossbowTrait, Firearms.MartialCrossbowTrait, Firearms.SimpleFirearmTrait, Firearms.MartialFirearmTrait],
+                [Trait.Will, Trait.Unarmed, Trait.Simple, Trait.Martial, FirearmTraits.AdvancedCrossbow, FirearmTraits.AdvancedFirearm, Trait.UnarmoredDefense, Trait.LightArmor, Trait.MediumArmor],
+                [Trait.Perception, Trait.Fortitude, Trait.Reflex, FirearmTraits.SimpleCrossbow, FirearmTraits.MartialCrossbow, FirearmTraits.SimpleFirearm, FirearmTraits.MartialFirearm],
                 3,
                 "{b}1. Gunslinger's Way{/b} All gunslingers have a particular way they follow, a combination of philosophy and combat style that defines both how they fight and the weapons they excel with. At 1st level, your way grants you an initial deed, a unique reload action called a slinger's reload, and proficiency with a particular skill. You also gain advanced and greater deeds at later levels, as well as access to way-specific feats.\n\n" +
                 "{b}2. Singular Expertise{/b} You have particular expertise with guns and crossbows that grants you greater proficiency with them and the ability to deal more damage. You gain a +1 circumstance bonus to damage rolls with firearms and crossbows.\r\n\r\nThis intense focus on firearms and crossbows prevents you from reaching the same heights with other weapons. Your proficiency with unarmed attacks and with weapons other than firearms and crossbows can't be higher than trained, even if you gain an ability that would increase your proficiency in one or more other weapons to match your highest weapon proficiency (such as the weapon expertise feats many ancestries have). If you have gunslinger weapon mastery, the limit is expert, and if you have gunslinging legend, the limit is master.\n\n" +
@@ -181,7 +183,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.BonusToDamage = (QEffect self, CombatAction action, Creature defender) =>
                 {
-                    if (action.HasTrait(Firearms.FirearmTrait) || action.HasTrait(Trait.Crossbow) || (action.Item != null && action.Item.WeaponProperties != null && Firearms.IsItemFirearmOrCrossbow(action.Item)))
+                    if (action.HasTrait(FirearmTraits.Firearm) || action.HasTrait(Trait.Crossbow) || (action.Item != null && action.Item.WeaponProperties != null && FirearmUtilities.IsItemFirearmOrCrossbow(action.Item)))
                     {
                         return new Bonus(1, BonusType.Circumstance, "Singular Expertise");
                     }
@@ -202,7 +204,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
-                    if (Firearms.IsItemFirearmOrCrossbow(item) && Firearms.IsItemLoaded(item) && !item.HasTrait(Trait.TwoHanded) && item.WeaponProperties != null)
+                    if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && FirearmUtilities.IsItemLoaded(item) && !item.HasTrait(Trait.TwoHanded) && item.WeaponProperties != null)
                     {
                         // Creates a technical effect to track using this only once per round and creates a basic strike for the item
                         QEffect technicalEffectForOncePerRound = new QEffect("Technical Cover Fire", "[this condition has no description]")
@@ -300,7 +302,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         // Checks if the item needs to be reloaded
                         ((CreatureTarget)coverFireAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
                         {
-                            if (!Firearms.IsItemLoaded(item))
+                            if (!FirearmUtilities.IsItemLoaded(item))
                             {
                                 return Usability.NotUsable("Needs to be reloaded.");
                             }
@@ -330,7 +332,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
-                    if (item.HasTrait(Firearms.FirearmTrait) && Firearms.IsItemLoaded(item) && item.WeaponProperties != null)
+                    if (item.HasTrait(FirearmTraits.Firearm) && FirearmUtilities.IsItemLoaded(item) && item.WeaponProperties != null)
                     {
                         CombatAction warningShotAction = CommonCombatActions.Demoralize(self.Owner);
                         warningShotAction.Name = "Warning Shot";
@@ -370,7 +372,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideMainAction = (QEffect pairedShotEffect) =>
                 {
-                    if (pairedShotEffect.Owner.HeldItems.Count(item => Firearms.IsItemFirearmOrCrossbow(item) && Firearms.IsItemLoaded(item) && !item.HasTrait(Firearms.MisfiredTrait) && item.WeaponProperties != null) != 2)
+                    if (pairedShotEffect.Owner.HeldItems.Count(item => FirearmUtilities.IsItemFirearmOrCrossbow(item) && FirearmUtilities.IsItemLoaded(item) && !item.HasTrait(FirearmTraits.Misfired) && item.WeaponProperties != null) != 2)
                     {
                         return null;
                     }
@@ -421,7 +423,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             {
                                 ProvideStrikeModifier = (Item item) =>
                                 {
-                                    if (Firearms.IsItemFirearmOrCrossbow(item) && Firearms.IsItemLoaded(item) && item.WeaponProperties != null)
+                                    if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && FirearmUtilities.IsItemLoaded(item) && item.WeaponProperties != null)
                                     {
                                         if (!permanentState.Owner.HeldItems.Concat(permanentState.Owner.CarriedItems).Contains(bomb))
                                         {
@@ -463,7 +465,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                                 else if (result == CheckResult.CriticalFailure)
                                                 {
                                                     attacker.AddQEffect(QEffect.PersistentDamage("1d6", alchemicalDamageType));
-                                                    item.Traits.Add(Firearms.MisfiredTrait);
+                                                    item.Traits.Add(FirearmTraits.Misfired);
                                                 }
                                             }
 
@@ -472,7 +474,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         // Checks if the item needs to be reloaded
                                         ((CreatureTarget)alchemicalShotAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
                                         {
-                                            if (!Firearms.IsItemLoaded(item))
+                                            if (!FirearmUtilities.IsItemLoaded(item))
                                             {
                                                 return Usability.NotUsable("Needs to be reloaded.");
                                             }
@@ -562,7 +564,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             {
                                 ProvideActionIntoPossibilitySection = delegate (QEffect runningReloadEffect, PossibilitySection section)
                                 {
-                                    if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                    if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && (!FirearmUtilities.IsItemLoaded(heldItem) || FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
                                     {
                                         return new ActionPossibility(new CombatAction(runningReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.WarpStep), "Running Reload", [Trait.Basic], runningReloadFeat.RulesText, Target.Self()).WithActionCost(1).WithItem(heldItem).WithEffectOnSelf(async (action, self) =>
                                         {
@@ -596,7 +598,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.BeforeYourActiveRoll = async (QEffect addingEffects, CombatAction action, Creature defender) =>
                 {
-                    if (action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(Firearms.FirearmTrait) || action.HasTrait(Trait.Crossbow)) && addingEffects.Owner.DistanceTo(defender) == 1 && !addingEffects.Owner.QEffects.Any(qe => qe.Id == GunslingerQEIDs.SwordAndPistolMeleeBuff && qe.Tag != null && qe.Tag == defender))
+                    if (action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(FirearmTraits.Firearm) || action.HasTrait(Trait.Crossbow)) && addingEffects.Owner.DistanceTo(defender) == 1 && !addingEffects.Owner.QEffects.Any(qe => qe.Id == GunslingerQEIDs.SwordAndPistolMeleeBuff && qe.Tag != null && qe.Tag == defender))
                     {
                         addingEffects.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
                         {
@@ -628,7 +630,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                 {
                                     foreach (Item item in addingEffects.Owner.HeldItems.Concat(addingEffects.Owner.CarriedItems))
                                     {
-                                        if (!item.HasTrait(Trait.DoesNotProvoke) && item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.TwoHanded) && (item.HasTrait(Firearms.FirearmTrait) || item.HasTrait(Trait.Crossbow)))
+                                        if (!item.HasTrait(Trait.DoesNotProvoke) && item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.TwoHanded) && (item.HasTrait(FirearmTraits.Firearm) || item.HasTrait(Trait.Crossbow)))
                                         {
                                             item.Traits.Add(GunslingerTraits.TemporaryDoesNotProvoke);
                                             item.Traits.Add(Trait.DoesNotProvoke);
@@ -645,7 +647,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             },
                             BeforeYourActiveRoll = async (QEffect rollEffect, CombatAction action, Creature attackedCreature) =>
                             {
-                                if (action.HasTrait(Trait.Strike) && action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(Firearms.FirearmTrait) || action.HasTrait(Trait.Crossbow)) && defender == attackedCreature)
+                                if (action.HasTrait(Trait.Strike) && action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(FirearmTraits.Firearm) || action.HasTrait(Trait.Crossbow)) && defender == attackedCreature)
                                 {
                                     foreach (Item item in addingEffects.Owner.HeldItems.Concat(addingEffects.Owner.CarriedItems))
                                     {
@@ -674,7 +676,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
-                    if (Firearms.IsItemFirearmOrCrossbow(item) && Firearms.IsItemLoaded(item) && !item.HasTrait(Trait.TwoHanded) && item.WeaponProperties != null)
+                    if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && FirearmUtilities.IsItemLoaded(item) && !item.HasTrait(Trait.TwoHanded) && item.WeaponProperties != null)
                     {
                         CombatAction pistolTwirlAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.Feint), "Pistol Twirl", [], pistolTwirlFeat.RulesText, Target.Ranged(item.WeaponProperties.RangeIncrement)).WithActionCost(1).WithItem(item)
                         .WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Deception), Checks.DefenseDC(Defense.Perception)))
@@ -754,14 +756,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             {
                                 ProvideActionIntoPossibilitySection = delegate (QEffect riskyReloadEffect, PossibilitySection section)
                                 {
-                                    if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                    if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && (!FirearmUtilities.IsItemLoaded(heldItem) || FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
                                     {
                                         CombatAction basicStrike = riskyReloadEffect.Owner.CreateStrike(heldItem);
                                         CombatAction riskyReloadAction = new CombatAction(riskyReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.TrueStrike), "Risky Reload", [Trait.Flourish, Trait.Basic], riskyReloadFeat.RulesText, basicStrike.Target).WithActionCost(1).WithItem(heldItem);
                                         return new ActionPossibility(riskyReloadAction
                                         .WithEffectOnEachTarget(async delegate (CombatAction riskyReload, Creature attacker, Creature defender, CheckResult result)
                                         {
-                                            if (heldItem.HasTrait(Firearms.DoubleBarrelTrait))
+                                            if (heldItem.HasTrait(FirearmTraits.DoubleBarrel))
                                             {
                                                 heldItem.EphemeralItemProperties.AmmunitionLeftInMagazine++;
                                                 heldItem.EphemeralItemProperties.NeedsReload = false;
@@ -773,9 +775,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                             }
 
                                             CheckResult strikeResult = await riskyReload.Owner.MakeStrike(defender, heldItem);
-                                            if (strikeResult <= CheckResult.Failure && !heldItem.HasTrait(Firearms.MisfiredTrait))
+                                            if (strikeResult <= CheckResult.Failure && !heldItem.HasTrait(FirearmTraits.Misfired))
                                             {
-                                                heldItem.Traits.Add(Firearms.MisfiredTrait);
+                                                heldItem.Traits.Add(FirearmTraits.Misfired);
                                             }
                                         }));
                                     }
@@ -804,7 +806,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         // HACK: Currently the base Dawnsbury Reload action has no attachment to the item that was reloaded
                         if (action.Item == null)
                         {
-                            action.Item = crossbowCrackshotEffect.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(Trait.Crossbow) && Firearms.IsItemLoaded(item));
+                            action.Item = crossbowCrackshotEffect.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(Trait.Crossbow) && FirearmUtilities.IsItemLoaded(item));
                         }
                         if (action.Item != null && action.Item.HasTrait(Trait.Crossbow) && action.Item.WeaponProperties != null) // Base Reload has null action.Item
                         {
@@ -875,9 +877,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 {
                     foreach (Item item in state.Owner.HeldItems)
                     {
-                        if (!item.HasTrait(Firearms.ParryTrait) && Firearms.IsItemFirearmOrCrossbow(item) && item.HasTrait(Trait.TwoHanded))
+                        if (!item.HasTrait(FirearmTraits.Parry) && FirearmUtilities.IsItemFirearmOrCrossbow(item) && item.HasTrait(Trait.TwoHanded))
                         {
-                            item.Traits.Add(Firearms.ParryTrait);
+                            item.Traits.Add(FirearmTraits.Parry);
                             item.Traits.Add(GunslingerTraits.TemporaryParry);
                         }
                     }
@@ -885,10 +887,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
                 self.BonusToDefenses = (QEffect bonusToAC, CombatAction? action, Defense defense) =>
                 {
-                    QEffect? parryQEffect = bonusToAC.Owner.QEffects.FirstOrDefault(qe => qe.Id == Firearms.ParryQEID);
-                    if (defense == Defense.AC && bonusToAC.Owner.HasEffect(Firearms.ParryQEID) && parryQEffect != null && parryQEffect.Tag != null && parryQEffect.Tag is Item item)
+                    QEffect? parryQEffect = bonusToAC.Owner.QEffects.FirstOrDefault(qe => qe.Id == FirearmQEIDs.Parry);
+                    if (defense == Defense.AC && bonusToAC.Owner.HasEffect(FirearmQEIDs.Parry) && parryQEffect != null && parryQEffect.Tag != null && parryQEffect.Tag is Item item)
                     {
-                        if (item.HasTrait(Firearms.ParryTrait) && !item.HasTrait(GunslingerTraits.TemporaryParry))
+                        if (item.HasTrait(FirearmTraits.Parry) && !item.HasTrait(GunslingerTraits.TemporaryParry))
                         {
                             return new Bonus(2, BonusType.Circumstance, "Parry (Defensive Armaments)", true);
                         }
@@ -907,7 +909,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         Item? tempParrytem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(GunslingerTraits.TemporaryParry));
                         if (tempParrytem != null && actionName.Contains(tempParrytem.Name.ToLower()) && tempParrytem.HasTrait(GunslingerTraits.TemporaryParry))
                         {
-                            tempParrytem.Traits.Remove(Firearms.ParryTrait);
+                            tempParrytem.Traits.Remove(FirearmTraits.Parry);
                             tempParrytem.Traits.Remove(GunslingerTraits.TemporaryParry);
                             self.Owner.HeldItems.Remove(tempParrytem);
                         }
@@ -920,7 +922,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     Item? tempParrytem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(GunslingerTraits.TemporaryParry));
                     if (tempParrytem != null && tempParrytem.HasTrait(GunslingerTraits.TemporaryParry))
                     {
-                        tempParrytem.Traits.Remove(Firearms.ParryTrait);
+                        tempParrytem.Traits.Remove(FirearmTraits.Parry);
                         tempParrytem.Traits.Remove(GunslingerTraits.TemporaryParry);
                     }
 
@@ -980,8 +982,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                 }
 
                                 QEffect? fakeOutTrackingEffect = ally.QEffects.FirstOrDefault(qe => qe.Id == GunslingerQEIDs.FakeOut);
-                                Item? mainWeapon = ally.HeldItems.FirstOrDefault(item => Firearms.IsItemFirearmOrCrossbow(item));
-                                if (mainWeapon != null && Firearms.IsItemLoaded(mainWeapon) && fakeOutTrackingEffect != null && fakeOutTrackingEffect.Tag != null && fakeOutTrackingEffect.Tag is List<Creature> creaturesAttacked)
+                                Item? mainWeapon = ally.HeldItems.FirstOrDefault(item => FirearmUtilities.IsItemFirearmOrCrossbow(item));
+                                if (mainWeapon != null && FirearmUtilities.IsItemLoaded(mainWeapon) && fakeOutTrackingEffect != null && fakeOutTrackingEffect.Tag != null && fakeOutTrackingEffect.Tag is List<Creature> creaturesAttacked)
                                 {
                                     string fakeOutTargetTextAddition = (creaturesAttacked.Contains(defender)) ? " (+1 circumstance bonus to this)" : string.Empty;
                                     if (await creature.Battle.AskToUseReaction(ally, "Make an attack roll to Aid the triggering attack." + fakeOutTargetTextAddition))
@@ -1090,7 +1092,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
         public static async void AwaitReloadItem(Creature self, Item item)
         {
-            if (item.HasTrait(Firearms.DoubleBarrelTrait))
+            if (item.HasTrait(FirearmTraits.DoubleBarrel))
             {
                 item.EphemeralItemProperties.AmmunitionLeftInMagazine++;
                 item.EphemeralItemProperties.NeedsReload = false;
@@ -1104,7 +1106,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
         private static List<ActionId> GetReloadAIDs()
         {
-            return [ActionId.Reload, Firearms.DoubleBarrelReloadAID];
+            return [ActionId.Reload, FirearmActionIDs.DoubleBarrelReload];
         }
 
         /// <summary>

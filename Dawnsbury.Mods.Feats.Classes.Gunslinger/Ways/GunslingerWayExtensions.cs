@@ -22,7 +22,8 @@ using Dawnsbury.Core.Tiles;
 using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Modding;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents;
-using Dawnsbury.Mods.Items.Firearms;
+using Dawnsbury.Mods.Items.Firearms.RegisteredComponents;
+using Dawnsbury.Mods.Items.Firearms.Utilities;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -83,7 +84,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                 {
                     // Collects the Strikes owner and if they have any ranged and melee options that meet the action requirements. If they don't return null to hide the action.
                     Creature owner = reloadingStrikeShotEffect.Owner;
-                    Item? ranged = owner.HeldItems.FirstOrDefault(item => Firearms.IsItemFirearmOrCrossbow(item) && (!Firearms.IsItemLoaded(item) || Firearms.IsMultiAmmoWeaponReloadable(item)) && item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.TwoHanded));
+                    Item? ranged = owner.HeldItems.FirstOrDefault(item => FirearmUtilities.IsItemFirearmOrCrossbow(item) && (!FirearmUtilities.IsItemLoaded(item) || FirearmUtilities.IsMultiAmmoWeaponReloadable(item)) && item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.TwoHanded));
                     Item? melee = owner.HeldItems.FirstOrDefault(item => item.HasTrait(Trait.Melee) && !item.HasTrait(Trait.TwoHanded));
                     if (ranged == null || melee == null && !owner.HasFreeHand)
                     {
@@ -185,7 +186,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                 ProvideMainAction = (raconteursReloadDemoralizeEffect) =>
                                 {
                                     // If the item is acceptable, the Demoarlize action is made as an option, with a Reload attached.
-                                    if (Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                    if (FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && (!FirearmUtilities.IsItemLoaded(heldItem) || FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
                                     {
                                         CombatAction demoralizeAction = CommonCombatActions.Demoralize(permanentState.Owner);
                                         demoralizeAction.ActionCost = 1;
@@ -208,7 +209,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                 ProvideMainAction = (raconteursReloadDiversionEffect) =>
                                 {
                                     // If the item is acceptable, the Create a Diversion action is made as an option, with a Reload attached.
-                                    if (Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                    if (FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && (!FirearmUtilities.IsItemLoaded(heldItem) || FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
                                     {
                                         Creature self = raconteursReloadDiversionEffect.Owner;
 
@@ -366,7 +367,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             {
                                 ProvideMainAction = (coveredReloadEffect) =>
                                 {
-                                    if (Firearms.IsItemFirearmOrCrossbow(heldItem) && (!Firearms.IsItemLoaded(heldItem) || Firearms.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                    if (FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && (!FirearmUtilities.IsItemLoaded(heldItem) || FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
                                     {
                                         // Gets the self creature and checks if it can either hide, take cover, or both
                                         Creature self = coveredReloadEffect.Owner;
@@ -545,14 +546,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                         self.Owner.Battle.Log(self.Owner.Name + " has rolled Stealth for initiative" + (self.Owner.DetectionStatus.EnemiesYouAreHiddenFrom.Count() > 0 ? "and is hidden to:\n" + string.Join(",", self.Owner.DetectionStatus.EnemiesYouAreHiddenFrom) : "."));
 
                         // If a Firearm or Crossbow is held the bonus damage is applied
-                        if (startOfCombat.Owner.HeldItems.Any(item => Firearms.IsItemFirearmOrCrossbow(item)))
+                        if (startOfCombat.Owner.HeldItems.Any(item => FirearmUtilities.IsItemFirearmOrCrossbow(item)))
                         {
                             startOfCombat.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
                             {
                                 Id = GunslingerQEIDs.OneShotOneKill,
                                 AddExtraWeaponDamage = (item) =>
                                 {
-                                    if (Firearms.IsItemFirearmOrCrossbow(item) && item.WeaponProperties != null)
+                                    if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && item.WeaponProperties != null)
                                     {
                                         QEffect? oneShotOneKillEffect = startOfCombat.Owner.QEffects.FirstOrDefault(qe => qe.Id == GunslingerQEIDs.OneShotOneKill);
                                         if (oneShotOneKillEffect != null)
@@ -610,14 +611,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                     StateCheck = (permanentState) =>
                     {
                         Creature owner = permanentState.Owner;
-                        if (owner.HeldItems.Count == 1 && owner.HeldItems.Any(item => item.HasTrait(Trait.TwoHanded) && Firearms.IsItemFirearmOrCrossbow(item)))
+                        if (owner.HeldItems.Count == 1 && owner.HeldItems.Any(item => item.HasTrait(Trait.TwoHanded) && FirearmUtilities.IsItemFirearmOrCrossbow(item)))
                         {
                             Item item = owner.HeldItems[0];
                             owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
                             {
                                 ProvideMainAction = (clearAPathEffect) =>
                                 {
-                                    if ((!Firearms.IsItemLoaded(item) || Firearms.IsMultiAmmoWeaponReloadable(item)) && item.WeaponProperties != null)
+                                    if ((!FirearmUtilities.IsItemLoaded(item) || FirearmUtilities.IsMultiAmmoWeaponReloadable(item)) && item.WeaponProperties != null)
                                     {
                                         // Creates a shove action and updates it's properties to match Clear a Path
                                         CombatAction clearAPathAction = Possibilities.CreateShove(owner);
@@ -696,7 +697,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
             {
                 self.StartOfCombat = async (startOfCombat) =>
                 {
-                    int bonus = startOfCombat.Owner.HeldItems.Any(item => item.HasTrait(Firearms.ParryTrait)) ? 2 : 1;
+                    int bonus = startOfCombat.Owner.HeldItems.Any(item => item.HasTrait(FirearmTraits.Parry)) ? 2 : 1;
                     startOfCombat.Owner.Battle.Log(startOfCombat.Owner.Name + " raises their weapon defensive. (Living Fortification)");
                     startOfCombat.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
                     {

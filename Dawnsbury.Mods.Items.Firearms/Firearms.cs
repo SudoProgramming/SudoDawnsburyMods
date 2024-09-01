@@ -1,6 +1,4 @@
 ﻿using Dawnsbury.Core;
-using Dawnsbury.Core.CharacterBuilder.FeatsDb;
-using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
 using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Intelligence;
@@ -14,12 +12,13 @@ using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Core.Possibilities;
 using Dawnsbury.Core.Roller;
 using Dawnsbury.Core.Tiles;
-using Dawnsbury.Display.Controls;
 using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Modding;
+using Dawnsbury.Mods.Items.Firearms.RegisteredComponents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Dawnsbury.Mods.Items.Firearms.Utilities;
 
 namespace Dawnsbury.Mods.Items.Firearms
 {
@@ -29,107 +28,6 @@ namespace Dawnsbury.Mods.Items.Firearms
     public static class Firearms
     {
         /// <summary>
-        /// A QEffect for setting up a Tripod
-        /// </summary>
-        private static readonly QEffect TripodSetupQEffect = new QEffect("Tripod Setup", "Your Tripod is setup, removing the circumstance penality from Kickback till you move.");
-
-        /// <summary>
-        /// A technical QEffect for determining if the Fatal dice is upgraded
-        /// </summary>
-        private static readonly QEffect FatalIsUpgradedTechnicalQEffect = new QEffect("Upgraded Fatal Technical Effect", "[this condition has no description]");
-
-        /// <summary>
-        /// Adds the weapon group trait of Firearm
-        /// </summary>
-        public static readonly Trait FirearmTrait = ModManager.RegisterTrait("Firearm", new TraitProperties("Firearm", true, relevantForShortBlock: true));
-
-        /// <summary>
-        /// Adds the technical trait for simple firearms used for proficiency
-        /// </summary>
-        public static readonly Trait SimpleFirearmTrait = ModManager.RegisterTrait("Simple Firearm", new TraitProperties("Simple Firearm", false) { ProficiencyName = "Simple Firearm"});
-
-        /// <summary>
-        /// Adds the technical trait for martial firearms used for proficiency
-        /// </summary>
-        public static readonly Trait MartialFirearmTrait = ModManager.RegisterTrait("Martial Firearm", new TraitProperties("Martial Firearm", false) { ProficiencyName = "Martial Firearm" });
-
-        /// <summary>
-        /// Adds the technical trait for advanced firearms used for proficiency
-        /// </summary>
-        public static readonly Trait AdvancedFirearmTrait = ModManager.RegisterTrait("Advanced Firearm", new TraitProperties("Advanced Firearm", false) { ProficiencyName = "Advanced Firearm" });
-
-        /// <summary>
-        /// Adds the technical trait for simple crossbows used for proficiency
-        /// </summary>
-        public static readonly Trait SimpleCrossbowTrait = ModManager.RegisterTrait("Simple Crossbow Prof", new TraitProperties("Simple Crossbow Prof", false) { ProficiencyName = "Simple Crossbow" });
-
-        /// <summary>
-        /// Adds the technical trait for martial crossbows used for proficiency
-        /// </summary>
-        public static readonly Trait MartialCrossbowTrait = ModManager.RegisterTrait("Martial Crossbow", new TraitProperties("Martial Crossbow", false) { ProficiencyName = "Martial Crossbow" });
-
-        /// <summary>
-        /// Adds the technical trait for advanced crossbows used for proficiency
-        /// </summary>
-        public static readonly Trait AdvancedCrossbowTrait = ModManager.RegisterTrait("Advanced Crossbow", new TraitProperties("Advanced Crossbow", false) { ProficiencyName = "Advanced Crossbow" });
-
-        /// <summary>
-        /// Adds the concussive trait for firearms
-        /// </summary>
-        public static readonly Trait ConcussiveTrait = ModManager.RegisterTrait("Concussive", new TraitProperties("Concussive", true, "Deals either bludgeoning or piercing damage, whichever is better for you.", relevantForShortBlock: true));
-
-        /// <summary>
-        /// Adds the Double Barrel trait for firearms
-        /// TODO: Add 2 ammo system
-        /// </summary>
-        public static readonly Trait DoubleBarrelTrait = ModManager.RegisterTrait("Double Barrel", new TraitProperties("Double Barrel", true, "This weapon has two barrels that are each loaded separately. You can fire both barrels of a double barrel weapon in a single Strike to increase the weapon damage die by one step. If the weapon has the fatal trait, this increases the fatal die by one step.", relevantForShortBlock: true));
-
-        /// <summary>
-        /// Adds the Double Barrel trait for firearms
-        /// </summary>
-        public static readonly Trait FatalAimD12Trait = ModManager.RegisterTrait("Fatal Aim D12", new TraitProperties("Fatal Aim D12", true, "This weapon can be held in 1 or 2 hands. You can interact as an action to switch your grip on it as it is more complicated than just releasing one hand. When held with 2 hands, it gains the Fatal D12 trait.", relevantForShortBlock: true));
-
-        /// <summary>
-        /// Adds the Double Barrel trait for firearms
-        /// </summary>
-        public static readonly Trait KickbackTrait = ModManager.RegisterTrait("Kickback", new TraitProperties("Kickback", true, "A kickback weapon is extra powerful and difficult to use due to its high recoil. A kickback weapon deals 1 additional damage with all attacks. Firing a kickback weapon gives a –2 circumstance penalty to the attack roll, but characters with 14 or more Strength ignore the penalty. A stablizer will lower the circumstance penalty to -1, and a tripod will remove the penalty entirely.", relevantForShortBlock: true));
-
-        /// <summary>
-        /// Adds the modular trait for firearms
-        /// TODO: Consider rewriting this in V3, as meeting RAW should be easier
-        /// </summary>
-        public static readonly Trait ModularTrait = ModManager.RegisterTrait("Modular", new TraitProperties("Modular", true, "Deals either bludgeoning, piercing or slashing damage, whichever is better for you.", relevantForShortBlock: true));
-
-        /// <summary>
-        /// Adds the Scatter 5 trait for firearms
-        /// </summary>
-        public static readonly Trait Scatter5Trait = ModManager.RegisterTrait("Scatter5", new TraitProperties("Scatter5", true, "This weapon fires a cluster of pellets in a wide spray. On a hit, the primary target of attacks with a scatter weapon take the listed damage, and the target and all other creatures within a 5-ft radius around it take 1 point of splash damage per weapon damage die.", relevantForShortBlock: true));
-
-        /// <summary>
-        /// Adds the Scatter 10 trait for firearms
-        /// </summary>
-        public static readonly Trait Scatter10Trait = ModManager.RegisterTrait("Scatter10", new TraitProperties("Scatter10", true, "This weapon fires a cluster of pellets in a wide spray. On a hit, the primary target of attacks with a scatter weapon take the listed damage, and the target and all other creatures within a 10-ft radius around it take 1 point of splash damage per weapon damage die.", relevantForShortBlock: true));
-
-        /// <summary>
-        /// Adds the Parry trait for firearms
-        /// </summary>
-        public static readonly Trait ParryTrait = ModManager.RegisterTrait("Parry", new TraitProperties("Parry", true, "This weapon can be used defensively to block attacks. While wielding this weapon, if your proficiency with it is trained or better, you can spend a single action to position your weapon defensively, gaining a +1 circumstance bonus to AC until the start of your next turn.", relevantForShortBlock: true));
-
-        /// <summary>
-        /// Adds the Scatter 10 trait for firearms
-        /// </summary>
-        public static readonly Trait MisfiredTrait = ModManager.RegisterTrait("Misfired", new TraitProperties("Misfired", true, "This firearm was misfired and is now jammed. You must use an Interact action to clear the jam before you can reload the weapon and fire again.", relevantForShortBlock: true));
-
-        public static readonly QEffectId ParryQEID = ModManager.RegisterEnumMember<QEffectId>("Parry QEID");
-
-        public static readonly ActionId DoubleBarrelReloadAID = ModManager.RegisterEnumMember<ActionId>("Double Barrel Realod AID");
-
-        // HACK: Repeating is hard coded to 5 round magazines, so right now the magazine will just be left to 5
-        //public static readonly Trait Magazine6Trait = ModManager.RegisterTrait("Magazine6", new TraitProperties("Magazine", true, "This repeating weapon has a magazine capacity of 6 instead of 5.", relevantForShortBlock: true));
-
-        //public static readonly Trait Magazine8Trait = ModManager.RegisterTrait("Magazine8", new TraitProperties("Magazine", true, "This repeating weapon has a magazine capacity of 8 instead of 5.", relevantForShortBlock: true));
-
-        /// <summary>
         /// Register all the Guns and Gears items
         /// </summary>
         public static void RegisterItems()
@@ -137,129 +35,129 @@ namespace Dawnsbury.Mods.Items.Firearms
             // Simple Ranged Firearm Weapons
             //  - Air Repeater
             ModManager.RegisterNewItemIntoTheShop("Air Repeater", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/AirRepeater.png"), "Air Repeater", 0, 3, Trait.Agile, Trait.Repeating, FirearmTrait, SimpleFirearmTrait, Trait.Simple)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/AirRepeater.png"), "Air Repeater", 0, 3, Trait.Agile, Trait.Repeating, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple)
                     .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Piercing)
                         .WithRangeIncrement(6)));
 
             //  - Coat Pistol
             ModManager.RegisterNewItemIntoTheShop("Coat Pistol", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/CoatPistol.png"), "Coat Pistol", 0, 3, Trait.FatalD8, ConcussiveTrait, FirearmTrait, SimpleFirearmTrait, Trait.Simple, Trait.Reload1)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/CoatPistol.png"), "Coat Pistol", 0, 3, Trait.FatalD8, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning)
                         .WithRangeIncrement(6)));
 
             //  - Fire Lance
             ModManager.RegisterNewItemIntoTheShop("Fire Lance", itemName =>
-               new Item(itemName, new ModdedIllustration("FirearmsAssets/FireLance.png"), "Fire Lance", 0, 3, Trait.FatalD10, FirearmTrait, SimpleFirearmTrait, Trait.Simple, Trait.Reload2, Trait.TwoHanded)
+               new Item(itemName, new ModdedIllustration("FirearmsAssets/FireLance.png"), "Fire Lance", 0, 3, Trait.FatalD10, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple, Trait.Reload2, Trait.TwoHanded)
                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Piercing)
                        .WithRangeIncrement(2)));
 
             //  - Flintlock Musket
             ModManager.RegisterNewItemIntoTheShop("Flintlock Musket", itemName =>
-               new Item(itemName, new ModdedIllustration("FirearmsAssets/FlintlockMusket.png"), "Flintlock Musket", 0, 4, Trait.FatalD10, ConcussiveTrait, FirearmTrait, SimpleFirearmTrait, Trait.Simple, Trait.Reload1, Trait.TwoHanded)
+               new Item(itemName, new ModdedIllustration("FirearmsAssets/FlintlockMusket.png"), "Flintlock Musket", 0, 4, Trait.FatalD10, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple, Trait.Reload1, Trait.TwoHanded)
                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
                        .WithRangeIncrement(14)));
 
             //  - Flintlock Pistol
             ModManager.RegisterNewItemIntoTheShop("Flintlock Pistol", itemName =>
-               new Item(itemName, new ModdedIllustration("FirearmsAssets/FlintlockPistol.png"), "Flintlock Pistol", 0, 3, Trait.FatalD8, ConcussiveTrait, FirearmTrait, SimpleFirearmTrait, Trait.Simple, Trait.Reload1)
+               new Item(itemName, new ModdedIllustration("FirearmsAssets/FlintlockPistol.png"), "Flintlock Pistol", 0, 3, Trait.FatalD8, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple, Trait.Reload1)
                    .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning)
                        .WithRangeIncrement(8)));
 
             //  - Hand Cannon
             ModManager.RegisterNewItemIntoTheShop("Hand Cannon", itemName =>
-               new Item(itemName, new ModdedIllustration("FirearmsAssets/HandCannon.png"), "Hand Cannon", 0, 3, Trait.FatalD8, ModularTrait, FirearmTrait, SimpleFirearmTrait, Trait.Simple, Trait.Reload1)
+               new Item(itemName, new ModdedIllustration("FirearmsAssets/HandCannon.png"), "Hand Cannon", 0, 3, Trait.FatalD8, FirearmTraits.Modular, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple, Trait.Reload1)
                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
                        .WithRangeIncrement(6)));
 
             //  - Long Air Repeater
             ModManager.RegisterNewItemIntoTheShop("Long Air Repeater", itemName =>
-               new Item(itemName, new ModdedIllustration("FirearmsAssets/LongAirRepeater.png"), "Long Air Repeater", 0, 5, Trait.Repeating, FirearmTrait, SimpleFirearmTrait, Trait.Simple)
+               new Item(itemName, new ModdedIllustration("FirearmsAssets/LongAirRepeater.png"), "Long Air Repeater", 0, 5, Trait.Repeating, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple)
                    .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Piercing)
                        .WithRangeIncrement(12)));
 
             // Martial Ranged Firearm Weapons
             //  - Arquebus
             ModManager.RegisterNewItemIntoTheShop("Arquebus", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/Arquebus.png"), "Arquebus", 0, 5, Trait.FatalD12, KickbackTrait, ConcussiveTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/Arquebus.png"), "Arquebus", 0, 5, Trait.FatalD12, FirearmTraits.Kickback, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning)
                         .WithRangeIncrement(30)));
 
             //  - Blunderbuss
             ModManager.RegisterNewItemIntoTheShop("Blunderbuss", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/Blunderbuss.png"), "Blunderbuss", 0, 4, ConcussiveTrait, Scatter10Trait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/Blunderbuss.png"), "Blunderbuss", 0, 4, FirearmTraits.Concussive, FirearmTraits.Scatter10, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning)
                         .WithRangeIncrement(8)));
 
             //  - Clan Pistol
             ModManager.RegisterNewItemIntoTheShop("Clan Pistol", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/ClanPistol.png"), "Clan Pistol", 0, 0, Trait.Dwarf, Trait.FatalD10, ConcussiveTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/ClanPistol.png"), "Clan Pistol", 0, 0, Trait.Dwarf, Trait.FatalD10, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
                         .WithRangeIncrement(16)));
 
             //  - Double-barreled Musket
             ModManager.RegisterNewItemIntoTheShop("Double-barreled Musket", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/Double-barreledMusket.png"), "Double-barreled Musket", 0, 5, Trait.FatalD10, ConcussiveTrait, DoubleBarrelTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/Double-barreledMusket.png"), "Double-barreled Musket", 0, 5, Trait.FatalD10, FirearmTraits.Concussive, FirearmTraits.DoubleBarrel, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
                         .WithRangeIncrement(12)));
 
             //  - Double-barreled Pistol
             ModManager.RegisterNewItemIntoTheShop("Double-barreled Pistol", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/Double-barreledPistol.png"), "Double-barreled Pistol", 0, 4, Trait.FatalD8, ConcussiveTrait, DoubleBarrelTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/Double-barreledPistol.png"), "Double-barreled Pistol", 0, 4, Trait.FatalD8, FirearmTraits.Concussive, FirearmTraits.DoubleBarrel, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning)
                         .WithRangeIncrement(6)));
 
             //  - Dragon Mouth Pistol
             ModManager.RegisterNewItemIntoTheShop("Dragon Mouth Pistol", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/DragonMouthPistol.png"), "Dragon Mouth Pistol", 0, 5, Trait.FatalD8, ConcussiveTrait, Scatter5Trait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/DragonMouthPistol.png"), "Dragon Mouth Pistol", 0, 5, Trait.FatalD8, FirearmTraits.Concussive, FirearmTraits.Scatter5, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
                         .WithRangeIncrement(4)));
 
             //  - Dueling Pistol
             ModManager.RegisterNewItemIntoTheShop("Dueling Pistol", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/DuelingPistol.png"), "Dueling Pistol", 0, 6, Trait.FatalD10, ConcussiveTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/DuelingPistol.png"), "Dueling Pistol", 0, 6, Trait.FatalD10, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
                         .WithRangeIncrement(12)));
 
             //  - Harmona Gun
             ModManager.RegisterNewItemIntoTheShop("Harmona Gun", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/HarmonaGun.png"), "Harmona Gun", 0, 5, KickbackTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/HarmonaGun.png"), "Harmona Gun", 0, 5, FirearmTraits.Kickback, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d10", DamageKind.Bludgeoning)
                         .WithRangeIncrement(30)));
 
             //  - Jezail
             ModManager.RegisterNewItemIntoTheShop("Jezail", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/Jezail.png"), "Jezail", 0, 5, ConcussiveTrait, FatalAimD12Trait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/Jezail.png"), "Jezail", 0, 5, FirearmTraits.Concussive, FirearmTraits.FatalAimD12, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning)
                         .WithRangeIncrement(18)));
 
             //  - Mithral Tree
             ModManager.RegisterNewItemIntoTheShop("Mithral Tree", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/MithralTree.png"), "Mithral Tree", 0, 5, Trait.Elf, Trait.FatalD10, ConcussiveTrait, ParryTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/MithralTree.png"), "Mithral Tree", 0, 5, Trait.Elf, Trait.FatalD10, FirearmTraits.Concussive, FirearmTraits.Parry, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
                         .WithRangeIncrement(30)));
 
             //  - Pepperbox
             ModManager.RegisterNewItemIntoTheShop("Pepperbox", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/Pepperbox.png"), "Pepperbox", 0, 6, Trait.FatalD8, ConcussiveTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/Pepperbox.png"), "Pepperbox", 0, 6, Trait.FatalD8, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning)
                         .WithRangeIncrement(12)));
 
             //  - Slide Pistol
             ModManager.RegisterNewItemIntoTheShop("Slide Pistol", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/SlidePistol.png"), "Slide Pistol", 0, 8, Trait.FatalD10, ConcussiveTrait, FirearmTrait, MartialFirearmTrait, Trait.Martial, Trait.Reload1)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/SlidePistol.png"), "Slide Pistol", 0, 8, Trait.FatalD10, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
                     .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
                         .WithRangeIncrement(6)));
 
             // Advanced Ranged Firearm Weapons
             //  - Dwarven Scattergun
             ModManager.RegisterNewItemIntoTheShop("Dwarven Scattergun", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/DwarvenScattergun.png"), "Dwarven Scattergun", 0, 5, Trait.Dwarf, ConcussiveTrait, KickbackTrait, Scatter10Trait, FirearmTrait, AdvancedFirearmTrait, Trait.Advanced, Trait.Reload1, Trait.TwoHanded)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/DwarvenScattergun.png"), "Dwarven Scattergun", 0, 5, Trait.Dwarf, FirearmTraits.Concussive, FirearmTraits.Kickback, FirearmTraits.Scatter10, FirearmTraits.Firearm, FirearmTraits.AdvancedFirearm, Trait.Advanced, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning)
                         .WithRangeIncrement(10)));
 
             //  - Flingflenser
             ModManager.RegisterNewItemIntoTheShop("Flingflenser", itemName =>
-                new Item(itemName, new ModdedIllustration("FirearmsAssets/Flingflenser.png"), "Flingflenser", 0, 3, Trait.Goblin, Trait.Backstabber, Trait.FatalD10, Scatter5Trait, FirearmTrait, AdvancedFirearmTrait, Trait.Advanced, Trait.Reload1, Trait.TwoHanded)
+                new Item(itemName, new ModdedIllustration("FirearmsAssets/Flingflenser.png"), "Flingflenser", 0, 3, Trait.Goblin, Trait.Backstabber, Trait.FatalD10, FirearmTraits.Scatter5, FirearmTraits.Firearm, FirearmTraits.AdvancedFirearm, Trait.Advanced, Trait.Reload1, Trait.TwoHanded)
                     .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Slashing)
                         .WithRangeIncrement(6)));
 
@@ -290,7 +188,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                     StateCheck = (QEffect self) =>
                     {
                         // Adds the Double Barrel Fire to all firearms with the Double Barrel trait
-                        if (self.Owner.WieldsItem(DoubleBarrelTrait))
+                        if (self.Owner.WieldsItem(FirearmTraits.DoubleBarrel))
                         {
                             AddDoubleBarrelFireStrikeAction(self);
                         }
@@ -299,50 +197,50 @@ namespace Dawnsbury.Mods.Items.Firearms
                         foreach (Item item in self.Owner.HeldItems)
                         {
                             // Adds the VersatileP trait to firearms with the Concussive trait
-                            if (item.HasTrait(ConcussiveTrait) && !item.HasTrait(Trait.VersatileP))
+                            if (item.HasTrait(FirearmTraits.Concussive) && !item.HasTrait(Trait.VersatileP))
                             {
                                 item.Traits.Add(Trait.VersatileP);
                             }
 
                             // Adds both VersatileP and VersatileS to firearms with the Modular trait
-                            if (item.HasTrait(ModularTrait) && !item.HasTrait(Trait.VersatileP) && !item.HasTrait(Trait.VersatileS))
+                            if (item.HasTrait(FirearmTraits.Modular) && !item.HasTrait(Trait.VersatileP) && !item.HasTrait(Trait.VersatileS))
                             {
                                 item.Traits.Add(Trait.VersatileP);
                                 item.Traits.Add(Trait.VersatileS);
                             }
 
                             // Adds logic for all firearms with the Double Barrel trait
-                            if (item.HasTrait(DoubleBarrelTrait))
+                            if (item.HasTrait(FirearmTraits.DoubleBarrel))
                             {
                                 AddDoubleBarrelLogic(self, item);
                             }
 
                             // Adds logic for all firearms with the Fatal Aim D12 trait
-                            if (item.HasTrait(FatalAimD12Trait))
+                            if (item.HasTrait(FirearmTraits.FatalAimD12))
                             {
                                 AddFatalAimLogic(self, item);
                             }
 
                             // Adds logic for all firearms with the Kickback trait
-                            if (item.HasTrait(KickbackTrait))
+                            if (item.HasTrait(FirearmTraits.Kickback))
                             {
                                 AddKickbackLogic(self, item);
                             }
 
                             // Adds logic for all firearms with the Scatter trait
-                            if (item.HasTrait(Scatter5Trait) || item.HasTrait(Scatter10Trait))
+                            if (item.HasTrait(FirearmTraits.Scatter5) || item.HasTrait(FirearmTraits.Scatter10))
                             {
                                 AddScatterLogic(self, item);
                             }
 
                             // Adds logic for all weapons with the Parry trait
-                            if (item.HasTrait(ParryTrait))
+                            if (item.HasTrait(FirearmTraits.Parry))
                             {
                                 AddParryLogic(self, item);
                             }
 
                             // Adds logic for all firearms with the Misfired trait
-                            if (item.HasTrait(MisfiredTrait))
+                            if (item.HasTrait(FirearmTraits.Misfired))
                             {
                                 AddMisfireLogic(self, item);
                             }
@@ -379,52 +277,6 @@ namespace Dawnsbury.Mods.Items.Firearms
         }
 
         /// <summary>
-        /// Determines if the item is a firearm or a crossbow
-        /// </summary>
-        /// <param name="item">The item being checked</param>
-        /// <returns>True if the item is a firearm or crossbow and false otherwise</returns>
-        public static bool IsItemFirearmOrCrossbow(Item item, bool checkIfItsLoaded = false)
-        {
-            if (item.HasTrait(Firearms.FirearmTrait) || item.HasTrait(Trait.Crossbow))
-            {
-                if (checkIfItsLoaded)
-                {
-                    return IsItemLoaded(item);
-                }
-
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Determines if the item is loaded
-        /// </summary>
-        /// <param name="item">The item being checked</param>
-        /// <returns>True if the item is loaded and false otherwise</returns>
-        public static bool IsItemLoaded(Item item)
-        {
-            return item.EphemeralItemProperties != null && !item.EphemeralItemProperties.NeedsReload;
-        }
-
-        /// <summary>
-        /// Determines if the item has a multi ammo reload and if it is reloadable
-        /// </summary>
-        /// <param name="item">The item being check</param>
-        /// <returns>True if the item is a multi ammo reloadable item and false otherwise.</returns>
-        public static bool IsMultiAmmoWeaponReloadable(Item item)
-        {
-            int maxMagazineSize = item.HasTrait(Firearms.DoubleBarrelTrait) ? 2 : 5;
-            if ((item.HasTrait(Firearms.DoubleBarrelTrait) || item.HasTrait(Trait.Repeating)) && item.EphemeralItemProperties.AmmunitionLeftInMagazine < maxMagazineSize)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// Adds the Double Barrel Fire Attack for all firearms with the Double Barrel trait
         /// </summary>
         /// <param name="self">The state check</param>
@@ -436,7 +288,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                 ProvideStrikeModifier = delegate (Item doubleBarrelItem)
                 {
                     // Avoids adding Double Barrel Fire to non-Double Barrel items
-                    if (!doubleBarrelItem.HasTrait(DoubleBarrelTrait))
+                    if (!doubleBarrelItem.HasTrait(FirearmTraits.DoubleBarrel))
                     {
                         return null;
                     }
@@ -485,7 +337,10 @@ namespace Dawnsbury.Mods.Items.Firearms
 
                                 // The ammo is set to 0 since this costs both barrel's ammo and a technical QEffect is added for tracking
                                 doubleBarrelItem.EphemeralItemProperties.AmmunitionLeftInMagazine = 0;
-                                attackUpgrade.Owner.AddQEffect(FatalIsUpgradedTechnicalQEffect);
+                                attackUpgrade.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                {
+                                    Id = FirearmQEIDs.FatalIsUpgraded
+                                });
                             }
                         }
                     };
@@ -544,7 +399,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                         }
 
                         // Updates the item's trait to reduce the fatal die back now to it's base size
-                        if (cleanup.Owner.QEffects.Count(eff => eff.Name == FatalIsUpgradedTechnicalQEffect.Name) > 0)
+                        if (cleanup.Owner.QEffects.Any(eff => eff.Id == FirearmQEIDs.FatalIsUpgraded))
                         {
                             Trait? fatalTrait = item.Traits.FirstOrDefault(trait => trait == Trait.FatalD8 || trait == Trait.FatalD10 || trait == Trait.FatalD12);
                             if (fatalTrait != null && item.HasTrait(fatalTrait.Value))
@@ -567,7 +422,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                             }
 
                             // Removes the technical track used for Fatail Die tracking
-                            cleanup.Owner.RemoveAllQEffects(qe => qe.Name == FatalIsUpgradedTechnicalQEffect.Name);
+                            cleanup.Owner.RemoveAllQEffects(qe => qe.Id == FirearmQEIDs.FatalIsUpgraded);
                         }
                     }
                 },
@@ -575,9 +430,9 @@ namespace Dawnsbury.Mods.Items.Firearms
                 {
                     if (section.PossibilitySectionId == PossibilitySectionId.ItemActions)
                     {
-                        if (item.HasTrait(DoubleBarrelTrait) && !item.EphemeralItemProperties.NeedsReload && item.EphemeralItemProperties.AmmunitionLeftInMagazine != 2)
+                        if (item.HasTrait(FirearmTraits.DoubleBarrel) && !item.EphemeralItemProperties.NeedsReload && item.EphemeralItemProperties.AmmunitionLeftInMagazine != 2)
                         {
-                            return new ActionPossibility(new CombatAction(self.Owner, item.Illustration, "Reload (1/2)", new Trait[1] { Trait.Manipulate }, "Reload the weapon with another piece of ammunition.", Target.Self((Creature cr, AI ai) => 10f)).WithActionId(DoubleBarrelReloadAID).WithItem(item).WithActionCost(1).WithActionId(ActionId.Reload).WithEffectOnSelf(delegate
+                            return new ActionPossibility(new CombatAction(self.Owner, item.Illustration, "Reload (1/2)", new Trait[1] { Trait.Manipulate }, "Reload the weapon with another piece of ammunition.", Target.Self((Creature cr, AI ai) => 10f)).WithActionId(FirearmActionIDs.DoubleBarrelReload).WithItem(item).WithActionCost(1).WithActionId(ActionId.Reload).WithEffectOnSelf(delegate
                             {
                                 item.EphemeralItemProperties.ReloadActionsAlreadyTaken++;
                                 item.EphemeralItemProperties.ReloadActionsAlreadyTaken = 0;
@@ -627,7 +482,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                 // Prompts the user to choose their grip at the start of combat if they have a hand free
                 StartOfCombat = async (QEffect self) =>
                 {
-                    Item? fatalAimItem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(FatalAimD12Trait));
+                    Item? fatalAimItem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(FirearmTraits.FatalAimD12));
                     if (fatalAimItem != null && !fatalAimItem.HasTrait(Trait.TwoHanded) && self.Owner.HasFreeHand && await self.Owner.Battle.AskForConfirmation(self.Owner, fatalAimItem.Illustration, "Change grip to two handed as a free action?", "Two handed"))
                     {
                         fatalAimItem.Traits.Add(Trait.TwoHanded);
@@ -637,7 +492,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                 // Adds or removed the Fatal D12 trait if the item has the two-handed trait
                 StateCheck = (QEffect self) =>
                 {
-                    List<Item> fatalAimItems = self.Owner.HeldItems.Where(item => item.HasTrait(FatalAimD12Trait)).ToList();
+                    List<Item> fatalAimItems = self.Owner.HeldItems.Where(item => item.HasTrait(FirearmTraits.FatalAimD12)).ToList();
                     foreach (Item item in fatalAimItems)
                     {
                         if (item.HasTrait(Trait.TwoHanded) && !item.HasTrait(Trait.FatalD12))
@@ -686,16 +541,16 @@ namespace Dawnsbury.Mods.Items.Firearms
                 // Removes the Tripod if you attemp to move away
                 AfterYouTakeAction = async (QEffect self, CombatAction action) =>
                 {
-                    if (self.Owner.QEffects.Count(qe => qe.Name == TripodSetupQEffect.Name) > 0 && action.HasTrait(Trait.Move))
+                    if (self.Owner.QEffects.Count(qe => qe.Id == FirearmQEIDs.TripodSetup) > 0 && action.HasTrait(Trait.Move))
                     {
-                        self.Owner.RemoveAllQEffects(removeQE => removeQE.Name == TripodSetupQEffect.Name);
+                        self.Owner.RemoveAllQEffects(removeQE => removeQE.Id == FirearmQEIDs.TripodSetup);
                     }
                 },
 
                 // Adds the penality to attack rolls depending on if you have a tripod setup, just a firearm stabalizer, enough strength, or nothing
                 BonusToAttackRolls = (QEffect self, CombatAction action, Creature? defender) =>
                 {
-                    if (self.Owner.Abilities.Strength < 2 && self.Owner.QEffects.Count(qe => qe.Name == TripodSetupQEffect.Name) == 0)
+                    if (self.Owner.Abilities.Strength < 2 && !self.Owner.QEffects.Any(qe => qe.Id == FirearmQEIDs.TripodSetup))
                     {
                         int penality = (self.Owner.HeldItems.Concat(self.Owner.CarriedItems).Count(item => item.Name == "Firearm Stabalizer") > 0) ? -1 : -2;
                         return new Bonus(penality, BonusType.Circumstance, "Kickback" + ((penality == -1) ? " (Stablized)" : ""));
@@ -787,7 +642,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                     // Adds a Switch Grip action to the items section to change switch between one-handed and two-handed
                     ProvideActionIntoPossibilitySection = delegate (QEffect self, PossibilitySection section)
                     {
-                        if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && !self.Owner.HasEffect(ParryQEID))
+                        if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && !self.Owner.HasEffect(FirearmQEIDs.Parry))
                         {
                             return new ActionPossibility(new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.SteelShield), "Parry", [], "While wielding this weapon, if your proficiency with it is trained or better, you can spend a single action to position your weapon defensively, gaining a +1 circumstance bonus to AC until the start of your next turn.", Target.Self())
                             {
@@ -796,7 +651,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                             {
                                 parryTarget.AddQEffect(new QEffect("Parry", "While wielding this weapon, if your proficiency with it is trained or better, you can spend a single action to position your weapon defensively, gaining a +1 circumstance bonus to AC until the start of your next turn.")
                                 {
-                                    Id = ParryQEID,
+                                    Id = FirearmQEIDs.Parry,
                                     Tag = item,
                                     ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn,
                                     BonusToDefenses = (QEffect bonusToAC, CombatAction? action, Defense defense) =>
@@ -826,18 +681,18 @@ namespace Dawnsbury.Mods.Items.Firearms
         private static void AddMisfireLogic(QEffect self, Item item)
         {
             // Checks for only Firearm or Crossbow items and if they have the Misfired trait
-            if (IsItemFirearmOrCrossbow(item) && item.HasTrait(MisfiredTrait))
+            if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && item.HasTrait(FirearmTraits.Misfired))
             {
                 self.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
                 {
                     // Adds an action to clean firearm to remove the Misfired trait
                     ProvideActionIntoPossibilitySection = delegate (QEffect cleanFirearmEffect, PossibilitySection section)
                     {
-                        if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && IsItemFirearmOrCrossbow(item) && item.HasTrait(MisfiredTrait))
+                        if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && FirearmUtilities.IsItemFirearmOrCrossbow(item) && item.HasTrait(FirearmTraits.Misfired))
                         {
                             return new ActionPossibility(new CombatAction(cleanFirearmEffect.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.Action), "Remove Jam", [Trait.Basic, Trait.Manipulate], "Remove the jam to remove the misfired trait.", Target.Self()).WithActionCost(1).WithEffectOnSelf(async (action, self) =>
                             {
-                                item.Traits.RemoveAll(trait => trait == MisfiredTrait);
+                                item.Traits.RemoveAll(trait => trait == FirearmTraits.Misfired);
                             }));
                         }
 
@@ -847,7 +702,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                     // Prevents taking any action with that item
                     PreventTakingAction = (CombatAction action) =>
                     {
-                        if (action.Name != "Remove Jam" && ((action.HasTrait(FirearmTrait) || action.HasTrait(Trait.Crossbow)) && action.HasTrait(MisfiredTrait)) || (action.Item != null && IsItemFirearmOrCrossbow(action.Item) && action.Item.HasTrait(MisfiredTrait)))
+                        if (action.Name != "Remove Jam" && ((action.HasTrait(FirearmTraits.Firearm) || action.HasTrait(Trait.Crossbow)) && action.HasTrait(FirearmTraits.Misfired)) || (action.Item != null && FirearmUtilities.IsItemFirearmOrCrossbow(action.Item) && action.Item.HasTrait(FirearmTraits.Misfired)))
                         {
                             return "Jammed from a misfire";
                         }
@@ -870,15 +725,15 @@ namespace Dawnsbury.Mods.Items.Firearms
             if (actionName != null && (actionName.Contains("drop") || actionName.Contains("stow")))
             {
                 // Collects all the fatal aim and kickback items for cleanup and handles it
-                Item? fatalAimItem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(FatalAimD12Trait));
-                Item? kickbackItem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(KickbackTrait));
-                if (fatalAimItem != null && actionName.Contains(fatalAimItem.Name.ToLower()) && fatalAimItem.HasTrait(Trait.TwoHanded) && fatalAimItem.HasTrait(FatalAimD12Trait))
+                Item? fatalAimItem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(FirearmTraits.FatalAimD12));
+                Item? kickbackItem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(FirearmTraits.Kickback));
+                if (fatalAimItem != null && actionName.Contains(fatalAimItem.Name.ToLower()) && fatalAimItem.HasTrait(Trait.TwoHanded) && fatalAimItem.HasTrait(FirearmTraits.FatalAimD12))
                 {
                     fatalAimItem.Traits.Remove(Trait.TwoHanded);
                 }
-                if (kickbackItem != null && actionName.Contains(kickbackItem.Name.ToLower()) && self.Owner.QEffects.Count(qe => qe.Name == TripodSetupQEffect.Name) > 0)
+                if (kickbackItem != null && actionName.Contains(kickbackItem.Name.ToLower()) && self.Owner.QEffects.Any(qe => qe.Id == FirearmQEIDs.TripodSetup))
                 {
-                    self.Owner.RemoveAllQEffects(removeQE => removeQE.Name == TripodSetupQEffect.Name);
+                    self.Owner.RemoveAllQEffects(removeQE => removeQE.Id == FirearmQEIDs.TripodSetup);
                 }
             }
         }
@@ -892,7 +747,7 @@ namespace Dawnsbury.Mods.Items.Firearms
         {
             // Collacts all the fatal aim items for cleanup and handles it
             string actionName = action.Name.ToLower();
-            Item? fatalAimItem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(FatalAimD12Trait));
+            Item? fatalAimItem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(FirearmTraits.FatalAimD12));
             if (actionName != null && (actionName.Contains("pick up") || actionName.Contains("draw")) && fatalAimItem != null && !fatalAimItem.HasTrait(Trait.TwoHanded) && self.Owner.HasFreeHand && await self.Owner.Battle.AskForConfirmation(self.Owner, fatalAimItem.Illustration, "Change grip to two handed as a free action?", "Two handed"))
             {
                 fatalAimItem.Traits.Add(Trait.TwoHanded);
@@ -910,15 +765,15 @@ namespace Dawnsbury.Mods.Items.Firearms
         private static DamageModification AddDealtLeathalDamage(QEffect self, Creature attacker, DamageStuff damage, Creature defender)
         {
             // Collects all the fatal aim and kickback items for cleanup and handles it
-            Item? fatalAimItem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(FatalAimD12Trait));
-            Item? kickbackItem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(KickbackTrait));
-            if (fatalAimItem != null && fatalAimItem.HasTrait(Trait.TwoHanded) && fatalAimItem.HasTrait(FatalAimD12Trait))
+            Item? fatalAimItem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(FirearmTraits.FatalAimD12));
+            Item? kickbackItem = self.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(FirearmTraits.Kickback));
+            if (fatalAimItem != null && fatalAimItem.HasTrait(Trait.TwoHanded) && fatalAimItem.HasTrait(FirearmTraits.FatalAimD12))
             {
                 fatalAimItem.Traits.Remove(Trait.TwoHanded);
             }
-            if (kickbackItem != null && self.Owner.QEffects.Count(qe => qe.Name == TripodSetupQEffect.Name) > 0)
+            if (kickbackItem != null && self.Owner.QEffects.Any(qe => qe.Id == FirearmQEIDs.TripodSetup))
             {
-                self.Owner.RemoveAllQEffects(removeQE => removeQE.Name == TripodSetupQEffect.Name);
+                self.Owner.RemoveAllQEffects(removeQE => removeQE.Id == FirearmQEIDs.TripodSetup);
             }
             return null;
         }
@@ -929,7 +784,7 @@ namespace Dawnsbury.Mods.Items.Firearms
         /// <param name="self">Item owner</param>
         private static void ToggleTwoHanded(Creature self)
         {
-            Item? fatalAimItem = self.HeldItems.FirstOrDefault(item => item.HasTrait(FatalAimD12Trait));
+            Item? fatalAimItem = self.HeldItems.FirstOrDefault(item => item.HasTrait(FirearmTraits.FatalAimD12));
             if (fatalAimItem != null)
             {
                 if (fatalAimItem.HasTrait(Trait.TwoHanded))
@@ -950,7 +805,7 @@ namespace Dawnsbury.Mods.Items.Firearms
         /// <returns>null if the item can be two handed or a reason why it can't be</returns>
         private static string? WhyCannotSwitchFromOneHandedToTwoHanded(Creature self)
         {
-            if (self.HeldItems.Count(item => item.HasTrait(FatalAimD12Trait) && !item.HasTrait(Trait.TwoHanded)) > 0 && !self.HasFreeHand)
+            if (self.HeldItems.Count(item => item.HasTrait(FirearmTraits.FatalAimD12) && !item.HasTrait(Trait.TwoHanded)) > 0 && !self.HasFreeHand)
             {
                 return "Switching from one hand to two hands requires a free hand.";
             }
@@ -966,9 +821,12 @@ namespace Dawnsbury.Mods.Items.Firearms
         /// <param name="self">The creature setting up the tripod</param>
         private static void SetupTripod(Creature self)
         {
-            if (self.QEffects.Count(qe => qe.Name == TripodSetupQEffect.Name) == 0)
+            if (!self.QEffects.Any(qe => qe.Id == FirearmQEIDs.TripodSetup))
             {
-                self.AddQEffect(TripodSetupQEffect);
+                self.AddQEffect(new QEffect(ExpirationCondition.Never)
+                {
+                    Id = FirearmQEIDs.TripodSetup
+                });
             }
         }
 
@@ -979,7 +837,7 @@ namespace Dawnsbury.Mods.Items.Firearms
         /// <returns>null if the tripod can be setup and a reason why it can't be</returns>
         private static string? WhyCannotSetupTripod(Creature self)
         {
-            if (self.QEffects.Count(qe => qe.Name == TripodSetupQEffect.Name) > 0)
+            if (self.QEffects.Any(qe => qe.Id == FirearmQEIDs.TripodSetup))
             {
                 return "Your tripod is already setup.";
             }

@@ -10,6 +10,7 @@ using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Core.Roller;
 using Dawnsbury.Modding;
+using Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered.RegisteredComponents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,21 +24,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
     public static class BarbarianRemastered
     {
         /// <summary>
-        /// The Registered Giant Instict Feat Name
-        /// </summary>
-        public static readonly FeatName GiantInstictFeatName = ModManager.RegisterFeatName("Giant Instict");
-
-        /// <summary>
-        /// The Registered Giant Weapon Trait
-        /// </summary>
-        public static readonly Trait GiantWeaponTrait = ModManager.RegisterTrait("Giant Weapon");
-
-        /// <summary>
-        /// A list of the original Dragon Instincts in Dawnsbury
-        /// </summary>
-        private static readonly List<FeatName> originalDragonInstincts = new List<FeatName>() { FeatName.DragonInstinctFire, FeatName.DragonInstinctCold, FeatName.DragonInstinctElectricity, FeatName.DragonInstinctSonic, FeatName.DragonInstinctAcid };
-
-        /// <summary>
         /// Determines if the provided feat should be removed
         /// </summary>
         /// <param name="possibleFeatToRemove">The feat being considered for removal</param>
@@ -45,7 +31,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
         public static bool ShouldFeatBeRemoved(Feat possibleFeatToRemove)
         {
             // 2nd Level Second Wind, 4th Level Fast Movement, and all original Dragon Instincts
-            return possibleFeatToRemove.FeatName == FeatName.SecondWind || possibleFeatToRemove.FeatName == FeatName.FastMovement || (possibleFeatToRemove is DragonInstinctFeat && originalDragonInstincts.Contains(possibleFeatToRemove.FeatName));
+            return possibleFeatToRemove.FeatName == FeatName.SecondWind || possibleFeatToRemove.FeatName == FeatName.FastMovement || (possibleFeatToRemove is DragonInstinctFeat && BarbarianRemasteredFeatNames.OriginalDragonInstincts.Contains(possibleFeatToRemove.FeatName));
         }
 
         /// <summary>
@@ -66,7 +52,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
             yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Omen dragon"), DamageKind.Mental);
 
             // The Giant Instict Feat
-            yield return new Feat(GiantInstictFeatName, "Your rage gives you the raw power and size of a giant", "You can use weapons built for larger creature. While weilding any weapon you increase the additional damage from Rage from 2 to 6. All weapons you weild are considered large which leaves you clumsy 1 as you weild a weapon.", new List<Trait>(), null).WithOnCreature(delegate (Creature cr)
+            yield return new Feat(BarbarianRemasteredFeatNames.GiantInstict, "Your rage gives you the raw power and size of a giant", "You can use weapons built for larger creature. While weilding any weapon you increase the additional damage from Rage from 2 to 6. All weapons you weild are considered large which leaves you clumsy 1 as you weild a weapon.", new List<Trait>(), null).WithOnCreature(delegate (Creature cr)
             {
                 cr.AddQEffect(new QEffect
                 {
@@ -89,7 +75,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
                             List<DamageKind> list = attack.Item.DetermineDamageKinds();
                             DamageKind damageTypeToUse = defender.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(list);
                             DiceFormula item3 = null;
-                            if (attack.HasTrait(GiantWeaponTrait))
+                            if (attack.HasTrait(BarbarianRemasteredTraits.GiantWeaponTrait))
                             {
                                 item3 = DiceFormula.FromText((attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "3" : "6", (attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "Barbarian rage (giant & agile)" : "Barbarian rage (giant)");
                             }
@@ -110,7 +96,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
                         Creature owner = qEffect.Owner;
                         foreach (Item item in owner.HeldItems.Concat(owner.CarriedItems).Where(item => DoesGiantInstictApply(item)))
                         {
-                            item.Traits.Add(GiantWeaponTrait);
+                            item.Traits.Add(BarbarianRemasteredTraits.GiantWeaponTrait);
                             item.Name = "Giant " + item.Name;
                         }
                     }
@@ -236,7 +222,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
         /// <param name="classSelectionFeat">The barbarian class feat</param>
         private static void AddGiantInstict(ClassSelectionFeat classSelectionFeat)
         {
-            Feat giantInstictFeat = AllFeats.All.FirstOrDefault(feat => feat.FeatName == GiantInstictFeatName);
+            Feat giantInstictFeat = AllFeats.All.FirstOrDefault(feat => feat.FeatName ==  BarbarianRemasteredFeatNames.GiantInstict);
             classSelectionFeat.Subfeats.Add(giantInstictFeat);
         }
 
@@ -365,7 +351,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
                 {
                     StateCheck = (QEffect self) =>
                     {
-                        List<Item> giantItems = self.Owner.HeldItems.Where(item => item.HasTrait(GiantWeaponTrait)).ToList();
+                        List<Item> giantItems = self.Owner.HeldItems.Where(item => item.HasTrait(BarbarianRemasteredTraits.GiantWeaponTrait)).ToList();
                         if (giantItems.Count > 0 && self.Owner.QEffects.Count(effect => effect.Tag != null && effect.Tag.GetType() == typeof(string) && effect.Tag.Equals(clumsyFromGiantWeaponTag)) == 0)
                         {
                             self.Owner.AddQEffect(new QEffect

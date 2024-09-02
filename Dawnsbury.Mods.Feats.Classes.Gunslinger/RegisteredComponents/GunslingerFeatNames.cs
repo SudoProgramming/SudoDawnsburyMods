@@ -19,6 +19,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents
         public static readonly FeatName SingularExpertise = ModManager.RegisterFeatName("Singular Expertise", "Singular Expertise");
 
         /// <summary>
+        /// The Coated Munitions class feat name
+        /// </summary>
+        public static readonly FeatName CoatedMunitions = ModManager.RegisterFeatName("Coated Munitions", "Coated Munitions");
+
+        /// <summary>
         /// The Hit the Dirt class feat name
         /// </summary>
         public static readonly FeatName HitTheDirt = ModManager.RegisterFeatName("Hit the Dirt", "Hit the Dirt");

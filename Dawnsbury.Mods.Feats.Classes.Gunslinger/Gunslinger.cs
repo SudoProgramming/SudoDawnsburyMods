@@ -30,6 +30,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static Dawnsbury.Core.Mechanics.Core.CalculatedNumber;
+using Dawnsbury.Core.Mechanics.Damage;
+using Dawnsbury.Core.Roller;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -94,6 +96,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 });
 
             // Level 1 Class Feats
+            TrueFeat coatedMunitionsFeat = new TrueFeat(GunslingerFeatNames.CoatedMunitions, 1, "You carried leftover alchemical vials that are filled to the brim with various alchemical liquids, and your bullets are often found drenched in this liquid.", "{b}Frequency{/b} a number of times per day equal to your level\n\n{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nAdd attack deals an addtional 1 persistent damage and 1 spalsh damage of your choice between acid, cold, electricity, fire or poison.", [GunslingerTraits.Gunslinger, Trait.Homebrew], null);
+            AddCoatedMunitionsLogic(coatedMunitionsFeat);
+            yield return coatedMunitionsFeat;
+            
             // Creates and adds the logic for the Cover Fire class feat
             TrueFeat coverFireFeat = new TrueFeat(GunslingerFeatNames.CoverFire, 1, "You lay down suppressive fire to protect allies by forcing foes to take cover from your wild attacks.", "{b}Frequency{/b} once per round\n\n{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nMake a firearm or crossbow Strike; the target must decide before you roll your attack whether it will duck out of the way.\n\nIf the target ducks, it gains a +2 circumstance bonus to AC against your attack, or a +4 circumstance bonus to AC if it has cover. It also takes a –2 circumstance penalty to ranged attack rolls until the end of its next turn.\n\nIf the target chooses not to duck, you gain a +1 circumstance bonus to your attack roll for that Strike.", [GunslingerTraits.Gunslinger]).WithActionCost(1);
             AddCoverFireLogic(coverFireFeat);
@@ -397,6 +403,76 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             await pairedShotEffect.Owner.MakeStrike(targets.ChosenCreature, secondHeldItem, currentMap);
                         }
                     }));
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Coated Munitions feat
+        /// </summary>
+        /// <param name="alchemicalShotFeat">The Coated Munitions true feat object</param>
+        private static void AddCoatedMunitionsLogic(TrueFeat coatedMunitionsFeat)
+        {
+            // Adds a permanent Coated Munitions action if the appropiate weapon is held
+            coatedMunitionsFeat.WithPermanentQEffect(coatedMunitionsFeat.FlavorText, delegate (QEffect self)
+            {
+                self.ProvideActionIntoPossibilitySection = (QEffect coatedMunitionsEffect, PossibilitySection possibilitySection) =>
+                {
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions && coatedMunitionsEffect.Owner.PersistentUsedUpResources.UsedUpActions.Count(resource => resource == "Coated Munitions") < coatedMunitionsEffect.Owner.Level)
+                    {
+                        DamageKind[] elementalDamageKinds = [DamageKind.Acid, DamageKind.Cold, DamageKind.Electricity, DamageKind.Fire, DamageKind.Poison];
+                        Dictionary<DamageKind, IllustrationName> illustraions = new Dictionary<DamageKind, IllustrationName>()
+                        {
+                            {DamageKind.Acid, IllustrationName.ResistAcid}, {DamageKind.Cold, IllustrationName.ResistCold}, {DamageKind.Electricity, IllustrationName.ResistElectricity}, {DamageKind.Fire, IllustrationName.ResistFire}, {DamageKind.Poison, IllustrationName.ResistEnergy}
+                        };
+                        PossibilitySection elementalDamageSection = new PossibilitySection("Elemental Damage");
+                        foreach (DamageKind damageKind in elementalDamageKinds)
+                        {
+                            string damageString = damageKind.ToString();
+                            ActionPossibility damageAction = new ActionPossibility(new CombatAction(coatedMunitionsEffect.Owner, illustraions[damageKind], damageString, [], "Deal 1 persistent " + damageString + " damage and 1 " + damageString + " splash damage.", Target.Self()
+                                .WithAdditionalRestriction((Creature user) =>
+                                {
+                                    if (user.QEffects.Any(qe => qe.Name == "Coated Munitions is Applied"))
+                                    {
+                                        return "Munitions are already coated.";
+                                    }
+
+                                    return null;
+                                }))
+                                .WithActionCost(1)
+                                .WithEffectOnSelf(async (damageEffect, owner) =>
+                                {
+                                    owner.PersistentUsedUpResources.UsedUpActions.Add("Coated Munitions");
+                                    owner.AddQEffect(new QEffect("Coated Munitions is Applied", "[This is a technical effect with no description]")
+                                    {
+                                        AddExtraKindedDamageOnStrike = (CombatAction action, Creature defender) =>
+                                        {
+                                            if (action.Item != null && FirearmUtilities.IsItemFirearmOrCrossbow(action.Item))
+                                            {
+                                                Map map = defender.Battle.Map;
+                                                Tile? tile = map.AllTiles.FirstOrDefault(tile => tile.PrimaryOccupant == defender);
+                                                foreach (Creature creature in tile.Neighbours.Creatures)
+                                                {
+                                                    creature.DealDirectDamage(null, DiceFormula.FromText("1"), creature, CheckResult.Success, damageKind);
+                                                }
+
+                                                return new KindedDamage(DiceFormula.FromText("1", "Coated Munitions (" + damageString + ")"), damageKind);
+                                            }
+
+                                            return null;
+                                        },
+                                        ExpiresAt = ExpirationCondition.ExpiresAtEndOfYourTurn
+                                    });
+                                }));
+                            elementalDamageSection.AddPossibility(damageAction);
+                        }
+
+                        SubmenuPossibility coatedMunitionsMenu = new SubmenuPossibility(IllustrationName.Bomb, "Coated Munitions");
+                        coatedMunitionsMenu.Subsections.Add(elementalDamageSection);
+                        return coatedMunitionsMenu;
+                    }
+
+                    return null;
                 };
             });
         }

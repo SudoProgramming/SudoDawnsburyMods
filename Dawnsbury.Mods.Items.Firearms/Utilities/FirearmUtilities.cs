@@ -1,4 +1,5 @@
-﻿using Dawnsbury.Core.Mechanics.Enumerations;
+﻿using Dawnsbury.Core.Creatures;
+using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Mods.Items.Firearms.RegisteredComponents;
 using System;
@@ -55,6 +56,25 @@ namespace Dawnsbury.Mods.Items.Firearms.Utilities
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Awaits the asyncronis reload action for the give item
+        /// </summary>
+        /// <param name="self">The creature weilding the item</param>
+        /// <param name="item">The item being reloaded</param>
+        public static async void AwaitReloadItem(Creature self, Item item)
+        {
+            if (item.HasTrait(FirearmTraits.DoubleBarrel))
+            {
+                item.EphemeralItemProperties.AmmunitionLeftInMagazine++;
+                item.EphemeralItemProperties.NeedsReload = false;
+
+            }
+            else
+            {
+                await self.CreateReload(item).WithActionCost(0).WithItem(item).AllExecute();
+            }
         }
     }
 }

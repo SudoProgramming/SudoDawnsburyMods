@@ -328,23 +328,25 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="pairedShotsFeat">The Warning Shot true feat object</param>
         private static void AddWarningShotLogic(TrueFeat warningShotFeat)
         {
+            // Adds a permanent Warning Shot action for items that match the criteria
             warningShotFeat.WithPermanentQEffect(warningShotFeat.FlavorText, delegate (QEffect self)
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
                     if (item.HasTrait(FirearmTraits.Firearm) && FirearmUtilities.IsItemLoaded(item) && item.WeaponProperties != null)
                     {
+                        // Creates a demoarlize action that has the effect for Intimidating glare
                         CombatAction warningShotAction = CommonCombatActions.Demoralize(self.Owner);
                         warningShotAction.Name = "Warning Shot";
                         warningShotAction.Item = item;
                         warningShotAction.ActionCost = 1;
+                        warningShotAction.ActionId = GunslingerActionIDs.WarningShot;
                         warningShotAction.Illustration = new SideBySideIllustration(item.Illustration, IllustrationName.Demoralize);
                         warningShotAction.Description = warningShotFeat.RulesText;
                         warningShotAction.Target = Target.Ranged(item.WeaponProperties.MaximumRange);
-                        warningShotAction.StrikeModifiers.QEffectForStrike = new QEffect()
+                        warningShotAction.StrikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.EphemeralAtEndOfImmediateAction)
                         {
                             Id = QEffectId.IntimidatingGlare,
-                            ExpiresAt = ExpirationCondition.EphemeralAtEndOfImmediateAction,
                         };
 
                         return warningShotAction;
@@ -352,9 +354,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
                     return null;
                 };
+
+                // Discharges the firearm
                 self.YouBeginAction = async (QEffect dischargeEffect, CombatAction action) =>
                 {
-                    if (action.Name == "Warning Shot" && action.Item != null)
+                    if (action.ActionId == GunslingerActionIDs.WarningShot && action.Item != null)
                     {
                         DischargeItem(action.Item);
                     }
@@ -368,6 +372,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="pairedShotsFeat">The Paired Shots true feat object</param>
         private static void AddPairedShotsLogic(TrueFeat pairedShotsFeat)
         {
+            // Adds a permanent Paired Shots action if both held items are Firearms or Crossbows
             pairedShotsFeat.WithPermanentQEffect(pairedShotsFeat.FlavorText, delegate (QEffect self)
             {
                 self.ProvideMainAction = (QEffect pairedShotEffect) =>
@@ -376,11 +381,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     {
                         return null;
                     }
+
+                    // Sets up the action effect by grabbing both items, and determining the minimum max range between them
                     int currentMap = self.Owner.Actions.AttackedThisManyTimesThisTurn;
                     Item firstHeldItem = self.Owner.HeldItems[0];
                     Item secondHeldItem = self.Owner.HeldItems[1];
                     int maxRange = Math.Min(firstHeldItem.WeaponProperties.MaximumRange, secondHeldItem.WeaponProperties.MaximumRange);
 
+                    // Returns the action which will make two strikes, one with each weapon
                     return new ActionPossibility(new CombatAction(pairedShotEffect.Owner, new SideBySideIllustration(firstHeldItem.Illustration, secondHeldItem.Illustration), "Paired Shots", [Trait.Basic, Trait.IsHostile], pairedShotsFeat.RulesText, Target.Ranged(maxRange)).WithActionCost(2).WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
                     {
                         if (targets.ChosenCreature != null)
@@ -399,12 +407,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="alchemicalShotFeat">The Alchemical Shot true feat object</param>
         private static void AddAlchemicalShotLogic(TrueFeat alchemicalShotFeat)
         {
+            // Adds to the creature a state check to add the Alchemical Shot action to appropiate held weapons with each alchemical bomb
             alchemicalShotFeat.WithOnCreature(creature =>
             {
                 creature.AddQEffect(new QEffect()
                 {
                     StateCheck = (QEffect permanentState) =>
                     {
+                        // Collects the unique bombs carried or held
                         List<Item> heldBombs = permanentState.Owner.HeldItems.Concat(permanentState.Owner.CarriedItems).Where(item => item.HasTrait(Trait.Alchemical) && item.HasTrait(Trait.Bomb)).ToList();
                         HashSet<string> uniqueBombNames = new HashSet<string>(heldBombs.Select(bomb => bomb.Name).ToList());
                         List<Item> uniqueBombsHeld = new List<Item>();
@@ -417,6 +427,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             }
                         }
 
+                        // For each bomb the bomb will be added as a strike modifier for weapon
                         foreach (Item bomb in uniqueBombsHeld)
                         {
                             permanentState.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
@@ -430,6 +441,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                             return null;
                                         }
 
+                                        // Adjusts the damage type and creates a tempory item that will be used instead of the normal weapon.
                                         DamageKind alchemicalDamageType = (bomb != null && bomb.WeaponProperties != null) ? bomb.WeaponProperties.DamageKind : item.WeaponProperties.DamageKind;
                                         Item alchemicalBombLoadedWeapon = new Item(item.Illustration, item.Name, item.Traits.ToArray())
                                         {
@@ -440,6 +452,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         alchemicalShotAction.Item = item;
                                         alchemicalShotAction.ActionCost = 2;
 
+                                        // The shot will be fired and remove the selected bomb
                                         alchemicalShotAction.WithEffectOnEachTarget(async delegate (CombatAction pistolTwirl, Creature attacker, Creature defender, CheckResult result)
                                         {
                                             if (defender != null)
@@ -504,6 +517,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="hitTheDirtFeat">The Hit the Dirt true feat object</param>
         private static void AddHitTheDirtLogic(TrueFeat hitTheDirtFeat)
         {
+            // Adds a permanent Hit the Dirt reaction
             hitTheDirtFeat.WithPermanentQEffect(hitTheDirtFeat.FlavorText, delegate (QEffect self)
             {
                 self.YouAreTargeted = async (QEffect hitTheDirtEffect, CombatAction action) =>
@@ -525,6 +539,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         });
                     }
                 };
+
+                // Prompts the user to leap and sets them to prone
                 self.AfterYouAreTargeted = async (QEffect cleanupEffects, CombatAction action) =>
                 {
                     if (cleanupEffects.Owner.HasEffect(GunslingerQEIDs.HitTheDirt))
@@ -551,9 +567,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="runningReloadFeat">The Running Reload true feat object</param>
         private static void AddRunningReloadLogic(TrueFeat runningReloadFeat)
         {
+            // Adds to the creature a state check to add the Running Reload action to appropiate held weapons
             runningReloadFeat.WithOnCreature(creature =>
             {
-
                 creature.AddQEffect(new QEffect()
                 {
                     StateCheck = (QEffect permanentState) =>
@@ -574,7 +590,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                             }
                                             else
                                             {
-                                                AwaitReloadItem(self, heldItem);
+                                                FirearmUtilities.AwaitReloadItem(self, heldItem);
                                             }
                                         }));
                                     }
@@ -594,10 +610,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="swordAndPistolFeat">The Sword and Pistol true feat object</param>
         private static void AddSwordAndPistolLogic(TrueFeat swordAndPistolFeat)
         {
+            // Adds a permanent Effect that will adjust depending on if you attacked in melee or ranged with appropiate weapons
             swordAndPistolFeat.WithPermanentQEffect(swordAndPistolFeat.FlavorText, delegate (QEffect self)
             {
                 self.BeforeYourActiveRoll = async (QEffect addingEffects, CombatAction action, Creature defender) =>
                 {
+                    // If you attack within your melee range with a ranged Firearm or Crossbow, you gain a Melee buff 
                     if (action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(FirearmTraits.Firearm) || action.HasTrait(Trait.Crossbow)) && addingEffects.Owner.DistanceTo(defender) == 1 && !addingEffects.Owner.QEffects.Any(qe => qe.Id == GunslingerQEIDs.SwordAndPistolMeleeBuff && qe.Tag != null && qe.Tag == defender))
                     {
                         addingEffects.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
@@ -610,17 +628,20 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                 if (action.HasTrait(Trait.Strike) && action.HasTrait(Trait.Melee) && !action.HasTrait(Trait.TwoHanded) && defender == attackedCreature)
                                 {
                                     QEffect flatFooted = QEffect.FlatFooted("Sword and Pistol");
-                                    flatFooted.ExpiresAt = ExpirationCondition.Immediately;
+                                    flatFooted.ExpiresAt = ExpirationCondition.EphemeralAtEndOfImmediateAction;
                                     attackedCreature.AddQEffect(flatFooted);
                                     rollEffect.Owner.RemoveAllQEffects(qe => qe.Id == GunslingerQEIDs.SwordAndPistolMeleeBuff && qe.Tag != null && qe.Tag == defender);
                                 }
                             }
                         });
                     }
+
+                    // If you attack with melee you gain a Ranged buff 
                     else if (action.HasTrait(Trait.Melee) && !action.HasTrait(Trait.TwoHanded) && !addingEffects.Owner.QEffects.Any(qe => qe.Id == GunslingerQEIDs.SwordAndPistolRangedBuff && qe.Tag != null && qe.Tag == defender))
                     {
                         addingEffects.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
                         {
+                            // Adds an effect that will prevent reactions to this effect
                             Id = GunslingerQEIDs.SwordAndPistolRangedBuff,
                             CannotExpireThisTurn = true,
                             Tag = defender,
@@ -638,6 +659,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     }
                                 }
                             },
+
+                            // Checks if the target the same as the effect, if they are not the same a reaction should be prompted
                             YouBeginAction = async (QEffect startAction, CombatAction action) =>
                             {
                                 if (action.ChosenTargets.ChosenCreature != null && action.ChosenTargets.ChosenCreature != defender)
@@ -645,6 +668,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     await startAction.Owner.ProvokeOpportunityAttacks(action);
                                 }
                             },
+
+                            // After a valid attack is done the effects should be removed
                             BeforeYourActiveRoll = async (QEffect rollEffect, CombatAction action, Creature attackedCreature) =>
                             {
                                 if (action.HasTrait(Trait.Strike) && action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(FirearmTraits.Firearm) || action.HasTrait(Trait.Crossbow)) && defender == attackedCreature)
@@ -672,12 +697,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="pistolTwirlFeat">The Pistol Twirl true feat object</param>
         private static void AddPistolTwirlLogic(TrueFeat pistolTwirlFeat)
         {
+            // Adds a permananet Pistol Twirl action for the appropiate weapons
             pistolTwirlFeat.WithPermanentQEffect(pistolTwirlFeat.FlavorText, delegate (QEffect self)
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
                     if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && FirearmUtilities.IsItemLoaded(item) && !item.HasTrait(Trait.TwoHanded) && item.WeaponProperties != null)
                     {
+                        // Creates the action and handles the success results of the actions
                         CombatAction pistolTwirlAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.Feint), "Pistol Twirl", [], pistolTwirlFeat.RulesText, Target.Ranged(item.WeaponProperties.RangeIncrement)).WithActionCost(1).WithItem(item)
                         .WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Deception), Checks.DefenseDC(Defense.Perception)))
                         .WithEffectOnEachTarget(async delegate (CombatAction pistolTwirl, Creature attacker, Creature defender, CheckResult result)
@@ -744,6 +771,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="riskyReloadFeat">The Risky Reload true feat object</param>
         private static void AddRiskyReloadLogic(TrueFeat riskyReloadFeat)
         {
+            // Adds to the creature a state check to add the Risky Reload action to appropiate held weapons
             riskyReloadFeat.WithOnCreature(creature =>
             {
                 creature.AddQEffect(new QEffect()
@@ -758,6 +786,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                 {
                                     if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && (!FirearmUtilities.IsItemLoaded(heldItem) || FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
                                     {
+                                        // Creates the strike and reloads and misfires the weapon if the attack misses
                                         CombatAction basicStrike = riskyReloadEffect.Owner.CreateStrike(heldItem);
                                         CombatAction riskyReloadAction = new CombatAction(riskyReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.TrueStrike), "Risky Reload", [Trait.Flourish, Trait.Basic], riskyReloadFeat.RulesText, basicStrike.Target).WithActionCost(1).WithItem(heldItem);
                                         return new ActionPossibility(riskyReloadAction
@@ -797,13 +826,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="crossbowCrackShotFeat">The Crossbow Crack Shot true feat object</param>
         private static void AddCrossbowCrackShotLogic(TrueFeat crossbowCrackShotFeat)
         {
+            // Adds a Permanent effect for strikes that are crossbows
             crossbowCrackShotFeat.WithPermanentQEffect(crossbowCrackShotFeat.FlavorText, delegate (QEffect self)
             {
                 self.AfterYouTakeAction = async (QEffect crossbowCrackshotEffect, CombatAction action) =>
                 {
                     if (GetReloadAIDs().Contains(action.ActionId) && !crossbowCrackshotEffect.Owner.HasEffect(GunslingerQEIDs.CrossbowCrackShot))
                     {
-                        // HACK: Currently the base Dawnsbury Reload action has no attachment to the item that was reloaded
                         if (action.Item == null)
                         {
                             action.Item = crossbowCrackshotEffect.Owner.HeldItems.FirstOrDefault(item => item.HasTrait(Trait.Crossbow) && FirearmUtilities.IsItemLoaded(item));
@@ -838,6 +867,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         }
                     }
                 };
+
+                // Cleans up the effect if effect was just used
                 self.StateCheck = (QEffect state) =>
                 {
                     QEffect? cbcsEffect = state.Owner.QEffects.FirstOrDefault(qe => qe.Id == GunslingerQEIDs.CrossbowCrackShot);
@@ -847,6 +878,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         state.Owner.RemoveAllQEffects(qe => qe.Id == GunslingerQEIDs.CrossbowCrackShot);
                     }
                 };
+
+                // If the effect is not used the adjustments still need to be cleaned up
                 self.EndOfAnyTurn = (QEffect endOfTurn) =>
                 {
                     if (endOfTurn.Owner.HasEffect(GunslingerQEIDs.CrossbowCrackShot))
@@ -871,6 +904,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="defensiveAramentsFeat">The Defensive Araments true feat object</param>
         private static void AddDefensiveAramentsLogic(TrueFeat defensiveAramentsFeat)
         {
+            // Adds a permananet effect that adds the Parry trait to items that don't have it when appropiate
             defensiveAramentsFeat.WithPermanentQEffect(defensiveAramentsFeat.FlavorText, delegate (QEffect self)
             {
                 self.StateCheck = (QEffect state) =>
@@ -885,6 +919,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     }
                 };
 
+                // Adjusts the bonus for items that already have the parry trait
                 self.BonusToDefenses = (QEffect bonusToAC, CombatAction? action, Defense defense) =>
                 {
                     QEffect? parryQEffect = bonusToAC.Owner.QEffects.FirstOrDefault(qe => qe.Id == FirearmQEIDs.Parry);
@@ -899,6 +934,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     return null;
                 };
 
+                // Handles cleanup for when you drop or stow
                 self.YouBeginAction = async (QEffect actionTakenCleanup, CombatAction action) =>
                 {
                     // Checks if the last action was a drop or stow
@@ -916,6 +952,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     }
                 };
 
+                // Handles cleanup when you fall unconsious
                 self.YouAreDealtLethalDamage = async (QEffect self, Creature attacker, DamageStuff damage, Creature defender) =>
                 {
                     // Collects all the temporary parry items for cleanup and handles it
@@ -937,8 +974,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="fakeOutFeat">The Fake Out true feat object</param>
         private static void AddFakeOutLogic(TrueFeat fakeOutFeat)
         {
+            // Adds a permanent effect with various pieces for each segment of the game state
             fakeOutFeat.WithPermanentQEffect(fakeOutFeat.FlavorText, delegate (QEffect fakeOutEffect)
             {
+                // Start of combat the tracking Fakeout effect is added
                 fakeOutEffect.StartOfCombat = async (QEffect startOfCombat) =>
                 {
                     fakeOutEffect.Owner.AddQEffect(new QEffect()
@@ -947,6 +986,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         Tag = new List<Creature>()
                     });
                 };
+
+                // Add the start of the turn the tracking effect has it's list of creatures cleared
                 fakeOutEffect.StartOfYourTurn = async (QEffect startOfTurn, Creature self) =>
                 {
                     QEffect? fakeOutTrackingEffect = startOfTurn.Owner.QEffects.FirstOrDefault(qe => qe.Id == GunslingerQEIDs.FakeOut);
@@ -955,6 +996,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         fakeOutTrackingEffect.Tag = new List<Creature>();
                     }
                 };
+
+                // After attacking that defender is adding to the tacking effect
                 fakeOutEffect.BeforeYourActiveRoll = async (QEffect beforeAttackRoll, CombatAction action, Creature defender) =>
                 {
                     QEffect? fakeOutTrackingEffect = beforeAttackRoll.Owner.QEffects.FirstOrDefault(qe => qe.Id == GunslingerQEIDs.FakeOut);
@@ -965,12 +1008,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 };
             });
 
+            // Handles the aid reaction for all allies
             ModManager.RegisterActionOnEachCreature(creature =>
             {
                 if (creature.OwningFaction == null || creature.OwningFaction.IsHumanControlled)
                 {
                     creature.AddQEffect(new QEffect()
                     {
+                        // When an ally contains the Fakeout action and take a reaction a prompt is asked if Fakeout should be used
                         BeforeYourActiveRoll = async (QEffect beforeAttackRoll, CombatAction action, Creature defender) =>
                         {
                             Creature[] alliesWithFakeout = beforeAttackRoll.Owner.Battle.AllCreatures.Where(battleCreature => battleCreature.OwningFaction == beforeAttackRoll.Owner.OwningFaction && battleCreature.HasEffect(GunslingerQEIDs.FakeOut) && battleCreature.Actions.CanTakeReaction()).ToArray();
@@ -981,13 +1026,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     continue;
                                 }
 
+                                // Collects the effects and items from the ally using Fakeout and begins building that aid strike subaction
                                 QEffect? fakeOutTrackingEffect = ally.QEffects.FirstOrDefault(qe => qe.Id == GunslingerQEIDs.FakeOut);
                                 Item? mainWeapon = ally.HeldItems.FirstOrDefault(item => FirearmUtilities.IsItemFirearmOrCrossbow(item));
                                 if (mainWeapon != null && FirearmUtilities.IsItemLoaded(mainWeapon) && fakeOutTrackingEffect != null && fakeOutTrackingEffect.Tag != null && fakeOutTrackingEffect.Tag is List<Creature> creaturesAttacked)
                                 {
+                                    // Prompts the user to use the reaction for this effect
                                     string fakeOutTargetTextAddition = (creaturesAttacked.Contains(defender)) ? " (+1 circumstance bonus to this)" : string.Empty;
                                     if (await creature.Battle.AskToUseReaction(ally, "Make an attack roll to Aid the triggering attack." + fakeOutTargetTextAddition))
                                     {
+                                        // Builds the strike for the aid strike
                                         CombatAction basicStrike = ally.CreateStrike(mainWeapon);
                                         CombatAction aidStrike = new CombatAction(ally, new SimpleIllustration(IllustrationName.None), "Aid Strike (" + mainWeapon.Name + ")", [], "{b}Critical Success{/b} Your ally gains a +2 circumstance bonus to the triggering action.\n\n\"{b}Success{/b} Your ally gains a +1 circumstance bonus to the triggering action.\n\n\"{b}Critical Failure{/b} Your ally gains a -1 circumstance penalty to the triggering action.\n\n", action.Target);;
                                         aidStrike.ActionCost = 0;
@@ -1001,6 +1049,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         aidStrike.WithActiveRollSpecification(new ActiveRollSpecification(attackCheck, Checks.DefenseDC(Defense.AC)));
                                         aidStrike.WithEffectOnEachTarget(async delegate (CombatAction aidAction, Creature attacker, Creature defender, CheckResult result)
                                         {
+                                            // Depending on the attacks result the original attacker gains a bonus
                                             switch (result)
                                             {
                                                 case CheckResult.CriticalSuccess:
@@ -1090,20 +1139,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             }
         }
 
-        public static async void AwaitReloadItem(Creature self, Item item)
-        {
-            if (item.HasTrait(FirearmTraits.DoubleBarrel))
-            {
-                item.EphemeralItemProperties.AmmunitionLeftInMagazine++;
-                item.EphemeralItemProperties.NeedsReload = false;
-
-            }
-            else
-            {
-                await self.CreateReload(item).WithActionCost(0).WithItem(item).AllExecute();
-            }
-        }
-
+        /// <summary>
+        /// Gets the Reload Action IDs
+        /// </summary>
+        /// <returns>A list of Reload Action IDs</returns>
         private static List<ActionId> GetReloadAIDs()
         {
             return [ActionId.Reload, FirearmActionIDs.DoubleBarrelReload];

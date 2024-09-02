@@ -131,7 +131,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                         }
 
                         // Reload item
-                        Gunslinger.AwaitReloadItem(attacker, ranged);
+                        FirearmUtilities.AwaitReloadItem(attacker, ranged);
                     }));
                 };
             });
@@ -195,7 +195,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                         demoralizeAction.Description = "Interact to reload and then attempt an Intimidation check to Demoralize.";
                                         demoralizeAction.WithEffectOnSelf(async innerSelf =>
                                         {
-                                            Gunslinger.AwaitReloadItem(raconteursReloadDemoralizeEffect.Owner, heldItem);
+                                            FirearmUtilities.AwaitReloadItem(raconteursReloadDemoralizeEffect.Owner, heldItem);
                                         });
 
                                         return new ActionPossibility(demoralizeAction);
@@ -225,7 +225,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                         }, "Choose any number of enemy creatures you can see.\n\nMake one Deception check against the Perception DC of all those creatures. On a success, you become Hidden to those creatures.\n\nWhether or not you succeed,  creatures you attempt to divert gain a +4 circumstance bonus to their Perception DCs against your attempts to Create a Diversion for the rest of the encounter.", Target.MultipleCreatureTargets(Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100)).WithMinimumTargets(1).WithMustBeDistinct().WithSimultaneousAnimation()).WithSoundEffect(SfxName.Feint).WithActionId(ActionId.CreateADiversion);
                                         createADiversion.WithEffectOnChosenTargets(async (creature, targets) =>
                                         {
-                                            Gunslinger.AwaitReloadItem(raconteursReloadDiversionEffect.Owner, heldItem);
+                                            FirearmUtilities.AwaitReloadItem(raconteursReloadDiversionEffect.Owner, heldItem);
                                             int roll = R.NextD20();
                                             foreach (Creature chosenCreature in targets.ChosenCreatures)
                                             {
@@ -380,7 +380,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                         coveredReloadAciton.ActionCost = 1;
                                         coveredReloadAciton.WithEffectOnSelf(async (self) =>
                                         {
-                                            Gunslinger.AwaitReloadItem(self, heldItem);
+                                            FirearmUtilities.AwaitReloadItem(self, heldItem);
 
                                             // HACK: Currently there is no CommonCombatActions for 'Take Cover' this should be replaced with that if it is ever added.
                                             CombatAction takeCoverAction = new CombatAction(self, (Illustration)IllustrationName.TakeCover, "Take cover", new Trait[1]
@@ -603,7 +603,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         public static void WithVanguardClearAPathLogic(this GunslingerWay vanguardWay)
         {
             Feat vanguardFeat = vanguardWay.Feat;
-            // Adds to the creature a state check to add the clear a path action to appropiate held weapons.
+            // Adds to the creature a state check to add the clear a path action to appropiate held weapons
             vanguardFeat.WithOnCreature(creature =>
             {
                 creature.AddQEffect(new QEffect()
@@ -641,7 +641,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                         };
                                         clearAPathAction.WithEffectOnSelf((self) =>
                                         {
-                                            Gunslinger.AwaitReloadItem(self, item);
+                                            FirearmUtilities.AwaitReloadItem(self, item);
                                         });
 
                                         return new ActionPossibility(clearAPathAction);

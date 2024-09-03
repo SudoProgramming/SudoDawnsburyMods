@@ -32,6 +32,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
 {
@@ -340,7 +341,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         {
             Feat pistoleroFeat = pistoleroWay.Feat;
             // Adds a permanent bonus to initiative and a start of combat stide with no reaction of 10 ft.
-            // TODO: UPDATE
             pistoleroFeat.WithPermanentQEffect("Pistolero's Ten Paces", delegate (QEffect self)
             {
                 self.StartOfCombat = async (startOfCombat) =>
@@ -370,6 +370,174 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         /// </summary>
         /// <param name="sniperWay">The Sniper way</param>
         public static void WithSnipersCoveredReloadLogic(this GunslingerWay sniperWay)
+        {
+            Feat sniperFeat = sniperWay.Feat;
+            // Adds a permanent Covered Reload action if the appropiate weapon is held
+            sniperFeat.WithPermanentQEffect(sniperFeat.FlavorText, delegate (QEffect self)
+            {
+                self.ProvideActionIntoPossibilitySection = (QEffect coveredReloadEffect, PossibilitySection possibilitySection) =>
+                {
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
+                    {
+                        Creature owner = coveredReloadEffect.Owner;
+                        SubmenuPossibility coveredReloadMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, "Covered Reload");
+
+                        foreach (Item item in owner.HeldItems.Where(item => FirearmUtilities.IsItemFirearmOrCrossbow(item) && item.WeaponProperties != null))
+                        {
+                            // Creates a Raconteurs Reload button
+                            PossibilitySection raconteursReloadSection = new PossibilitySection(item.Name);
+
+                            // Gets the self creature and checks if it can either hide, take cover, or both
+                            Creature self = coveredReloadEffect.Owner;
+                            bool canHide = self.Battle.AllCreatures.Any(cr => cr.EnemyOf(self) && HiddenRules.HasCoverOrConcealment(self, cr));
+                            bool canTakeCover = !self.HasEffect(QEffectId.TakingCover);
+
+                            // HACK: Currently there is no CommonCombatActions for 'Take Cover' this should be replaced with that if it is ever added.
+                            CombatAction takeCoverAction = new CombatAction(self, (Illustration)IllustrationName.TakeCover, "Take cover", new Trait[1]
+                            {
+                                                Trait.Basic
+                            }, "{i}You hunker down.{/i}\n\nUntil you move, attack or become Unconscious, any standard cover you have instead counts as greater cover (you don't gain this benefit against creatures against whom you don't have standard cover).\n\nIn addition, if you're prone, you count as having greater cover from all ranged attacks.", Target.Self()
+                            .WithAdditionalRestriction((Creature innerSelf) =>
+                            {
+                                if (innerSelf.HasEffect(QEffectId.TakingCover))
+                                {
+                                    return "You're already taking cover.";
+                                }
+                                else if (FirearmUtilities.IsItemLoaded(item) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(item))
+                                {
+                                    return "Can not be reloaded.";
+                                }
+
+                                return null;
+                            }))
+                            .WithActionCost(1)
+                            .WithEffectOnSelf(async innerSelf =>
+                            {
+                                FirearmUtilities.AwaitReloadItem(innerSelf, item);
+                                innerSelf.AddQEffect(new QEffect("Taking cover", "Until you move, attack or become Unconscious, any standard cover you have instead counts as greater cover (you don't gain this benefit against creatures against whom you don't have standard cover).\n\nIn addition, if you're prone, you count as having greater cover from all ranged attacks.", ExpirationCondition.Never, innerSelf, (Illustration)IllustrationName.TakeCover)
+                                {
+                                    Id = QEffectId.TakingCover,
+                                    CountsAsABuff = true,
+                                    StateCheck = sc =>
+                                    {
+                                        if (!sc.Owner.HasEffect(QEffectId.Unconscious))
+                                            return;
+                                        sc.ExpiresAt = ExpirationCondition.Immediately;
+                                    },
+                                    AfterYouTakeAction = async (qfSelf, action) =>
+                                    {
+                                        if (action.Name == "Covered Reload" || !action.HasTrait(Trait.Attack) && !action.HasTrait(Trait.Move))
+                                            return;
+                                        qfSelf.ExpiresAt = ExpirationCondition.Immediately;
+                                    },
+                                    IncreaseCover = (qfSelf, attack, existingCover) => attack != null && attack.HasTrait(Trait.Ranged) && qfSelf.Owner.HasEffect(QEffectId.Prone) && existingCover < CoverKind.Greater || existingCover == CoverKind.Standard ? CoverKind.Greater : existingCover
+                                });
+                            });
+                            // HACK: This is the end of the 'Take Cover'
+
+                            ActionPossibility takeCoverPossibility = new ActionPossibility(takeCoverAction);
+                            raconteursReloadSection.AddPossibility(takeCoverPossibility);
+
+                            // HACK: Currently there is no CommonCombatActions for 'Hide' this should be replaced with that if it is ever added.
+                            CombatAction hideAction = new CombatAction(self, (Illustration)IllustrationName.Hide, "Hide", new Trait[2]
+                            {
+                                                Trait.Basic,
+                                                Trait.AttackDoesNotTargetAC
+                            }, "Make one Stealth check against the Perception DCs of each enemy creature that can see you but that you have cover or concealment from. On a success, you become Hidden to that creature.", Target.Self((cr, ai) => ai.HideSelf())
+                            .WithAdditionalRestriction(innerSelf =>
+                            {
+                                if (HiddenRules.IsHiddenFromAllEnemies(innerSelf, innerSelf.Occupies))
+                                    return "You're already hidden from all enemies.";
+                                else if (FirearmUtilities.IsItemLoaded(item) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(item))
+                                {
+                                    return "Can not be reloaded.";
+                                }
+                                return !innerSelf.Battle.AllCreatures.Any(cr => cr.EnemyOf(innerSelf) && HiddenRules.HasCoverOrConcealment(innerSelf, cr)) ? "You don't have cover or concealment from any enemy." : null;
+                            })).WithActionCost(1).WithActionId(ActionId.Hide).WithSoundEffect(SfxName.Hide).WithEffectOnSelf(async innerSelf =>
+                            {
+                                FirearmUtilities.AwaitReloadItem(innerSelf, item);
+                                int roll = R.NextD20();
+                                foreach (Creature creature in innerSelf.Battle.AllCreatures.Where<Creature>(cr => cr.EnemyOf(innerSelf)))
+                                {
+                                    if (!innerSelf.DetectionStatus.HiddenTo.Contains(creature) && HiddenRules.HasCoverOrConcealment(innerSelf, creature))
+                                    {
+                                        CheckBreakdown breakdown = CombatActionExecution.BreakdownAttack(new CombatAction(innerSelf, (Illustration)IllustrationName.Hide, "Hide", new Trait[1]
+                                        {
+                                                            Trait.Basic
+                                        }, "[this condition has no description]", Target.Self()).WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Stealth), Checks.DefenseDC(Defense.Perception))), creature);
+                                        CheckBreakdownResult breakdownResult = new CheckBreakdownResult(breakdown, roll);
+                                        string str8 = breakdown.DescribeWithFinalRollTotal(breakdownResult);
+                                        StringBuilder stringHandler;
+                                        if (breakdownResult.CheckResult >= CheckResult.Success)
+                                        {
+                                            innerSelf.DetectionStatus.HiddenTo.Add(creature);
+                                            Tile occupies = creature.Occupies;
+                                            Color lightBlue = Color.LightBlue;
+                                            string str9 = innerSelf?.ToString();
+                                            string str10 = creature?.ToString();
+                                            stringHandler = new StringBuilder(string.Empty, 10);
+                                            stringHandler.Append(" (");
+                                            stringHandler.Append(breakdownResult.D20Roll.ToString() + breakdown.TotalCheckBonus.WithPlus());
+                                            stringHandler.Append("=");
+                                            stringHandler.Append(breakdownResult.D20Roll + breakdown.TotalCheckBonus);
+                                            stringHandler.Append(" vs. ");
+                                            stringHandler.Append(breakdown.TotalDC);
+                                            stringHandler.Append(").");
+                                            string stringAndClear = stringHandler.ToString();
+                                            string log = str9 + " successfully hid from " + str10 + stringAndClear;
+                                            string logDetails = str8;
+                                            occupies.Overhead("hidden from", lightBlue, log, "Hide", logDetails);
+                                        }
+                                        else
+                                        {
+                                            Tile occupies = creature.Occupies;
+                                            Color red = Color.Red;
+                                            string str11 = innerSelf?.ToString();
+                                            string str12 = creature?.ToString();
+                                            stringHandler = new StringBuilder(string.Empty, 10);
+                                            stringHandler.Append(" (");
+                                            stringHandler.Append(breakdownResult.D20Roll.ToString() + breakdown.TotalCheckBonus.WithPlus());
+                                            stringHandler.Append("=");
+                                            stringHandler.Append(breakdownResult.D20Roll + breakdown.TotalCheckBonus);
+                                            stringHandler.Append(" vs. ");
+                                            stringHandler.Append(breakdown.TotalDC);
+                                            stringHandler.Append(").");
+                                            string stringAndClear = stringHandler.ToString();
+                                            string log = str11 + " failed to hide from " + str12 + stringAndClear;
+                                            string logDetails = str8;
+                                            occupies.Overhead("hide failed", red, log, "Hide", logDetails);
+                                        }
+                                    }
+                                    // HACK: This is the end of the 'Hide'
+                                }
+                            });
+
+                            // Adds all the posibilites for each weapon and finalizes the button
+                            raconteursReloadSection.AddPossibility(new ActionPossibility(hideAction));
+
+                            coveredReloadMenu.Subsections.Add(raconteursReloadSection);
+                        }
+
+                        return coveredReloadMenu;
+                    }
+
+                    return null;
+                };
+                self.AfterYouTakeAction = async (QEffect dischargeItem, CombatAction action) =>
+                {
+                    if (action.ActionId == GunslingerActionIDs.BlackPowderBoost && action.Item != null)
+                    {
+                        FirearmUtilities.DischargeItem(action.Item);
+                    }
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds Covered Reload Logic
+        /// </summary>
+        /// <param name="sniperWay">The Sniper way</param>
+        public static void WithSnipersCoveredReloadLogicOLD(this GunslingerWay sniperWay)
         {
             Feat sniperFeat = sniperWay.Feat;
             // Adds to the creature a state check to add the covered reload action to appropiate held weapons.
@@ -405,7 +573,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                             {
                                                 Trait.Basic
                                             }, "{i}You hunker down.{/i}\n\nUntil you move, attack or become Unconscious, any standard cover you have instead counts as greater cover (you don't gain this benefit against creatures against whom you don't have standard cover).\n\nIn addition, if you're prone, you count as having greater cover from all ranged attacks.", Target.Self().WithAdditionalRestriction(innerSelf => !innerSelf.HasEffect(QEffectId.TakingCover) ? null : "You're already taking cover."))
-                                            .WithActionCost(0)
+                                            .WithActionCost(1)
                                             .WithEffectOnSelf(async innerSelf =>
                                             {
                                                 innerSelf.AddQEffect(new QEffect("Taking cover", "Until you move, attack or become Unconscious, any standard cover you have instead counts as greater cover (you don't gain this benefit against creatures against whom you don't have standard cover).\n\nIn addition, if you're prone, you count as having greater cover from all ranged attacks.", ExpirationCondition.Never, innerSelf, (Illustration)IllustrationName.TakeCover)
@@ -420,7 +588,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                                     },
                                                     AfterYouTakeAction = async (qfSelf, action) =>
                                                     {
-                                                        if (action.Name == "Covered Reload" || !action.HasTrait(Trait.Attack) && !action.HasTrait(Trait.Move))
+                                                        if (action.Name == "Covered Reload")
+                                                        if (action.Name == "Covered Reload" || !action.HasTrait(Trait.Attack) && !action.HasTrait(Trait.Move) && action.Item != null)
                                                             return;
                                                         qfSelf.ExpiresAt = ExpirationCondition.Immediately;
                                                     },
@@ -439,8 +608,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                                 if (HiddenRules.IsHiddenFromAllEnemies(innerSelf, innerSelf.Occupies))
                                                     return "You're already hidden from all enemies.";
                                                 return !innerSelf.Battle.AllCreatures.Any(cr => cr.EnemyOf(innerSelf) && HiddenRules.HasCoverOrConcealment(innerSelf, cr)) ? "You don't have cover or concealment from any enemy." : null;
-                                            })).WithActionCost(0).WithActionId(ActionId.Hide).WithSoundEffect(SfxName.Hide).WithEffectOnSelf(async innerSelf =>
+                                            })).WithActionCost(1).WithActionId(ActionId.Hide).WithSoundEffect(SfxName.Hide).WithEffectOnSelf(async innerSelf =>
                                             {
+                                                FirearmUtilities.AwaitReloadItem(innerSelf, heldItem);
                                                 int roll = R.NextD20();
                                                 foreach (Creature creature in innerSelf.Battle.AllCreatures.Where<Creature>(cr => cr.EnemyOf(innerSelf)))
                                                 {

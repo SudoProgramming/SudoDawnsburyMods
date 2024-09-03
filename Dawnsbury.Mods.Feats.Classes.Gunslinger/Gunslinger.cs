@@ -32,6 +32,10 @@ using System.Threading.Tasks;
 using static Dawnsbury.Core.Mechanics.Core.CalculatedNumber;
 using Dawnsbury.Core.Mechanics.Damage;
 using Dawnsbury.Core.Roller;
+using Dawnsbury.Core.Animations.Movement;
+using Dawnsbury.Core.Intelligence;
+using System.Reflection;
+using Dawnsbury.Auxiliary;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -153,6 +157,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             alchemicalShotFeat.WithActionCost(2);
             AddAlchemicalShotLogic(alchemicalShotFeat);
             yield return alchemicalShotFeat;
+
+            // Creates and adds the logic for the Black Powder Boost class feat
+            TrueFeat blackPowderBoostFeat = new TrueFeat(GunslingerFeatNames.BlackPowderBoost, 4, "You fire your weapon as you jump, using the kickback to go farther.", "{b}Requirements{/b} You're wielding a loaded firearm.\n\nYou Leap and discharge your firearm to add a +10-foot status bonus to the distance traveled. If you spend 2 actions for Black Powder Boost, you Long Jump instead.", [GunslingerTraits.Gunslinger]);
+            AddBlackPowderBoostLogic(blackPowderBoostFeat);
+            yield return blackPowderBoostFeat;
 
             // Creates and adds the logic for the Paired Shots class feat
             TrueFeat pairedShotsFeat = new TrueFeat(GunslingerFeatNames.PairedShots, 4, "Your shots hit simultaneously.", "{b}Requirements{/b} You're wielding two weapons, each of which can be either a loaded one-handed firearm or loaded one-handed crossbow.\n\nMake two Strikes, one with each of your two ranged weapons, each using your current multiple attack penalty. Both Strikes must have the same target.\n\nIf both attacks hit, combine their damage and then add any applicable effects from both weapons. Combine the damage from both Strikes and apply resistances and weaknesses only once. This counts as two attacks when calculating your multiple attack penalty.", [GunslingerTraits.Gunslinger]).WithActionCost(2);
@@ -366,7 +375,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 {
                     if (action.ActionId == GunslingerActionIDs.WarningShot && action.Item != null)
                     {
-                        DischargeItem(action.Item);
+                        FirearmUtilities.DischargeItem(action.Item);
                     }
                 };
             });
@@ -440,7 +449,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     return null;
                                 }))
                                 .WithActionCost(1)
-                                .WithEffectOnSelf(async (damageEffect, owner) =>
+                                .WithEffectOnSelf(async (CombatAction damageEffect, Creature owner) =>
                                 {
                                     owner.AddQEffect(new QEffect("Coated Munitions is Applied", "[This is a technical effect with no description]")
                                     {
@@ -472,6 +481,118 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     }
 
                     return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Black Powder Boost feat
+        /// </summary>
+        /// <param name="blackPowderBoostFeat">The Black Powder Boost true feat object</param>
+        private static void AddBlackPowderBoostLogic(TrueFeat blackPowderBoostFeat)
+        {
+            // Adds a permanent Black Powder Boost action if the appropiate weapon is held
+            blackPowderBoostFeat.WithPermanentQEffect(blackPowderBoostFeat.FlavorText, delegate (QEffect self)
+            {
+                self.ProvideActionIntoPossibilitySection = (QEffect blackPowderBoostEffect, PossibilitySection possibilitySection) =>
+                {
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
+                    {
+                        Creature owner = blackPowderBoostEffect.Owner;
+                        SubmenuPossibility blackPowderBoostMenu = new SubmenuPossibility(IllustrationName.Jump, "Black Powder Boost");
+
+                        foreach (Item firearm in owner.HeldItems.Where(item => item.HasTrait(FirearmTraits.Firearm) && FirearmUtilities.IsItemLoaded(item)))
+                        {
+                            // Creates a Black Powder Boost button and calculates the standard leap distance
+                            PossibilitySection firearmBlackPowderBoostSection = new PossibilitySection(firearm.Name);
+                            int leapDistance = (((owner.Speed >= 6) ? 3 : 2) + (owner.HasEffect(QEffectId.PowerfulLeap) ? 1 : 0) + 2);
+
+                            // Adds the 1 action boost that acts as an extended leap
+                            CombatAction blackPowderBoostOneAction = CommonCombatActions.Leap(owner, leapDistance);
+                            blackPowderBoostOneAction.ActionId = GunslingerActionIDs.BlackPowderBoost;
+                            blackPowderBoostOneAction.Item = firearm;
+                            blackPowderBoostOneAction.Illustration = new SideBySideIllustration(firearm.Illustration, IllustrationName.Action);
+                            blackPowderBoostOneAction.Name = "Boosted Leap";
+                            blackPowderBoostOneAction.Description = "You Leap and discharge your firearm to add a +10-foot status bonus to the distance traveled.";
+                            blackPowderBoostOneAction.WithActionCost(1);
+                            firearmBlackPowderBoostSection.AddPossibility(new ActionPossibility(blackPowderBoostOneAction));
+
+                            // Adds the 2 action boost that acts as an extended long jump
+                            CombatAction blackPowderBoostTwoAction = new CombatAction(owner, new SideBySideIllustration(firearm.Illustration, IllustrationName.TwoActions), "Boosted Long Jump", [Trait.Basic, Trait.Move], "You Stride, then attempt a DC 15 Athletics check to make a long jump in the direction you were Striding.\n\nIf you didn't Stride at least 10 feet, you automatically fail your check.\n\n{b}Success{/b} You Leap up to a distance equal to your check result rounded down to the nearest 5 feet. You can't jump farther than your land Speed.\n{b}Failure{/b} You Leap.\n{b}Critical Failure{/b} You Leap, then fall and land prone.\n\nYou discharge your firearm to add a +10-foot status bonus to the distance traveled.", Target.Self());
+                            blackPowderBoostTwoAction.WithActionCost(2);
+                            blackPowderBoostTwoAction.ActionId = GunslingerActionIDs.BlackPowderBoost;
+                            blackPowderBoostTwoAction.Item = firearm;
+                            blackPowderBoostTwoAction.WithEffectOnSelf(async (Creature leaper) =>
+                            {
+                                // Collects the starting tile and handles the first stride
+                                Tile startingTile = leaper.Occupies;
+                                await leaper.StrideAsync("Choose a tile to Stride to. (1/2)");
+
+                                // Gets the tile after striding and determines how far was moved
+                                Tile currentTile = leaper.Occupies;
+                                int distanceMoved = startingTile.DistanceTo(currentTile);
+                                bool autoFailure = distanceMoved < 2 && (distanceMoved == 0 || !currentTile.DifficultTerrain);
+                                CheckResult result;
+                                int totalResult = -1;
+
+                                // If the long jump isn't an auto failure an Ath
+                                if (!autoFailure)
+                                {
+                                    int diceResult = R.NextD20();
+                                    int athleticsMod = leaper.Skills.Get(Skill.Athletics);
+                                    totalResult = diceResult + athleticsMod;
+                                    result = (totalResult >= 15) ? CheckResult.Success : (totalResult <= 5) ? CheckResult.CriticalFailure : CheckResult.Failure;
+                                    result = (diceResult == 1 && result != CheckResult.CriticalFailure) ? result - 1 : result;
+                                    leaper.Battle.Log(leaper.ToString() + " " + ((result >= CheckResult.Success) ? "{Green}succeeds{/}" : "{Red}fails{/}") + " a long jump:");
+                                    leaper.Battle.Log(athleticsMod.ToString() + "+" + diceResult + "=" + totalResult + " vs. 15");
+                                }
+
+                                // If an auto failure happened no need to do the check
+                                else
+                                {
+                                    result = CheckResult.Failure;
+                                    leaper.Battle.Log(leaper.ToString() + " {Red}fails{/} to long jump, since they did not stride at least 10 ft.");
+                                }
+
+                                // Sets the Failure distances to the leap distance but also updates the successful long jumps
+                                int longJumpDistance = leapDistance;
+                                if (result >= CheckResult.Success)
+                                {
+                                    int leapBasedOnSpeed = ((owner.Speed >= 6) ? 3 : 2);
+                                    int longDistance = totalResult % 5;
+                                    int longDistanceGained = (longDistance < leapBasedOnSpeed) ? leapBasedOnSpeed : (longDistance > owner.Speed) ? owner.Speed : longDistance;
+                                    longJumpDistance = (longDistanceGained + (owner.HasEffect(QEffectId.PowerfulLeap) ? 1 : 0) + 2);
+                                }
+                                
+                                // Handles the Long Jump and lands prone on a critical failure
+                                Tile? tileToLeapTo = await GetLongJumpTileWithinDistance(leaper, startingTile, "Choose the tile to leap to. (2/2)", longJumpDistance);
+                                if (tileToLeapTo != null)
+                                {
+                                    await leaper.SingleTileMove(tileToLeapTo, null);
+                                }
+                                if (result == CheckResult.CriticalFailure)
+                                {
+                                    await leaper.FallProne();
+                                }
+                            });
+
+                            // Adds all the posibilites for each weapon and finalizes the button
+                            firearmBlackPowderBoostSection.AddPossibility(new ActionPossibility(blackPowderBoostTwoAction));
+
+                            blackPowderBoostMenu.Subsections.Add(firearmBlackPowderBoostSection);
+                        }
+
+                        return blackPowderBoostMenu;
+                    }
+
+                    return null;
+                };
+                self.AfterYouTakeAction = async (QEffect dischargeItem, CombatAction action) =>
+                {
+                    if (action.ActionId == GunslingerActionIDs.BlackPowderBoost && action.Item != null)
+                    {
+                        FirearmUtilities.DischargeItem(action.Item);
+                    }
                 };
             });
         }
@@ -533,7 +654,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                             if (defender != null)
                                             {
                                                 result = await permanentState.Owner.MakeStrike(defender, alchemicalBombLoadedWeapon);
-                                                DischargeItem(item);
+                                                FirearmUtilities.DischargeItem(item);
                                                 for (int i = 0; i < permanentState.Owner.HeldItems.Count; i++)
                                                 {
                                                     if (permanentState.Owner.HeldItems.Contains(bomb))
@@ -624,7 +745,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         int leapDistance = ((cleanupEffects.Owner.Speed >= 6) ? 3 : 2) + (cleanupEffects.Owner.HasEffect(QEffectId.PowerfulLeap) ? 1 : 0);
                         CombatAction leapAction = CommonCombatActions.Leap(cleanupEffects.Owner);
                         leapAction.EffectOnChosenTargets = null;
-                        Tile? tileToLeapTo = await GetHitTheDirtTileAsync(cleanupEffects.Owner, leapAction, leapDistance);
+                        Tile? tileToLeapTo = await GetLeapTileWithinDistance(cleanupEffects.Owner, "Choose the tile to leap to.", leapDistance);
                         if (tileToLeapTo != null)
                         {
                             await cleanupEffects.Owner.SingleTileMove(tileToLeapTo, leapAction);
@@ -1158,7 +1279,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
                                             if (aidAction.Item != null)
                                             {
-                                                DischargeItem(aidAction.Item);
+                                                FirearmUtilities.DischargeItem(aidAction.Item);
                                             }
                                         });
 
@@ -1198,23 +1319,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         }
 
         /// <summary>
-        /// Discharges the provided item
-        /// </summary>
-        /// <param name="item">The item being discharged</param>
-        private static void DischargeItem(Item item)
-        {
-            if (item.EphemeralItemProperties != null)
-            {
-                if (item.HasTrait(Trait.Reload1) || item.HasTrait(Trait.Reload2))
-                {
-                    item.EphemeralItemProperties.NeedsReload = true;
-                }
-
-                item.EphemeralItemProperties.AmmunitionLeftInMagazine--;
-            }
-        }
-
-        /// <summary>
         /// Gets the Reload Action IDs
         /// </summary>
         /// <returns>A list of Reload Action IDs</returns>
@@ -1223,36 +1327,27 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             return [ActionId.Reload, FirearmActionIDs.DoubleBarrelReload];
         }
 
-        /// <summary>
-        /// Gets a selected tile for Hit the Dirt asyncronisly
-        /// </summary>
-        /// <param name="self">The creature leaping</param>
-        /// <param name="leapAction">The leap action</param>
-        /// <param name="distance">The allowed leap distance</param>
-        /// <returns>The tile for hit the dirt</returns>
-        public static async Task<Tile?> GetHitTheDirtTileAsync(Creature self, CombatAction leapAction, int distance)
+        public static async Task<Tile?> GetLeapTileWithinDistance(Creature self, string messageString, int range)
         {
-            List<Tile> tiles = self.Battle.Map.AllTiles.Where(tile => self.Occupies.DistanceTo(tile) <= distance && tile.IsFree).ToList();
-            List<Option> leapOptions = new List<Option>();
-            Dictionary<Option, Tile> selectedTileMapping = new Dictionary<Option, Tile>();
-            foreach (Tile tile in tiles)
+            // Gets the starting tile, initatlizes the options and collects the possible tiles within range that the user can reach
+            Tile startingTile = self.Occupies;
+            List<Option> options = new List<Option>();
+            foreach (Tile tile in self.Battle.Map.AllTiles)
             {
-                Option tileOption = leapAction.CreateUseOptionOn(tile).WithIllustration(leapAction.Illustration);
-                if (tileOption != null)
+                if (tile.IsFree && startingTile.DistanceTo(tile) <= range)
                 {
-                    leapOptions.Add(tileOption);
-                    selectedTileMapping.Add(tileOption, tile);
+                    options.Add(new TileOption(tile, "Tile (" + tile.X + "," + tile.Y + ")", null, (AIUsefulness)int.MinValue, true));
                 }
             }
 
-
-
-            Option? selectedOption = (await self.Battle.SendRequest(new AdvancedRequest(self, "Choose the tile to leap to.", leapOptions)
+            // Prompts the user to select a valid tile and returns it or null
+            Option selectedOption = (await self.Battle.SendRequest(new AdvancedRequest(self, messageString, options)
             {
                 IsMainTurn = false,
                 IsStandardMovementRequest = false,
-                TopBarIcon = IllustrationName.WarpStep,
-                TopBarText = "Choose the tile to leap to."
+                TopBarIcon = IllustrationName.Jump,
+                TopBarText = messageString
+
             })).ChosenOption;
 
             if (selectedOption != null)
@@ -1262,10 +1357,43 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     return null;
                 }
 
-                if (selectedTileMapping.ContainsKey(selectedOption))
+                return ((TileOption)selectedOption).Tile;
+            }
+
+            return null;
+        }
+
+        public static async Task<Tile?> GetLongJumpTileWithinDistance(Creature self, Tile originalTileBeforeStride, string messageString, int range)
+        {
+            // Gets the starting tile, initatlizes the options and collects the possible tiles within range that the user can reach
+            Tile startingTile = self.Occupies;
+            List<Option> options = new List<Option>();
+            foreach (Tile tile in self.Battle.Map.AllTiles)
+            {
+                if (tile.IsFree && startingTile.DistanceTo(tile) <= range && originalTileBeforeStride.DistanceTo(tile) > originalTileBeforeStride.DistanceTo(startingTile))
                 {
-                    return selectedTileMapping[selectedOption];
+                    options.Add(new TileOption(tile, "Tile (" + tile.X + "," + tile.Y + ")", null, (AIUsefulness)int.MinValue, true));
                 }
+            }
+
+            // Prompts the user to select a valid tile and returns it or null
+            Option selectedOption = (await self.Battle.SendRequest(new AdvancedRequest(self, messageString, options)
+            {
+                IsMainTurn = false,
+                IsStandardMovementRequest = false,
+                TopBarIcon = IllustrationName.Jump,
+                TopBarText = messageString
+
+            })).ChosenOption;
+
+            if (selectedOption != null)
+            {
+                if (selectedOption is CancelOption cancel)
+                {
+                    return null;
+                }
+
+                return ((TileOption)selectedOption).Tile;
             }
 
             return null;

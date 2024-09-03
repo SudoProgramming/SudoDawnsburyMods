@@ -76,5 +76,22 @@ namespace Dawnsbury.Mods.Items.Firearms.Utilities
                 await self.CreateReload(item).WithActionCost(0).WithItem(item).AllExecute();
             }
         }
+
+        /// <summary>
+        /// Discharges the provided item
+        /// </summary>
+        /// <param name="item">The item being discharged</param>
+        public static void DischargeItem(Item item)
+        {
+            if (item.EphemeralItemProperties != null)
+            {
+                if (item.HasTrait(Trait.Reload1) || item.HasTrait(Trait.Reload2))
+                {
+                    item.EphemeralItemProperties.NeedsReload = true;
+                }
+
+                item.EphemeralItemProperties.AmmunitionLeftInMagazine--;
+            }
+        }
     }
 }

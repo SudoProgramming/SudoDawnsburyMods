@@ -74,6 +74,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents
         public static readonly FeatName AlchemicalShot = ModManager.RegisterFeatName("Alchemical Shot", "Alchemical Shot");
 
         /// <summary>
+        /// The Black Powder Boost class feat name
+        /// </summary>
+        public static readonly FeatName BlackPowderBoost = ModManager.RegisterFeatName("Black Powder Boost", "Black Powder Boost {icon:Action} or {icon:TwoActions}");
+
+        /// <summary>
         /// The Paired Shots class feat name
         /// HACK: Currently the percision damage is added from both attacks. Dawnsbury doesn't break out precision damage to check which is higher
         /// </summary>

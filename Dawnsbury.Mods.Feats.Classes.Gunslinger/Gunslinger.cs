@@ -103,7 +103,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             TrueFeat coatedMunitionsFeat = new TrueFeat(GunslingerFeatNames.CoatedMunitions, 1, "You coat your munitions with mysterious alchemical mixed liquids you keep in small vials.", "{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nUntil the end of your turn, your next attack deals an addtional 1 persistent damage and 1 spalsh damage of your choice between acid, cold, electricity, fire or poison.", [GunslingerTraits.Gunslinger, Trait.Homebrew], null);
             AddCoatedMunitionsLogic(coatedMunitionsFeat);
             yield return coatedMunitionsFeat;
-            
+
             // Creates and adds the logic for the Cover Fire class feat
             TrueFeat coverFireFeat = new TrueFeat(GunslingerFeatNames.CoverFire, 1, "You lay down suppressive fire to protect allies by forcing foes to take cover from your wild attacks.", "{b}Frequency{/b} once per round\n\n{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nMake a firearm or crossbow Strike; the target must decide before you roll your attack whether it will duck out of the way.\n\nIf the target ducks, it gains a +2 circumstance bonus to AC against your attack, or a +4 circumstance bonus to AC if it has cover. It also takes a –2 circumstance penalty to ranged attack rolls until the end of its next turn.\n\nIf the target chooses not to duck, you gain a +1 circumstance bonus to your attack roll for that Strike.", [GunslingerTraits.Gunslinger]).WithActionCost(1);
             AddCoverFireLogic(coverFireFeat);
@@ -203,7 +203,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         return new Bonus(1, BonusType.Circumstance, "Singular Expertise");
                     }
 
-                    return null;                   
+                    return null;
                 };
             });
         }
@@ -501,7 +501,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         Creature owner = blackPowderBoostEffect.Owner;
                         SubmenuPossibility blackPowderBoostMenu = new SubmenuPossibility(IllustrationName.Jump, "Black Powder Boost");
 
-                        foreach (Item firearm in owner.HeldItems.Where(item => item.HasTrait(FirearmTraits.Firearm) && FirearmUtilities.IsItemLoaded(item)))
+                        foreach (Item firearm in owner.HeldItems.Where(item => item.HasTrait(FirearmTraits.Firearm)))
                         {
                             // Creates a Black Powder Boost button and calculates the standard leap distance
                             PossibilitySection firearmBlackPowderBoostSection = new PossibilitySection(firearm.Name);
@@ -515,6 +515,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             blackPowderBoostOneAction.Name = "Boosted Leap";
                             blackPowderBoostOneAction.Description = "You Leap and discharge your firearm to add a +10-foot status bonus to the distance traveled.";
                             blackPowderBoostOneAction.WithActionCost(1);
+
+                            // Checks if the item needs to be reloaded
+                            ((TileTarget)blackPowderBoostOneAction.Target).AdditionalTargetingRequirement = ((Creature reloader, Tile tile) =>
+                            {
+                                if (!FirearmUtilities.IsItemLoaded(firearm))
+                                {
+                                    return Usability.NotUsable("Needs to be reloaded.");
+                                }
+
+                                return Usability.Usable;
+                            });
+
                             firearmBlackPowderBoostSection.AddPossibility(new ActionPossibility(blackPowderBoostOneAction));
 
                             // Adds the 2 action boost that acts as an extended long jump
@@ -563,7 +575,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     int longDistanceGained = (longDistance < leapBasedOnSpeed) ? leapBasedOnSpeed : (longDistance > owner.Speed) ? owner.Speed : longDistance;
                                     longJumpDistance = (longDistanceGained + (owner.HasEffect(QEffectId.PowerfulLeap) ? 1 : 0) + 2);
                                 }
-                                
+
                                 // Handles the Long Jump and lands prone on a critical failure
                                 Tile? tileToLeapTo = await GetLongJumpTileWithinDistance(leaper, startingTile, "Choose the tile to leap to. (2/2)", longJumpDistance);
                                 if (tileToLeapTo != null)
@@ -574,6 +586,17 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                 {
                                     await leaper.FallProne();
                                 }
+                            });
+
+                            // Checks if the item needs to be reloaded
+                            ((SelfTarget)blackPowderBoostTwoAction.Target).WithAdditionalRestriction((Creature reloader) =>
+                            {
+                                if (!FirearmUtilities.IsItemLoaded(firearm))
+                                {
+                                    return "Needs to be reloaded.";
+                                }
+
+                                return null;
                             });
 
                             // Adds all the posibilites for each weapon and finalizes the button
@@ -623,20 +646,21 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             }
                         }
 
-                        // For each bomb the bomb will be added as a strike modifier for weapon
-                        foreach (Item bomb in uniqueBombsHeld)
+                        permanentState.ProvideActionIntoPossibilitySection = (QEffect alchemicalShotEffect, PossibilitySection possibilitySection) =>
                         {
-                            permanentState.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
+                            if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
                             {
-                                ProvideStrikeModifier = (Item item) =>
-                                {
-                                    if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && FirearmUtilities.IsItemLoaded(item) && item.WeaponProperties != null)
-                                    {
-                                        if (!permanentState.Owner.HeldItems.Concat(permanentState.Owner.CarriedItems).Contains(bomb))
-                                        {
-                                            return null;
-                                        }
+                                Creature owner = alchemicalShotEffect.Owner;
+                                SubmenuPossibility alchemicalShotMenu = new SubmenuPossibility(IllustrationName.Bomb, "Alchemical Shot");
 
+                                foreach (Item item in owner.HeldItems.Where(item => FirearmUtilities.IsItemFirearmOrCrossbow(item) && FirearmUtilities.IsItemLoaded(item) && item.WeaponProperties != null))
+                                {
+                                    // Creates a Alchemical Shot button
+                                    PossibilitySection alchemicalShotSection = new PossibilitySection(item.Name);
+
+                                    // For each bomb the bomb will be added as a strike modifier for weapon
+                                    foreach (Item bomb in uniqueBombsHeld)
+                                    {
                                         // Adjusts the damage type and creates a tempory item that will be used instead of the normal weapon.
                                         DamageKind alchemicalDamageType = (bomb != null && bomb.WeaponProperties != null) ? bomb.WeaponProperties.DamageKind : item.WeaponProperties.DamageKind;
                                         Item alchemicalBombLoadedWeapon = new Item(item.Illustration, item.Name, item.Traits.ToArray())
@@ -695,13 +719,17 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                             return Usability.Usable;
                                         });
 
-                                        return alchemicalShotAction;
+                                        alchemicalShotSection.AddPossibility(new ActionPossibility(alchemicalShotAction));
                                     }
 
-                                    return null;
+                                    alchemicalShotMenu.Subsections.Add(alchemicalShotSection);
                                 }
-                            });
-                        }
+
+                                return alchemicalShotMenu;
+                            }
+
+                            return null;
+                        };
                     }
                 });
             });
@@ -757,46 +785,58 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             });
         }
 
-        /// <summary>
+        // <summary>
         /// Adds the logic for the Running Reload feat
         /// </summary>
         /// <param name="runningReloadFeat">The Running Reload true feat object</param>
         private static void AddRunningReloadLogic(TrueFeat runningReloadFeat)
         {
-            // Adds to the creature a state check to add the Running Reload action to appropiate held weapons
-            runningReloadFeat.WithOnCreature(creature =>
+            // Adds a permanent Running Reload action if the appropiate weapon is held
+            runningReloadFeat.WithPermanentQEffect(runningReloadFeat.FlavorText, delegate (QEffect self)
             {
-                creature.AddQEffect(new QEffect()
+                self.ProvideActionIntoPossibilitySection = (QEffect runningReloadEffect, PossibilitySection possibilitySection) =>
                 {
-                    StateCheck = (QEffect permanentState) =>
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
                     {
-                        foreach (Item heldItem in permanentState.Owner.HeldItems)
+                        SubmenuPossibility runningReloadMenu = new SubmenuPossibility(IllustrationName.WarpStep, "Running Reload");
+
+                        foreach (Item heldItem in runningReloadEffect.Owner.HeldItems)
                         {
-                            permanentState.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
+                            if (FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && heldItem.WeaponProperties != null)
                             {
-                                ProvideActionIntoPossibilitySection = delegate (QEffect runningReloadEffect, PossibilitySection section)
+                                PossibilitySection runningReloadSection = new PossibilitySection(heldItem.Name);
+                                CombatAction itemAction = new CombatAction(runningReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.WarpStep), "Running Reload", [Trait.Basic], runningReloadFeat.RulesText, Target.Self()
+                                .WithAdditionalRestriction((Creature user) =>
                                 {
-                                    if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && (!FirearmUtilities.IsItemLoaded(heldItem) || FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                    if (FirearmUtilities.IsItemLoaded(heldItem) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem))
                                     {
-                                        return new ActionPossibility(new CombatAction(runningReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.WarpStep), "Running Reload", [Trait.Basic], runningReloadFeat.RulesText, Target.Self()).WithActionCost(1).WithItem(heldItem).WithEffectOnSelf(async (action, self) =>
-                                        {
-                                            if (!await self.StrideAsync("Choose where to Stride with Running Reload.", allowCancel: true))
-                                            {
-                                                action.RevertRequested = true;
-                                            }
-                                            else
-                                            {
-                                                FirearmUtilities.AwaitReloadItem(self, heldItem);
-                                            }
-                                        }));
+                                        return "Can not be reloaded.";
                                     }
 
                                     return null;
-                                }
-                            });
+                                })).WithActionCost(1).WithItem(heldItem).WithEffectOnSelf(async (action, self) =>
+                                {
+                                    if (!await self.StrideAsync("Choose where to Stride with Running Reload.", allowCancel: true))
+                                    {
+                                        action.RevertRequested = true;
+                                    }
+                                    else
+                                    {
+                                        FirearmUtilities.AwaitReloadItem(self, heldItem);
+                                    }
+                                });
+                                ActionPossibility itemPossibility = new ActionPossibility(itemAction);
+
+                                runningReloadSection.AddPossibility(itemPossibility);
+                                runningReloadMenu.Subsections.Add(runningReloadSection);
+                            }
                         }
+
+                        return runningReloadMenu;
                     }
-                });
+
+                    return null;
+                };
             });
         }
 
@@ -967,52 +1007,67 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// <param name="riskyReloadFeat">The Risky Reload true feat object</param>
         private static void AddRiskyReloadLogic(TrueFeat riskyReloadFeat)
         {
-            // Adds to the creature a state check to add the Risky Reload action to appropiate held weapons
-            riskyReloadFeat.WithOnCreature(creature =>
+            // Adds a permanent Running Reload action if the appropiate weapon is held
+            riskyReloadFeat.WithPermanentQEffect(riskyReloadFeat.FlavorText, delegate (QEffect self)
             {
-                creature.AddQEffect(new QEffect()
+                self.ProvideActionIntoPossibilitySection = (QEffect riskyReloadEffect, PossibilitySection possibilitySection) =>
                 {
-                    StateCheck = (QEffect permanentState) =>
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
                     {
-                        foreach (Item heldItem in permanentState.Owner.HeldItems)
+                        SubmenuPossibility riskyReloadMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, "Risky Reload");
+
+                        foreach (Item heldItem in riskyReloadEffect.Owner.HeldItems)
                         {
-                            permanentState.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
+                            if (FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && heldItem.WeaponProperties != null)
                             {
-                                ProvideActionIntoPossibilitySection = delegate (QEffect riskyReloadEffect, PossibilitySection section)
+                                PossibilitySection riskyReloadSection = new PossibilitySection(heldItem.Name);
+                                // Creates the strike and reloads and misfires the weapon if the attack misses
+                                CombatAction basicStrike = riskyReloadEffect.Owner.CreateStrike(heldItem);
+                                CombatAction riskyReloadAction = new CombatAction(riskyReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.TrueStrike), "Risky Reload", [Trait.Flourish, Trait.Basic], riskyReloadFeat.RulesText, basicStrike.Target).WithActionCost(1).WithItem(heldItem);
+                                riskyReloadAction.WithEffectOnEachTarget(async delegate (CombatAction riskyReload, Creature attacker, Creature defender, CheckResult result)
                                 {
-                                    if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && (!FirearmUtilities.IsItemLoaded(heldItem) || FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
+                                    if (heldItem.HasTrait(FirearmTraits.DoubleBarrel))
                                     {
-                                        // Creates the strike and reloads and misfires the weapon if the attack misses
-                                        CombatAction basicStrike = riskyReloadEffect.Owner.CreateStrike(heldItem);
-                                        CombatAction riskyReloadAction = new CombatAction(riskyReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.TrueStrike), "Risky Reload", [Trait.Flourish, Trait.Basic], riskyReloadFeat.RulesText, basicStrike.Target).WithActionCost(1).WithItem(heldItem);
-                                        return new ActionPossibility(riskyReloadAction
-                                        .WithEffectOnEachTarget(async delegate (CombatAction riskyReload, Creature attacker, Creature defender, CheckResult result)
-                                        {
-                                            if (heldItem.HasTrait(FirearmTraits.DoubleBarrel))
-                                            {
-                                                heldItem.EphemeralItemProperties.AmmunitionLeftInMagazine++;
-                                                heldItem.EphemeralItemProperties.NeedsReload = false;
+                                        heldItem.EphemeralItemProperties.AmmunitionLeftInMagazine++;
+                                        heldItem.EphemeralItemProperties.NeedsReload = false;
 
-                                            }
-                                            else
-                                            {
-                                                await attacker.CreateReload(heldItem).WithActionCost(0).WithItem(heldItem).AllExecute();
-                                            }
-
-                                            CheckResult strikeResult = await riskyReload.Owner.MakeStrike(defender, heldItem);
-                                            if (strikeResult <= CheckResult.Failure && !heldItem.HasTrait(FirearmTraits.Misfired))
-                                            {
-                                                heldItem.Traits.Add(FirearmTraits.Misfired);
-                                            }
-                                        }));
+                                    }
+                                    else
+                                    {
+                                        await attacker.CreateReload(heldItem).WithActionCost(0).WithItem(heldItem).AllExecute();
                                     }
 
-                                    return null;
-                                }
-                            });
+                                    CheckResult strikeResult = await riskyReload.Owner.MakeStrike(defender, heldItem);
+                                    if (strikeResult <= CheckResult.Failure && !heldItem.HasTrait(FirearmTraits.Misfired))
+                                    {
+                                        heldItem.Traits.Add(FirearmTraits.Misfired);
+                                    }
+                                });
+
+                                // Checks if the item needs to be reloaded
+                                ((CreatureTarget)riskyReloadAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                                {
+                                    if (FirearmUtilities.IsItemLoaded(heldItem) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem))
+                                    {
+                                        return Usability.NotUsable("Can not be reloaded.");
+                                    }
+
+
+                                    return Usability.Usable;
+                                });
+
+                                ActionPossibility riskyReloadPossibility = new ActionPossibility(riskyReloadAction);
+
+                                riskyReloadSection.AddPossibility(riskyReloadPossibility);
+                                riskyReloadMenu.Subsections.Add(riskyReloadSection);
+                            }
                         }
+
+                        return riskyReloadMenu;
                     }
-                });
+
+                    return null;
+                };
             });
         }
 

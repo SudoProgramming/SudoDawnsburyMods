@@ -13,6 +13,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents
     /// </summary>
     public static class GunslingerActionIDs
     {
+        /// <summary>
+        /// The Warning Shot persistent Action ID
+        /// </summary>
         public static readonly ActionId WarningShot = ModManager.RegisterEnumMember<ActionId>("Warning Shot AID");
+
+        /// <summary>
+        /// The Black Powder Boost persistent Action ID
+        /// </summary>
+        public static readonly ActionId BlackPowderBoost = ModManager.RegisterEnumMember<ActionId>("Black Powder Boost AID");
     }
 }

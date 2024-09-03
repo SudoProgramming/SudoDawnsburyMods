@@ -1,4 +1,5 @@
-﻿using Dawnsbury.Core;
+﻿using Dawnsbury.Auxiliary;
+using Dawnsbury.Core;
 using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.CharacterBuilder.AbilityScores;
 using Dawnsbury.Core.CharacterBuilder.Feats;
@@ -8,34 +9,30 @@ using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Core.Coroutines.Options;
 using Dawnsbury.Core.Coroutines.Requests;
 using Dawnsbury.Core.Creatures;
+using Dawnsbury.Core.Intelligence;
 using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Core;
+using Dawnsbury.Core.Mechanics.Damage;
 using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics.Rules;
 using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Core.Possibilities;
+using Dawnsbury.Core.Roller;
 using Dawnsbury.Core.Tiles;
 using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Modding;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.Enums;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways;
-using Dawnsbury.Mods.Items.Firearms;
-using Dawnsbury.Mods.Items.Firearms.Utilities;
 using Dawnsbury.Mods.Items.Firearms.RegisteredComponents;
+using Dawnsbury.Mods.Items.Firearms.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static Dawnsbury.Core.Mechanics.Core.CalculatedNumber;
-using Dawnsbury.Core.Mechanics.Damage;
-using Dawnsbury.Core.Roller;
-using Dawnsbury.Core.Animations.Movement;
-using Dawnsbury.Core.Intelligence;
-using System.Reflection;
-using Dawnsbury.Auxiliary;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
@@ -614,7 +611,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 {
                     if (action.ActionId == GunslingerActionIDs.BlackPowderBoost && action.Item != null)
                     {
-                        FirearmUtilities.DischargeItem(action.Item);
+                        //FirearmUtilities.DischargeItem(action.Item);
                     }
                 };
             });

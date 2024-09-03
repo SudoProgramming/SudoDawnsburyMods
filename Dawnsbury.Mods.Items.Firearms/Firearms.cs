@@ -36,129 +36,129 @@ namespace Dawnsbury.Mods.Items.Firearms
             //  - Air Repeater
             ModManager.RegisterNewItemIntoTheShop("Air Repeater", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/AirRepeater.png"), "Air Repeater", 0, 3, Trait.Agile, Trait.Repeating, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple)
-                    .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Piercing)
+                    .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Piercing) { Sfx = FirearmSFXNames.SmallFirearm1 }
                         .WithRangeIncrement(6)));
 
             //  - Coat Pistol
             ModManager.RegisterNewItemIntoTheShop("Coat Pistol", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/CoatPistol.png"), "Coat Pistol", 0, 3, Trait.FatalD8, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple, Trait.Reload1)
-                    .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.SmallFirearm2 }
                         .WithRangeIncrement(6)));
 
             //  - Fire Lance
             ModManager.RegisterNewItemIntoTheShop("Fire Lance", itemName =>
                new Item(itemName, new ModdedIllustration("FirearmsAssets/FireLance.png"), "Fire Lance", 0, 3, Trait.FatalD10, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple, Trait.Reload2, Trait.TwoHanded)
-                   .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Piercing)
+                   .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Piercing) { Sfx = FirearmSFXNames.LargeFirearm1 }
                        .WithRangeIncrement(2)));
 
             //  - Flintlock Musket
             ModManager.RegisterNewItemIntoTheShop("Flintlock Musket", itemName =>
                new Item(itemName, new ModdedIllustration("FirearmsAssets/FlintlockMusket.png"), "Flintlock Musket", 0, 4, Trait.FatalD10, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple, Trait.Reload1, Trait.TwoHanded)
-                   .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
+                   .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.LargeFirearm2 }
                        .WithRangeIncrement(14)));
 
             //  - Flintlock Pistol
             ModManager.RegisterNewItemIntoTheShop("Flintlock Pistol", itemName =>
                new Item(itemName, new ModdedIllustration("FirearmsAssets/FlintlockPistol.png"), "Flintlock Pistol", 0, 3, Trait.FatalD8, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple, Trait.Reload1)
-                   .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning)
+                   .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.SmallFirearm2 }
                        .WithRangeIncrement(8)));
 
             //  - Hand Cannon
             ModManager.RegisterNewItemIntoTheShop("Hand Cannon", itemName =>
                new Item(itemName, new ModdedIllustration("FirearmsAssets/HandCannon.png"), "Hand Cannon", 0, 3, Trait.FatalD8, FirearmTraits.Modular, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple, Trait.Reload1)
-                   .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
+                   .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.SmallFirearm2 }
                        .WithRangeIncrement(6)));
 
             //  - Long Air Repeater
             ModManager.RegisterNewItemIntoTheShop("Long Air Repeater", itemName =>
                new Item(itemName, new ModdedIllustration("FirearmsAssets/LongAirRepeater.png"), "Long Air Repeater", 0, 5, Trait.Repeating, FirearmTraits.Firearm, FirearmTraits.SimpleFirearm, Trait.Simple)
-                   .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Piercing)
+                   .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Piercing) { Sfx = FirearmSFXNames.SmallFirearm1 }
                        .WithRangeIncrement(12)));
 
             // Martial Ranged Firearm Weapons
             //  - Arquebus
             ModManager.RegisterNewItemIntoTheShop("Arquebus", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Arquebus.png"), "Arquebus", 0, 5, Trait.FatalD12, FirearmTraits.Kickback, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
-                    .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.LargeFirearm1 }
                         .WithRangeIncrement(30)));
 
             //  - Blunderbuss
             ModManager.RegisterNewItemIntoTheShop("Blunderbuss", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Blunderbuss.png"), "Blunderbuss", 0, 4, FirearmTraits.Concussive, FirearmTraits.Scatter10, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
-                    .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.LargeFirearm2 }
                         .WithRangeIncrement(8)));
 
             //  - Clan Pistol
             ModManager.RegisterNewItemIntoTheShop("Clan Pistol", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/ClanPistol.png"), "Clan Pistol", 0, 0, Trait.Dwarf, Trait.FatalD10, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
-                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.SmallFirearm2 }
                         .WithRangeIncrement(16)));
 
             //  - Double-barreled Musket
             ModManager.RegisterNewItemIntoTheShop("Double-barreled Musket", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Double-barreledMusket.png"), "Double-barreled Musket", 0, 5, Trait.FatalD10, FirearmTraits.Concussive, FirearmTraits.DoubleBarrel, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
-                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.LargeFirearm1 }
                         .WithRangeIncrement(12)));
 
             //  - Double-barreled Pistol
             ModManager.RegisterNewItemIntoTheShop("Double-barreled Pistol", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Double-barreledPistol.png"), "Double-barreled Pistol", 0, 4, Trait.FatalD8, FirearmTraits.Concussive, FirearmTraits.DoubleBarrel, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
-                    .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.SmallFirearm1 }
                         .WithRangeIncrement(6)));
 
             //  - Dragon Mouth Pistol
             ModManager.RegisterNewItemIntoTheShop("Dragon Mouth Pistol", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/DragonMouthPistol.png"), "Dragon Mouth Pistol", 0, 5, Trait.FatalD8, FirearmTraits.Concussive, FirearmTraits.Scatter5, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
-                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.SmallFirearm2 }
                         .WithRangeIncrement(4)));
 
             //  - Dueling Pistol
             ModManager.RegisterNewItemIntoTheShop("Dueling Pistol", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/DuelingPistol.png"), "Dueling Pistol", 0, 6, Trait.FatalD10, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
-                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.SmallFirearm1 }
                         .WithRangeIncrement(12)));
 
             //  - Harmona Gun
             ModManager.RegisterNewItemIntoTheShop("Harmona Gun", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/HarmonaGun.png"), "Harmona Gun", 0, 5, FirearmTraits.Kickback, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
-                    .WithWeaponProperties(new WeaponProperties("1d10", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d10", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.LargeFirearm2 }
                         .WithRangeIncrement(30)));
 
             //  - Jezail
             ModManager.RegisterNewItemIntoTheShop("Jezail", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Jezail.png"), "Jezail", 0, 5, FirearmTraits.Concussive, FirearmTraits.FatalAimD12, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
-                    .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.LargeFirearm1 }
                         .WithRangeIncrement(18)));
 
             //  - Mithral Tree
             ModManager.RegisterNewItemIntoTheShop("Mithral Tree", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/MithralTree.png"), "Mithral Tree", 0, 5, Trait.Elf, Trait.FatalD10, FirearmTraits.Concussive, FirearmTraits.Parry, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1, Trait.TwoHanded)
-                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.LargeFirearm2 }
                         .WithRangeIncrement(30)));
 
             //  - Pepperbox
             ModManager.RegisterNewItemIntoTheShop("Pepperbox", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Pepperbox.png"), "Pepperbox", 0, 6, Trait.FatalD8, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
-                    .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.LargeFirearm1 }
                         .WithRangeIncrement(12)));
 
             //  - Slide Pistol
             ModManager.RegisterNewItemIntoTheShop("Slide Pistol", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/SlidePistol.png"), "Slide Pistol", 0, 8, Trait.FatalD10, FirearmTraits.Concussive, FirearmTraits.Firearm, FirearmTraits.MartialFirearm, Trait.Martial, Trait.Reload1)
-                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d6", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.SmallFirearm1 }
                         .WithRangeIncrement(6)));
 
             // Advanced Ranged Firearm Weapons
             //  - Dwarven Scattergun
             ModManager.RegisterNewItemIntoTheShop("Dwarven Scattergun", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/DwarvenScattergun.png"), "Dwarven Scattergun", 0, 5, Trait.Dwarf, FirearmTraits.Concussive, FirearmTraits.Kickback, FirearmTraits.Scatter10, FirearmTraits.Firearm, FirearmTraits.AdvancedFirearm, Trait.Advanced, Trait.Reload1, Trait.TwoHanded)
-                    .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning)
+                    .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Bludgeoning) { Sfx = FirearmSFXNames.LargeFirearm1 }
                         .WithRangeIncrement(10)));
 
             //  - Flingflenser
             ModManager.RegisterNewItemIntoTheShop("Flingflenser", itemName =>
                 new Item(itemName, new ModdedIllustration("FirearmsAssets/Flingflenser.png"), "Flingflenser", 0, 3, Trait.Goblin, Trait.Backstabber, Trait.FatalD10, FirearmTraits.Scatter5, FirearmTraits.Firearm, FirearmTraits.AdvancedFirearm, Trait.Advanced, Trait.Reload1, Trait.TwoHanded)
-                    .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Slashing)
+                    .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Slashing) { Sfx = FirearmSFXNames.LargeFirearm2 }
                         .WithRangeIncrement(6)));
 
             // Other Items

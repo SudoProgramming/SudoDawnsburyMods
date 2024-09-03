@@ -785,7 +785,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                 CombatAction itemAction = new CombatAction(runningReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.WarpStep), "Running Reload", [Trait.Basic], runningReloadFeat.RulesText, Target.Self()
                                 .WithAdditionalRestriction((Creature user) =>
                                 {
-                                    if (FirearmUtilities.IsItemLoaded(heldItem) || !FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem))
+                                    if (FirearmUtilities.IsItemLoaded(heldItem) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem))
                                     {
                                         return "Can not be reloaded.";
                                     }
@@ -814,49 +814,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
                     return null;
                 };
-            });
-        }
-
-        /// <summary>
-        /// Adds the logic for the Running Reload feat
-        /// </summary>
-        /// <param name="runningReloadFeat">The Running Reload true feat object</param>
-        private static void AddRunningReloadLogicOLD(TrueFeat runningReloadFeat)
-        {
-            // Adds to the creature a state check to add the Running Reload action to appropiate held weapons
-            runningReloadFeat.WithOnCreature(creature =>
-            {
-                creature.AddQEffect(new QEffect()
-                {
-                    StateCheck = (QEffect permanentState) =>
-                    {
-                        foreach (Item heldItem in permanentState.Owner.HeldItems)
-                        {
-                            permanentState.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
-                            {
-                                ProvideActionIntoPossibilitySection = delegate (QEffect runningReloadEffect, PossibilitySection section)
-                                {
-                                    if (section.PossibilitySectionId == PossibilitySectionId.ItemActions && FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && (!FirearmUtilities.IsItemLoaded(heldItem) || FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
-                                    {
-                                        return new ActionPossibility(new CombatAction(runningReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.WarpStep), "Running Reload", [Trait.Basic], runningReloadFeat.RulesText, Target.Self()).WithActionCost(1).WithItem(heldItem).WithEffectOnSelf(async (action, self) =>
-                                        {
-                                            if (!await self.StrideAsync("Choose where to Stride with Running Reload.", allowCancel: true))
-                                            {
-                                                action.RevertRequested = true;
-                                            }
-                                            else
-                                            {
-                                                FirearmUtilities.AwaitReloadItem(self, heldItem);
-                                            }
-                                        }));
-                                    }
-
-                                    return null;
-                                }
-                            });
-                        }
-                    }
-                });
             });
         }
 
@@ -1026,6 +983,76 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         /// </summary>
         /// <param name="riskyReloadFeat">The Risky Reload true feat object</param>
         private static void AddRiskyReloadLogic(TrueFeat riskyReloadFeat)
+        {
+            // Adds a permanent Running Reload action if the appropiate weapon is held
+            riskyReloadFeat.WithPermanentQEffect(riskyReloadFeat.FlavorText, delegate (QEffect self)
+            {
+                self.ProvideActionIntoPossibilitySection = (QEffect riskyReloadEffect, PossibilitySection possibilitySection) =>
+                {
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
+                    {
+                        SubmenuPossibility riskyReloadMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, "Risky Reload");
+
+                        foreach (Item heldItem in riskyReloadEffect.Owner.HeldItems)
+                        {
+                            if (FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && heldItem.WeaponProperties != null)
+                            {
+                                PossibilitySection riskyReloadSection = new PossibilitySection(heldItem.Name);
+                                // Creates the strike and reloads and misfires the weapon if the attack misses
+                                CombatAction basicStrike = riskyReloadEffect.Owner.CreateStrike(heldItem);
+                                CombatAction riskyReloadAction = new CombatAction(riskyReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.TrueStrike), "Risky Reload", [Trait.Flourish, Trait.Basic], riskyReloadFeat.RulesText, basicStrike.Target).WithActionCost(1).WithItem(heldItem);
+                                riskyReloadAction.WithEffectOnEachTarget(async delegate (CombatAction riskyReload, Creature attacker, Creature defender, CheckResult result)
+                                {
+                                    if (heldItem.HasTrait(FirearmTraits.DoubleBarrel))
+                                    {
+                                        heldItem.EphemeralItemProperties.AmmunitionLeftInMagazine++;
+                                        heldItem.EphemeralItemProperties.NeedsReload = false;
+
+                                    }
+                                    else
+                                    {
+                                        await attacker.CreateReload(heldItem).WithActionCost(0).WithItem(heldItem).AllExecute();
+                                    }
+
+                                    CheckResult strikeResult = await riskyReload.Owner.MakeStrike(defender, heldItem);
+                                    if (strikeResult <= CheckResult.Failure && !heldItem.HasTrait(FirearmTraits.Misfired))
+                                    {
+                                        heldItem.Traits.Add(FirearmTraits.Misfired);
+                                    }
+                                });
+
+                                // Checks if the item needs to be reloaded
+                                ((CreatureTarget)riskyReloadAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                                {
+                                    if (FirearmUtilities.IsItemLoaded(heldItem) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem))
+                                    {
+                                        return Usability.NotUsable("Can not be reloaded.");
+                                    }
+
+
+                                    return Usability.Usable;
+                                });
+
+                                ActionPossibility riskyReloadPossibility = new ActionPossibility(riskyReloadAction);
+
+                                riskyReloadSection.AddPossibility(riskyReloadPossibility);
+                                riskyReloadMenu.Subsections.Add(riskyReloadSection);
+                            }
+                        }
+
+                        return riskyReloadMenu;
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Risky Reload feat
+        /// </summary>
+        /// <param name="riskyReloadFeat">The Risky Reload true feat object</param>
+        private static void AddRiskyReloadLogicOLD(TrueFeat riskyReloadFeat)
         {
             // Adds to the creature a state check to add the Risky Reload action to appropiate held weapons
             riskyReloadFeat.WithOnCreature(creature =>

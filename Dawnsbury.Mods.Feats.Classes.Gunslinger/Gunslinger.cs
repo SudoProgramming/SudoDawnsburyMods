@@ -95,7 +95,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("GunslingerFeat1", "Gunslinger feat", 1, (Feat ft) => ft.HasTrait(GunslingerTraits.Gunslinger)));
                     sheet.AddAtLevel(3, delegate (CalculatedCharacterSheetValues values)
                     {
-                        values.SetProficiency(Trait.Will, Proficiency.Expert); // Add Stubborn Check also
+                        values.SetProficiency(Trait.Will, Proficiency.Expert);
                     });
                 });
 
@@ -1327,6 +1327,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             return [ActionId.Reload, FirearmActionIDs.DoubleBarrelReload];
         }
 
+        /// <summary>
+        /// Asyncronisly gets a tile for leaping witin the distance
+        /// </summary>
+        /// <param name="self">The creature leaping</param>
+        /// <param name="messageString">The message displayed while leaping</param>
+        /// <param name="range">The max distance</param>
+        /// <returns>The tile selected or null otherwise</returns>
         public static async Task<Tile?> GetLeapTileWithinDistance(Creature self, string messageString, int range)
         {
             // Gets the starting tile, initatlizes the options and collects the possible tiles within range that the user can reach
@@ -1363,6 +1370,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             return null;
         }
 
+        /// <summary>
+        /// Asyncronisly gets a tile for long jumping witin the distance
+        /// </summary>
+        /// <param name="self">The creature long jumping</param>
+        /// <param name="originalTileBeforeStride">The original tile that must be further from</param>
+        /// <param name="messageString">The message displayed while long jumping</param>
+        /// <param name="range">The max distance</param>
+        /// <returns>The tile selected or null otherwise</returns>
         public static async Task<Tile?> GetLongJumpTileWithinDistance(Creature self, Tile originalTileBeforeStride, string messageString, int range)
         {
             // Gets the starting tile, initatlizes the options and collects the possible tiles within range that the user can reach

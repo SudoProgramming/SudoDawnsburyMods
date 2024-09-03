@@ -96,7 +96,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 });
 
             // Level 1 Class Feats
-            TrueFeat coatedMunitionsFeat = new TrueFeat(GunslingerFeatNames.CoatedMunitions, 1, "You carried leftover alchemical vials that are filled to the brim with various alchemical liquids, and your bullets are often found drenched in this liquid.", "{b}Frequency{/b} a number of times per day equal to your level\n\n{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nAdd attack deals an addtional 1 persistent damage and 1 spalsh damage of your choice between acid, cold, electricity, fire or poison.", [GunslingerTraits.Gunslinger, Trait.Homebrew], null);
+            TrueFeat coatedMunitionsFeat = new TrueFeat(GunslingerFeatNames.CoatedMunitions, 1, "You coat your munitions with mysterious alchemical mixed liquids you keep in small vials.", "{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nUntil the end of your turn, your next attack deals an addtional 1 persistent damage and 1 spalsh damage of your choice between acid, cold, electricity, fire or poison.", [GunslingerTraits.Gunslinger, Trait.Homebrew], null);
             AddCoatedMunitionsLogic(coatedMunitionsFeat);
             yield return coatedMunitionsFeat;
             
@@ -418,7 +418,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideActionIntoPossibilitySection = (QEffect coatedMunitionsEffect, PossibilitySection possibilitySection) =>
                 {
-                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions && coatedMunitionsEffect.Owner.PersistentUsedUpResources.UsedUpActions.Count(resource => resource == "Coated Munitions") < coatedMunitionsEffect.Owner.Level)
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
                     {
                         DamageKind[] elementalDamageKinds = [DamageKind.Acid, DamageKind.Cold, DamageKind.Electricity, DamageKind.Fire, DamageKind.Poison];
                         Dictionary<DamageKind, IllustrationName> illustraions = new Dictionary<DamageKind, IllustrationName>()
@@ -442,7 +442,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                 .WithActionCost(1)
                                 .WithEffectOnSelf(async (damageEffect, owner) =>
                                 {
-                                    owner.PersistentUsedUpResources.UsedUpActions.Add("Coated Munitions");
                                     owner.AddQEffect(new QEffect("Coated Munitions is Applied", "[This is a technical effect with no description]")
                                     {
                                         AddExtraKindedDamageOnStrike = (CombatAction action, Creature defender) =>

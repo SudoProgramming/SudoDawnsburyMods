@@ -154,7 +154,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                     // Prompts for reaction, then has the user select a tile closer to the enemy then strides towards it.
                     if (await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Stride as a free action towards a creature?", "Yes"))
                     {
-                        Tile? tileToStrideTo = await GetTileCloserToEnemy(startOfCombat.Owner, "Stride towards the selected enemy.");
+                        Tile? tileToStrideTo = await GetTileCloserToEnemy(startOfCombat.Owner, "Stride towards the selected enemy or right-click to cancel.");
                         if (tileToStrideTo != null)
                         {
                             await startOfCombat.Owner.MoveTo(tileToStrideTo, null, new MovementStyle()
@@ -192,6 +192,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             // Adds the 1 action boost that acts as an extended leap
                             CombatAction demoralizeAction = CommonCombatActions.Demoralize(owner);
                             demoralizeAction.ActionCost = 1;
+                            demoralizeAction.Item = item;
                             demoralizeAction.Name = "Raconteur's Reload (Demoralize)";
                             demoralizeAction.Illustration = new SideBySideIllustration(item.Illustration, demoralizeAction.Illustration);
                             demoralizeAction.Description = "Interact to reload and then attempt an Intimidation check to Demoralize.";
@@ -308,6 +309,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             // HACK: This is the end of the 'Create a Diversion'
 
                             createADiversion.ActionCost = 1;
+                            createADiversion.Item = item;
                             createADiversion.Name = "Raconteur's Reload (Diversion)";
                             createADiversion.Illustration = new SideBySideIllustration(item.Illustration, createADiversion.Illustration);
                             createADiversion.Description = "Interact to reload and then attempt a Deception check to Create a Diversion.";
@@ -347,7 +349,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                 {
                     if (await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Step up to 10 ft as a free action?", "Yes"))
                     {
-                        Tile? tileToStepTo = await GetStepableTileWithinRange(startOfCombat.Owner, "Choose which tile to step to.", 2);
+                        Tile? tileToStepTo = await GetStepableTileWithinRange(startOfCombat.Owner, "Choose which tile to step to or right-click to cancel.", 2);
                         if (tileToStepTo != null)
                         {
                             await startOfCombat.Owner.MoveTo(tileToStepTo, null, new MovementStyle()
@@ -435,6 +437,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             });
                             // HACK: This is the end of the 'Take Cover'
 
+                            takeCoverAction.ActionCost = 1;
+                            takeCoverAction.Item = item;
+                            takeCoverAction.Name = "Covered Reload (Take Cover)";
+                            takeCoverAction.Illustration = new SideBySideIllustration(item.Illustration, takeCoverAction.Illustration);
+                            takeCoverAction.Description = "Interact to reload and then Take Cover.";
+
                             ActionPossibility takeCoverPossibility = new ActionPossibility(takeCoverAction);
                             raconteursReloadSection.AddPossibility(takeCoverPossibility);
 
@@ -512,6 +520,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                 }
                             });
 
+                            hideAction.ActionCost = 1;
+                            hideAction.Item = item;
+                            hideAction.Name = "Covered Reload (Hide)";
+                            hideAction.Illustration = new SideBySideIllustration(item.Illustration, hideAction.Illustration);
+                            hideAction.Description = "Interact to reload and then attempt a Stealth check to Hide.";
+
                             // Adds all the posibilites for each weapon and finalizes the button
                             raconteursReloadSection.AddPossibility(new ActionPossibility(hideAction));
 
@@ -530,176 +544,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                         FirearmUtilities.DischargeItem(action.Item);
                     }
                 };
-            });
-        }
-
-        /// <summary>
-        /// Adds Covered Reload Logic
-        /// </summary>
-        /// <param name="sniperWay">The Sniper way</param>
-        public static void WithSnipersCoveredReloadLogicOLD(this GunslingerWay sniperWay)
-        {
-            Feat sniperFeat = sniperWay.Feat;
-            // Adds to the creature a state check to add the covered reload action to appropiate held weapons.
-            sniperFeat.WithOnCreature(creature =>
-            {
-                creature.AddQEffect(new QEffect()
-                {
-                    StateCheck = (permanentState) =>
-                    {
-                        foreach (Item heldItem in permanentState.Owner.HeldItems)
-                        {
-                            permanentState.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
-                            {
-                                ProvideMainAction = (coveredReloadEffect) =>
-                                {
-                                    if (FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && (!FirearmUtilities.IsItemLoaded(heldItem) || FirearmUtilities.IsMultiAmmoWeaponReloadable(heldItem)) && heldItem.WeaponProperties != null)
-                                    {
-                                        // Gets the self creature and checks if it can either hide, take cover, or both
-                                        Creature self = coveredReloadEffect.Owner;
-                                        bool canHide = self.Battle.AllCreatures.Any(cr => cr.EnemyOf(self) && HiddenRules.HasCoverOrConcealment(self, cr));
-                                        bool canTakeCover = !self.HasEffect(QEffectId.TakingCover);
-
-                                        // Creates the Cover Reload action that will prompt the user for which effect they would like on use.
-                                        CombatAction coveredReloadAciton = new CombatAction(self, heldItem.Illustration, "Covered Reload", [Trait.Basic], sniperWay.SlingersReloadRulesText, Target.Self().WithAdditionalRestriction(targetingSelf => !canHide && !canTakeCover ? "Can't Take Cover or Hide" : null));
-                                        coveredReloadAciton.Item = heldItem;
-                                        coveredReloadAciton.ActionCost = 1;
-                                        coveredReloadAciton.WithEffectOnSelf(async (self) =>
-                                        {
-                                            FirearmUtilities.AwaitReloadItem(self, heldItem);
-
-                                            // HACK: Currently there is no CommonCombatActions for 'Take Cover' this should be replaced with that if it is ever added.
-                                            CombatAction takeCoverAction = new CombatAction(self, (Illustration)IllustrationName.TakeCover, "Take cover", new Trait[1]
-                                            {
-                                                Trait.Basic
-                                            }, "{i}You hunker down.{/i}\n\nUntil you move, attack or become Unconscious, any standard cover you have instead counts as greater cover (you don't gain this benefit against creatures against whom you don't have standard cover).\n\nIn addition, if you're prone, you count as having greater cover from all ranged attacks.", Target.Self().WithAdditionalRestriction(innerSelf => !innerSelf.HasEffect(QEffectId.TakingCover) ? null : "You're already taking cover."))
-                                            .WithActionCost(1)
-                                            .WithEffectOnSelf(async innerSelf =>
-                                            {
-                                                innerSelf.AddQEffect(new QEffect("Taking cover", "Until you move, attack or become Unconscious, any standard cover you have instead counts as greater cover (you don't gain this benefit against creatures against whom you don't have standard cover).\n\nIn addition, if you're prone, you count as having greater cover from all ranged attacks.", ExpirationCondition.Never, innerSelf, (Illustration)IllustrationName.TakeCover)
-                                                {
-                                                    Id = QEffectId.TakingCover,
-                                                    CountsAsABuff = true,
-                                                    StateCheck = sc =>
-                                                    {
-                                                        if (!sc.Owner.HasEffect(QEffectId.Unconscious))
-                                                            return;
-                                                        sc.ExpiresAt = ExpirationCondition.Immediately;
-                                                    },
-                                                    AfterYouTakeAction = async (qfSelf, action) =>
-                                                    {
-                                                        if (action.Name == "Covered Reload")
-                                                        if (action.Name == "Covered Reload" || !action.HasTrait(Trait.Attack) && !action.HasTrait(Trait.Move) && action.Item != null)
-                                                            return;
-                                                        qfSelf.ExpiresAt = ExpirationCondition.Immediately;
-                                                    },
-                                                    IncreaseCover = (qfSelf, attack, existingCover) => attack != null && attack.HasTrait(Trait.Ranged) && qfSelf.Owner.HasEffect(QEffectId.Prone) && existingCover < CoverKind.Greater || existingCover == CoverKind.Standard ? CoverKind.Greater : existingCover
-                                                });
-                                            });
-                                            // HACK: This is the end of the 'Take Cover'
-
-                                            // HACK: Currently there is no CommonCombatActions for 'Hide' this should be replaced with that if it is ever added.
-                                            CombatAction hideAction = new CombatAction(self, (Illustration)IllustrationName.Hide, "Hide", new Trait[2]
-                                            {
-                                                Trait.Basic,
-                                                Trait.AttackDoesNotTargetAC
-                                            }, "Make one Stealth check against the Perception DCs of each enemy creature that can see you but that you have cover or concealment from. On a success, you become Hidden to that creature.", Target.Self((cr, ai) => ai.HideSelf()).WithAdditionalRestriction(innerSelf =>
-                                            {
-                                                if (HiddenRules.IsHiddenFromAllEnemies(innerSelf, innerSelf.Occupies))
-                                                    return "You're already hidden from all enemies.";
-                                                return !innerSelf.Battle.AllCreatures.Any(cr => cr.EnemyOf(innerSelf) && HiddenRules.HasCoverOrConcealment(innerSelf, cr)) ? "You don't have cover or concealment from any enemy." : null;
-                                            })).WithActionCost(1).WithActionId(ActionId.Hide).WithSoundEffect(SfxName.Hide).WithEffectOnSelf(async innerSelf =>
-                                            {
-                                                FirearmUtilities.AwaitReloadItem(innerSelf, heldItem);
-                                                int roll = R.NextD20();
-                                                foreach (Creature creature in innerSelf.Battle.AllCreatures.Where<Creature>(cr => cr.EnemyOf(innerSelf)))
-                                                {
-                                                    if (!innerSelf.DetectionStatus.HiddenTo.Contains(creature) && HiddenRules.HasCoverOrConcealment(innerSelf, creature))
-                                                    {
-                                                        CheckBreakdown breakdown = CombatActionExecution.BreakdownAttack(new CombatAction(innerSelf, (Illustration)IllustrationName.Hide, "Hide", new Trait[1]
-                                                        {
-                                                            Trait.Basic
-                                                        }, "[this condition has no description]", Target.Self()).WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Stealth), Checks.DefenseDC(Defense.Perception))), creature);
-                                                        CheckBreakdownResult breakdownResult = new CheckBreakdownResult(breakdown, roll);
-                                                        string str8 = breakdown.DescribeWithFinalRollTotal(breakdownResult);
-                                                        StringBuilder stringHandler;
-                                                        if (breakdownResult.CheckResult >= CheckResult.Success)
-                                                        {
-                                                            innerSelf.DetectionStatus.HiddenTo.Add(creature);
-                                                            Tile occupies = creature.Occupies;
-                                                            Color lightBlue = Color.LightBlue;
-                                                            string str9 = innerSelf?.ToString();
-                                                            string str10 = creature?.ToString();
-                                                            stringHandler = new StringBuilder(string.Empty, 10);
-                                                            stringHandler.Append(" (");
-                                                            stringHandler.Append(breakdownResult.D20Roll.ToString() + breakdown.TotalCheckBonus.WithPlus());
-                                                            stringHandler.Append("=");
-                                                            stringHandler.Append(breakdownResult.D20Roll + breakdown.TotalCheckBonus);
-                                                            stringHandler.Append(" vs. ");
-                                                            stringHandler.Append(breakdown.TotalDC);
-                                                            stringHandler.Append(").");
-                                                            string stringAndClear = stringHandler.ToString();
-                                                            string log = str9 + " successfully hid from " + str10 + stringAndClear;
-                                                            string logDetails = str8;
-                                                            occupies.Overhead("hidden from", lightBlue, log, "Hide", logDetails);
-                                                        }
-                                                        else
-                                                        {
-                                                            Tile occupies = creature.Occupies;
-                                                            Color red = Color.Red;
-                                                            string str11 = innerSelf?.ToString();
-                                                            string str12 = creature?.ToString();
-                                                            stringHandler = new StringBuilder(string.Empty, 10);
-                                                            stringHandler.Append(" (");
-                                                            stringHandler.Append(breakdownResult.D20Roll.ToString() + breakdown.TotalCheckBonus.WithPlus());
-                                                            stringHandler.Append("=");
-                                                            stringHandler.Append(breakdownResult.D20Roll + breakdown.TotalCheckBonus);
-                                                            stringHandler.Append(" vs. ");
-                                                            stringHandler.Append(breakdown.TotalDC);
-                                                            stringHandler.Append(").");
-                                                            string stringAndClear = stringHandler.ToString();
-                                                            string log = str11 + " failed to hide from " + str12 + stringAndClear;
-                                                            string logDetails = str8;
-                                                            occupies.Overhead("hide failed", red, log, "Hide", logDetails);
-                                                        }
-                                                    }
-                                                    // HACK: This is the end of the 'Hide'
-                                                }
-                                            });
-
-                                            // If you can Hide and Take Cover prompt the user to pick
-                                            if (canHide && canTakeCover)
-                                            {
-                                                if (canHide && canTakeCover && await self.Battle.AskForConfirmation(self, coveredReloadAciton.Illustration, "Choose to Take Cover or Hide.", "Take Cover", "Hide"))
-                                                {
-                                                    await takeCoverAction.AllExecute();
-                                                }
-                                                else
-                                                {
-                                                    await hideAction.AllExecute();
-                                                }
-                                            }
-
-                                            // Prompts the user to use their only option between Take Cover and Hide
-                                            if (!canHide && await self.Battle.AskForConfirmation(self, coveredReloadAciton.Illustration, "Would you like to Take Cover as a free action?", "Yes"))
-                                            {
-                                                await takeCoverAction.AllExecute();
-                                            }
-                                            else if (!canTakeCover && await self.Battle.AskForConfirmation(self, coveredReloadAciton.Illustration, "Would you like to Hide as a free action?", "Yes"))
-                                            {
-                                                await hideAction.AllExecute();
-                                            }
-                                        });
-
-                                        return new ActionPossibility(coveredReloadAciton);
-                                    }
-
-                                    return null;
-                                }
-                            });
-                        }
-                    }
-                });
             });
         }
 
@@ -941,6 +785,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                 }
             }
 
+            // Adds a Cancel Option
+            options.Add(new CancelOption(true));
+
             // Prompts the user for their desired tile and returns it or null
             Option selectedOption = (await self.Battle.SendRequest(new AdvancedRequest(self, messageString, options)
             {
@@ -997,6 +844,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                     }
                 }
             }
+
+            // Adds a Cancel Option
+            options.Add(new CancelOption(true));
 
             // Prompts the user to select a valid tile and returns it or null
             Option selectedOption = (await self.Battle.SendRequest(new AdvancedRequest(self, messageString, options)

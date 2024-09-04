@@ -16,7 +16,7 @@ namespace Dawnsbury.Mods.Items.Firearms.RegisteredComponents
         /// <summary>
         /// The technical Fatal Is Upgraded persistent QEffect ID 
         /// </summary>
-        public static readonly QEffectId FatalIsUpgraded = ModManager.RegisterEnumMember<QEffectId>("Tripod Setup QEID");
+        public static readonly QEffectId FatalIsUpgraded = ModManager.RegisterEnumMember<QEffectId>("Fatal Is Upgraded QEID");
 
 
         /// <summary>

@@ -611,7 +611,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 {
                     if (action.ActionId == GunslingerActionIDs.BlackPowderBoost && action.Item != null)
                     {
-                        //FirearmUtilities.DischargeItem(action.Item);
+                        FirearmUtilities.DischargeItem(action.Item);
                     }
                 };
             });
@@ -1034,10 +1034,17 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         await attacker.CreateReload(heldItem).WithActionCost(0).WithItem(heldItem).AllExecute();
                                     }
 
-                                    CheckResult strikeResult = await riskyReload.Owner.MakeStrike(defender, heldItem);
-                                    if (strikeResult <= CheckResult.Failure && !heldItem.HasTrait(FirearmTraits.Misfired))
+                                    if (!heldItem.EphemeralItemProperties.NeedsReload)
                                     {
-                                        heldItem.Traits.Add(FirearmTraits.Misfired);
+                                        CheckResult strikeResult = await riskyReload.Owner.MakeStrike(defender, heldItem);
+                                        if (strikeResult <= CheckResult.Failure && !heldItem.HasTrait(FirearmTraits.Misfired))
+                                        {
+                                            heldItem.Traits.Add(FirearmTraits.Misfired);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        riskyReloadEffect.Owner.Battle.Log("A strike with " + heldItem.Name + " could not be made.");
                                     }
                                 });
 
@@ -1393,7 +1400,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             List<Option> options = new List<Option>();
             foreach (Tile tile in self.Battle.Map.AllTiles)
             {
-                if (tile.IsFree && startingTile.DistanceTo(tile) <= range)
+                if (tile.IsFree && tile.CanIStopMyMovementHere(self) && startingTile.DistanceTo(tile) <= range)
                 {
                     options.Add(new TileOption(tile, "Tile (" + tile.X + "," + tile.Y + ")", null, (AIUsefulness)int.MinValue, true));
                 }
@@ -1437,7 +1444,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             List<Option> options = new List<Option>();
             foreach (Tile tile in self.Battle.Map.AllTiles)
             {
-                if (tile.IsFree && startingTile.DistanceTo(tile) <= range && originalTileBeforeStride.DistanceTo(tile) > originalTileBeforeStride.DistanceTo(startingTile))
+                if (tile.IsFree && tile.CanIStopMyMovementHere(self) && startingTile.DistanceTo(tile) <= range && originalTileBeforeStride.DistanceTo(tile) > originalTileBeforeStride.DistanceTo(startingTile))
                 {
                     options.Add(new TileOption(tile, "Tile (" + tile.X + "," + tile.Y + ")", null, (AIUsefulness)int.MinValue, true));
                 }

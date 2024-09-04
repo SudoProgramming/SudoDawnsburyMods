@@ -63,55 +63,76 @@ This module adds firearm weapons from Guns and Gears along with the traits for t
 - [Modular](https://2e.aonprd.com/Traits.aspx?ID=271)
     - RAW Difference: Deals the best damage out of B, P, or S without needing an action to change between the damage types
 - [Scatter](https://2e.aonprd.com/Traits.aspx?ID=413)
+- [Parry](https://2e.aonprd.com/Traits.aspx?ID=667&Redirected=1)
 
 ### Firearms Future Plans
 - Add [Combination Traits](https://2e.aonprd.com/Traits.aspx?ID=417) and the weapons from Guns and Gears
-- Add [Parry](https://2e.aonprd.com/Traits.aspx?ID=667&Redirected=1) and add to Mithral Tree
 - Add Treasure Vault firearms
 
 # Gunslinger
-This module adds the Gunslinger class. This is a Work in Progress:
-### Setup
-- [X] Class Selection Feat
-    - The Crossbows need a technical trait attached 
-- [X] Ways Stubbed out
-- [X] Class Feats Stubbed out
+This module adds the [Gunslinger class](https://2e.aonprd.com/Classes.aspx?ID=20). A detailed list is below:
 
-### Class Feats
-- [X] Cover Fire
-- [X] Crossbow Crack Shot
-- [X] Hit the Dirt
-- [X] Sword and Pistol
-- [X] Defensive Armaments
-- [X] Fake Out
-- [X] Pistol Twirl
-- [X] Risky Reload
-- [X] Quick Draw
-- [X] Warning Shot
-- [X] Alchemical Shot
-- [X] Paired Shots
+### Class Features and Progression
+- Level 1 - Gunslinger Base Features
+- Level 1 - Singular Expertise
+- Level 3 - Stubborn
+    - RAW Differences: Does NOT have the controlled condition fortune effect
+
+### Gunslinger Ways
+General RAW Differences: No Initial Deed has the weapon draws, since Dawnsbury is meant to have your prefered weapons already equipped.
+- Way of the Drifter
+    - Reloading Strike
+    - Into the Fray
+- Way of the Pistolero
+    - Raconteur's Reload
+    - Ten Paces
+- Way of the Sniper
+    - Covered Reload
+    - One Shot, One Kill
+        - RAW Differences: The damage will apply to any firearm or crossbow on your first turn. You also will pick Stealth or Perception in the Character Sheet for initiative.
+- Way of the Vanguard
+    - Clear a Path
+    - Living Fortification
+ 
+### Gunslinger Class Feats
+
+#### Level 1
+- Coated Munitions - A Homebrew feat meant to replace [Munitions Crafter](https://2e.aonprd.com/Feats.aspx?ID=3158)
+    - 1 Action - Requirements: You're wielding a loaded firearm or crossbow.
+    - You coat your munitions with mysterious alchemical mixed liquids you keep in small vials.
+    - Until the end of your turn, your next attack deals an addtional 1 persistent damage and 1 spalsh damage of your choice between acid, cold, electricity, fire or poison.
+- [Cover Fire](https://2e.aonprd.com/Feats.aspx?ID=3155)
+- [Crossbow Crack Shot](https://2e.aonprd.com/Feats.aspx?ID=3156)
+- [Hit the Dirt](https://2e.aonprd.com/Feats.aspx?ID=3157)
+- [Sword and Pistol](https://2e.aonprd.com/Feats.aspx?ID=3159)
+
+#### Level 2
+- [Defensive Armaments](https://2e.aonprd.com/Feats.aspx?ID=3160)
+- [Fake Out](https://2e.aonprd.com/Feats.aspx?ID=3161)
+- [Pistol Twirl](https://2e.aonprd.com/Feats.aspx?ID=3162)
+- [Quick Draw](https://2e.aonprd.com/Feats.aspx?ID=4869)
+- [Risky Reload](https://2e.aonprd.com/Feats.aspx?ID=3163)
+- [Warning Shot](https://2e.aonprd.com/Feats.aspx?ID=3164)
+
+#### Level 4
+- [Alchemical Shot](https://2e.aonprd.com/Feats.aspx?ID=3165)
+- [Black Powder Boost](https://2e.aonprd.com/Feats.aspx?ID=3166)
+- [Paired Shots](https://2e.aonprd.com/Feats.aspx?ID=3168)
     - RAW Difference: The precision damage is applied from both strikes.
-- [X] Running Reload
-
-### Sub Class Feats
-- [X] Ways Base Class
-- [X] Way of the Drifter
-- [X] Way of the Pistolero
-- [X] Way of the Sniper
-- [ ] Way of the Triggerbrand
-    - Needs combination weapons
-- [X] Way of the Vanguard
+- [Running Reload](https://2e.aonprd.com/Feats.aspx?ID=4875)
 
 ### Dependencies
 This module depends on the Firearms mod
 
-### Spell Shot
-Spell shot would need the https://github.com/AurixVirlym/DawnniExpanded to represent this correctly so might be a seperate mod
+### Gunslinger Future Plans
+- Way of the Triggerbrand
+- Maybe Way of the Spell Shot
+    - Spell shot would need the https://github.com/AurixVirlym/DawnniExpanded to represent this correctly so might be a seperate mod
 
 # SudoProgramming's Modding Plans
 - [X] Update Barbarian to match the Remastered rules
 - [X] Add the Firearm items and traits
-- [ ] Add the Gunslinger class
+- [X] Add the Gunslinger class
 - [ ] Add the Thaumaturge class
 
 # Licensing

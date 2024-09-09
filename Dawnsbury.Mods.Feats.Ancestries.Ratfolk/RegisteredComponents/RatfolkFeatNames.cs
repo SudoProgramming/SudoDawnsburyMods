@@ -3,6 +3,9 @@ using Dawnsbury.Modding;
 
 namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk.RegisteredComponents
 {
+    /// <summary>
+    /// A static class containing all Feat Names used for the Ratfolk
+    /// </summary>
     public static class RatfolkFeatNames
     {
         /// <summary>
@@ -51,9 +54,9 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk.RegisteredComponents
         public static readonly FeatName AgileTail = ModManager.RegisterFeatName("Agile Tail", "Agile Tail");
 
         /// <summary>
-        /// The Sly Approach ancestry feat name
+        /// The Tumbling Trickster ancestry feat name
         /// </summary>
-        public static readonly FeatName SlyApproach = ModManager.RegisterFeatName("Sly Approach", "Sly Approach");
+        public static readonly FeatName TumblingTrickster = ModManager.RegisterFeatName("Tumbling Trickster", "Tumbling Trickster");
 
         /// <summary>
         /// The Cheek Pouches ancestry feat name

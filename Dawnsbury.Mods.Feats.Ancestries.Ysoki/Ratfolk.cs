@@ -177,6 +177,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
                         StrikeModifiers modifiers = action.StrikeModifiers ?? new StrikeModifiers();
                         QEffect qEffectForStrike = modifiers.QEffectForStrike ?? new QEffect();
                         qEffectForStrike.Id = QEffectId.IntimidatingGlare;
+                        modifiers.QEffectForStrike = qEffectForStrike;
                     }
                 };
             });

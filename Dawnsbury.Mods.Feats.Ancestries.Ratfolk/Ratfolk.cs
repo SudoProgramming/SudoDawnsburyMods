@@ -318,7 +318,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
                             tumblingTrickersEffect.Owner.AddQEffect(new QEffect(ExpirationCondition.EphemeralAtEndOfImmediateAction)
                             {
                                 Id = RatfolkQEIDs.TumblingTrickster,
-                                Tag = new Tuple<Tile, Creature> (tumblingTrickersEffect.Owner.Occupies, tumbleThroughCreature)
+                                Tag = tumbleThroughCreature
                             });
                         }
                     }
@@ -327,18 +327,19 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
                 // After a stride is complete the tracking effect placed before striding is checked and a bonus might be set
                 self.AfterYouTakeAction = async (QEffect postTumbleThrough, CombatAction action) =>
                 {
-                    if (action.ActionId == ActionId.Stride)
+                    if (action.ActionId == ActionId.Stride && action.ChosenTargets != null && action.ChosenTargets.ChosenTile != null)
                     {
                         // The tumbling trickster tracking effect set before striding is gathered and extrapolates the tag named into tumbleDetails. Then the starting tile and the current tile are checked. If they are the same the tumble through failed
                         QEffect? tumblingEffect = postTumbleThrough.Owner.QEffects.FirstOrDefault(qe => qe.Id == RatfolkQEIDs.TumblingTrickster);
-                        if (tumblingEffect != null && tumblingEffect.Tag is Tuple<Tile, Creature> tumbleDetails && tumbleDetails.Item1 != postTumbleThrough.Owner.Occupies)
+
+                        if (tumblingEffect != null && tumblingEffect.Tag is Creature tumbledThroughCreature && action.ChosenTargets.ChosenTile == postTumbleThrough.Owner.Occupies)
                         {
                             // A successful tumble through means an effect bonus is added for AC when that creature attacks
                             postTumbleThrough.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
                             {
                                 BonusToDefenses = (QEffect bonusToAC, CombatAction? action, Defense defense) =>
                                 {
-                                    if (defense == Defense.AC && action != null && action.Owner != null && action.Owner == tumbleDetails.Item2)
+                                    if (defense == Defense.AC && action != null && action.Owner != null && action.Owner == tumbledThroughCreature)
                                     {
                                         return new Bonus(1, BonusType.Circumstance, "Tumbling Trickster", true);
                                     }

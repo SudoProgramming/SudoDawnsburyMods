@@ -89,7 +89,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
             yield return ratfolkLoreFeat;
 
             // Creates and adds the logic for the Tumbling Trickster Ratfolk Feat
-            TrueFeat tumblingTricksterFeat = new TrueFeat(RatfolkFeatNames.TumblingTrickster, 1, "You are known for your agility and your trickery, so anyone running into you between check your surrounding carefully.", "{b}Trigger{/b} You successfully Tumble Through an enemy.\n\nUntil the start of your next turn, you gain a +1 circumstance bonus to your AC against the creature you Tumbled Through.", [RatfolkTraits.Ratfolk, Trait.Homebrew]);
+            TrueFeat tumblingTricksterFeat = new TrueFeat(RatfolkFeatNames.TumblingTrickster, 1, "You are known for your agility and your trickery, so anyone running into you between check your surrounding carefully.", "After you successfully Tumble Through an enemy, you gain a +1 circumstance bonus to your AC that creature until the start of your next turn.", [RatfolkTraits.Ratfolk, Trait.Homebrew]);
             AddTumblingTricksterLogic(tumblingTricksterFeat);
             yield return tumblingTricksterFeat;
 

@@ -305,22 +305,29 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
                 // As you begin striding a tracking effect is added if a tumble through is needed
                 self.YouBeginAction = async (QEffect tumblingTrickersEffect, CombatAction action) =>
                 {
+                    Creature? tumbleThroughCreature = null;
+
+                    if (action.Name == "Tumble Through" && action.ChosenTargets != null && action.ChosenTargets.ChosenCreature != null)
+                    {
+                        tumbleThroughCreature = action.ChosenTargets.ChosenCreature;
+                    }
+
                     // Checks that the action is a Stride and that the chosen tile is valid
-                    if (action.ActionId == ActionId.Stride && action.ChosenTargets != null && action.ChosenTargets.ChosenTile != null)
+                    else  if (action.ActionId == ActionId.Stride && action.ChosenTargets != null && action.ChosenTargets.ChosenTile != null && !tumblingTrickersEffect.Owner.HasEffect(RatfolkQEIDs.TumblingTrickster))
                     {
                         // Uses the Pathfinding to determine if the path will go through a creature requiring a Tumble Through
-                        Creature? tumbleThroughCreature = await GetTumbleThroughCreature(tumblingTrickersEffect.Owner, action.ChosenTargets.ChosenTile);
+                        tumbleThroughCreature = await GetTumbleThroughCreature(tumblingTrickersEffect.Owner, action.ChosenTargets.ChosenTile);
+                    }
 
-                        // If a tumble through is needed from Pathfinding a tracking effect is added that will be checked after movement is complete
-                        // The two details we need to remember are the starting tile (Tuple item 1) and the creature tumbled through (Tuple item 2)
-                        if (tumbleThroughCreature != null)
+                    // If a tumble through is needed from Pathfinding a tracking effect is added that will be checked after movement is complete
+                    // The two details we need to remember are the starting tile (Tuple item 1) and the creature tumbled through (Tuple item 2)
+                    if (tumbleThroughCreature != null)
+                    {
+                        tumblingTrickersEffect.Owner.AddQEffect(new QEffect(ExpirationCondition.EphemeralAtEndOfImmediateAction)
                         {
-                            tumblingTrickersEffect.Owner.AddQEffect(new QEffect(ExpirationCondition.EphemeralAtEndOfImmediateAction)
-                            {
-                                Id = RatfolkQEIDs.TumblingTrickster,
-                                Tag = tumbleThroughCreature
-                            });
-                        }
+                            Id = RatfolkQEIDs.TumblingTrickster,
+                            Tag = new Tuple<CombatAction, Creature> (action, tumbleThroughCreature)
+                        });
                     }
                 };
 
@@ -332,21 +339,34 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
                         // The tumbling trickster tracking effect set before striding is gathered and extrapolates the tag named into tumbleDetails. Then the starting tile and the current tile are checked. If they are the same the tumble through failed
                         QEffect? tumblingEffect = postTumbleThrough.Owner.QEffects.FirstOrDefault(qe => qe.Id == RatfolkQEIDs.TumblingTrickster);
 
-                        if (tumblingEffect != null && tumblingEffect.Tag is Creature tumbledThroughCreature && action.ChosenTargets.ChosenTile == postTumbleThrough.Owner.Occupies)
+                        if (tumblingEffect != null && tumblingEffect.Tag is Tuple<CombatAction, Creature> tumbleDetails)
                         {
-                            // A successful tumble through means an effect bonus is added for AC when that creature attacks
-                            postTumbleThrough.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
+                            Creature? creatureForBonus = null;
+                            CombatAction tumbleAction = tumbleDetails.Item1;
+                            if (tumbleAction.Name == "Tumble Through" && tumbleAction.CheckResult >= CheckResult.Success)
                             {
-                                BonusToDefenses = (QEffect bonusToAC, CombatAction? action, Defense defense) =>
+                                creatureForBonus = tumbleDetails.Item2;
+                            }
+                            else if (tumbleAction.ActionId == ActionId.Stride && action.ChosenTargets.ChosenTile == postTumbleThrough.Owner.Occupies)
+                            {
+                                creatureForBonus = tumbleDetails.Item2;
+                            }
+                            if (creatureForBonus != null)
+                            {
+                                // A successful tumble through means an effect bonus is added for AC when that creature attacks
+                                postTumbleThrough.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
                                 {
-                                    if (defense == Defense.AC && action != null && action.Owner != null && action.Owner == tumbledThroughCreature)
+                                    BonusToDefenses = (QEffect bonusToAC, CombatAction? action, Defense defense) =>
                                     {
-                                        return new Bonus(1, BonusType.Circumstance, "Tumbling Trickster", true);
-                                    }
+                                        if (defense == Defense.AC && action != null && action.Owner != null && action.Owner == creatureForBonus)
+                                        {
+                                            return new Bonus(1, BonusType.Circumstance, "Tumbling Trickster", true);
+                                        }
 
-                                    return null;
-                                }
-                            });
+                                        return null;
+                                    }
+                                });
+                            }
                         }
                     }
                 };

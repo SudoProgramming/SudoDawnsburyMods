@@ -129,10 +129,30 @@ This module depends on the Firearms mod
 - Maybe Way of the Spell Shot
     - Spell shot would need the https://github.com/AurixVirlym/DawnniExpanded to represent this correctly so might be a seperate mod
 
+# Ratfolk
+This module adds the Ratfolk ancestry from Player Core 2. The following are all added
+
+### Heritages
+- Desert Rat
+- Longsnout Rat
+- Sewer Rat
+- Shadow Rat
+- Snow Rat
+
+### Ancestry Feats
+#### Level 1
+- Agile Tail - Homebrew - You ignore the requirement of needing a free hand for the Trip action.
+- Cheek Pouches
+    - RAW Difference: The functionality is largely changed to the following: The first two items you draw or replace within an encounter are a free action instead of an action.
+- Ratfolk Lore
+- Tumbling Trickster - Homebrew - After you successfully Tumble Through an enemy, you gain a +1 circumstance bonus to your AC that creature until the start of your next turn.
+- Vicious Incisors
+
 # SudoProgramming's Modding Plans
 - [X] Update Barbarian to match the Remastered rules
 - [X] Add the Firearm items and traits
-- [X] Add the Gunslinger class
+- [X] Add the Gunslinger class]
+- [X] Add Ratfolk
 - [ ] Add the Thaumaturge class
 
 # Licensing

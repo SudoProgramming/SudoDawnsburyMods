@@ -406,8 +406,32 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     {
                         if (targets.ChosenCreature != null)
                         {
+                            // A crash happens if the sound effect of the second weapon is too long and is still playing, so a swap is needed 
+                            SfxName? replacementSfx = null;
+                            if (firstHeldItem.WeaponProperties != null && secondHeldItem.WeaponProperties != null && firstHeldItem.WeaponProperties.Sfx == secondHeldItem.WeaponProperties.Sfx)
+                            {
+                                if (secondHeldItem.HasTrait(Trait.Crossbow))
+                                {
+                                    replacementSfx = (firstHeldItem.WeaponProperties.Sfx == SfxName.Bow) ? SfxName.Fist : SfxName.Bow;
+                                }
+                                else if (secondHeldItem.HasTrait(FirearmTraits.Firearm))
+                                {
+                                    replacementSfx = (firstHeldItem.WeaponProperties.Sfx == FirearmSFXNames.SmallFirearm1) ? FirearmSFXNames.SmallFirearm2 : FirearmSFXNames.SmallFirearm1;
+                                }
+
+                                if (replacementSfx != null)
+                                {
+                                    secondHeldItem.WeaponProperties.Sfx = (SfxName)replacementSfx;
+                                }
+                            }
+
                             await pairedShotEffect.Owner.MakeStrike(targets.ChosenCreature, firstHeldItem, currentMap);
                             await pairedShotEffect.Owner.MakeStrike(targets.ChosenCreature, secondHeldItem, currentMap);
+
+                            if (replacementSfx != null && firstHeldItem.WeaponProperties != null && secondHeldItem.WeaponProperties != null)
+                            {
+                                secondHeldItem.WeaponProperties.Sfx = firstHeldItem.WeaponProperties.Sfx;
+                            }
                         }
                     }));
                 };

@@ -577,21 +577,16 @@ namespace Dawnsbury.Mods.Items.Firearms
             if (item.WeaponProperties != null)
             {
                 // The result of any scatter attack will be 
-                CheckBreakdownResult? lastAttackResult = null;
                 self.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
                 {
-                    // The last attack result will be saved here
-                    AfterYouMakeAttackRoll = async (QEffect self, CheckBreakdownResult result) =>
-                    {
-                        lastAttackResult = result;
-                    },
-
                     // After a strike with the scatter item the targeted crature is looked at
                     AfterYouTakeAction = async (QEffect self, CombatAction action) =>
                     {
-                        if (action.Item == item)
+                        List<string> specialActionsToIgnore = new List<string>() { "Reloading Strike", "Cover Fire", "Pistol Twirl", "Fake Out", "Hit the Dirt", "Risky Reload" };
+                        if (action.Item == item) // && !specialActionsToIgnore.Contains(action.Name)
                         {
-                            if ((lastAttackResult == null || (lastAttackResult.CheckResult == CheckResult.Success || lastAttackResult.CheckResult == CheckResult.CriticalSuccess) && action.Name.ToLower().Contains("strike") && action.ChosenTargets.ChosenCreature != null && item.WeaponProperties != null))
+                            CheckResult lastAttackResult = action.CheckResult;
+                            if (lastAttackResult >= CheckResult.Success && action.HasTrait(Trait.Strike) && action.ChosenTargets != null && action.ChosenTargets.ChosenCreature != null && action.ChosenTargets.ChosenCreature != self.Owner && item.WeaponProperties != null)
                             {
                                 Creature? targetCreature = action.ChosenTargets.ChosenCreature;
                                 if (targetCreature != null)
@@ -612,14 +607,11 @@ namespace Dawnsbury.Mods.Items.Firearms
                                             Creature? potentalSplashTarget = tileToScatterTo.PrimaryOccupant;
                                             if (potentalSplashTarget != null && potentalSplashTarget is Creature splashTarget && splashTarget != targetCreature)
                                             {
-                                                await splashTarget.DealDirectDamage(action, DiceFormula.FromText(item.WeaponProperties.DamageDieCount.ToString()), splashTarget, CheckResult.Success, bestDamageToTarget);
+                                                await splashTarget.DealDirectDamage(null, DiceFormula.FromText(item.WeaponProperties.DamageDieCount.ToString()), splashTarget, CheckResult.Success, bestDamageToTarget);
                                             }
                                         }
                                     }
                                 }
-
-                                // Updates the last attack to null
-                                lastAttackResult = null;
                             }
                         }
                     }

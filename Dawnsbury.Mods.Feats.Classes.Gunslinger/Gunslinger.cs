@@ -1,4 +1,5 @@
-﻿using Dawnsbury.Auxiliary;
+﻿using Dawnsbury.Audio;
+using Dawnsbury.Auxiliary;
 using Dawnsbury.Core;
 using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.CharacterBuilder.AbilityScores;
@@ -662,10 +663,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         DamageKind alchemicalDamageType = (bomb != null && bomb.WeaponProperties != null) ? bomb.WeaponProperties.DamageKind : item.WeaponProperties.DamageKind;
                                         Item alchemicalBombLoadedWeapon = new Item(item.Illustration, item.Name, item.Traits.ToArray())
                                         {
-                                            WeaponProperties = new WeaponProperties(item.WeaponProperties.Damage, alchemicalDamageType).WithRangeIncrement(item.WeaponProperties.RangeIncrement)
+                                            WeaponProperties = new WeaponProperties(item.WeaponProperties.Damage, alchemicalDamageType) { Sfx = item.WeaponProperties.Sfx }.WithRangeIncrement(item.WeaponProperties.RangeIncrement)
                                         };
 
-                                        CombatAction alchemicalShotAction = new CombatAction(permanentState.Owner, new SideBySideIllustration(item.Illustration, bomb.Illustration), "Alchemical Shot (" + bomb.Name + ")", [Trait.Basic], alchemicalShotFeat.RulesText, Target.Ranged(item.WeaponProperties.MaximumRange));
+                                        CombatAction alchemicalShotAction = new CombatAction(permanentState.Owner, new SideBySideIllustration(item.Illustration, bomb.Illustration), "Alchemical Shot (" + bomb.Name + ")", [Trait.Basic, Trait.Strike], alchemicalShotFeat.RulesText, Target.Ranged(item.WeaponProperties.MaximumRange));
                                         alchemicalShotAction.Item = item;
                                         alchemicalShotAction.ActionCost = 2;
 
@@ -675,6 +676,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                             if (defender != null)
                                             {
                                                 result = await permanentState.Owner.MakeStrike(defender, alchemicalBombLoadedWeapon);
+                                                pistolTwirl.CheckResult = result;
                                                 FirearmUtilities.DischargeItem(item);
                                                 for (int i = 0; i < permanentState.Owner.HeldItems.Count; i++)
                                                 {

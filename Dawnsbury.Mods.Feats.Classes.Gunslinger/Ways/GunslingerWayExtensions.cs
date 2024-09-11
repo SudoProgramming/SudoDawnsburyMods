@@ -94,7 +94,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                     }
 
                     // Creates and returns the action with all desired restrictions
-                    return new ActionPossibility(new CombatAction(reloadingStrikeShotEffect.Owner, new SideBySideIllustration(ranged.Illustration, melee != null ? melee.Illustration : IllustrationName.Fist), "Reloading Strike", [Trait.Basic], driftersWay.SlingersReloadRulesText, Target.Self()
+                    return new ActionPossibility(new CombatAction(reloadingStrikeShotEffect.Owner, new SideBySideIllustration(ranged.Illustration, melee != null ? melee.Illustration : IllustrationName.Fist), "Reloading Strike", [Trait.Basic], driftersWay.SlingersReloadRulesText.Substring(driftersWay.SlingersReloadRulesText.IndexOf('\n') + 1), Target.Self()
                     .WithAdditionalRestriction(self => self.Battle != null && self.Battle.AllCreatures.Count(creature => self.DistanceTo(creature) <= 1 && creature != self && !self.FriendOf(creature)) > 0 ? null : "No valid melee targets."))
                     .WithActionCost(1).WithItem(ranged)
                     .WithEffectOnEachTarget(async (CombatAction action, Creature attacker, Creature defender, CheckResult result) =>
@@ -195,7 +195,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             demoralizeAction.Item = item;
                             demoralizeAction.Name = "Raconteur's Reload (Demoralize)";
                             demoralizeAction.Illustration = new SideBySideIllustration(item.Illustration, demoralizeAction.Illustration);
-                            demoralizeAction.Description = "Interact to reload and then attempt an Intimidation check to Demoralize.";
+                            demoralizeAction.Description = "Interact to reload and then attempt an Intimidation check to Demoralize.\n\n" + demoralizeAction.Description;
                             demoralizeAction.WithEffectOnSelf(async innerSelf =>
                             {
                                 FirearmUtilities.AwaitReloadItem(owner, item);
@@ -216,6 +216,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             raconteursReloadSection.AddPossibility(demoralizePossibility);
 
                             // HACK: Currently there is no CommonCombatActions for 'Create a Diversion' this should be replaced with that if it is ever added.
+                            string originalDescription = "Choose any number of enemy creatures you can see.\n\nMake one Deception check against the Perception DC of all those creatures. On a success, you become Hidden to those creatures.\n\nWhether or not you succeed,  creatures you attempt to divert gain a +4 circumstance bonus to their Perception DCs against your attempts to Create a Diversion for the rest of the encounter.";
                             CombatAction createADiversion = new CombatAction(owner, (Illustration)IllustrationName.CreateADiversion, "Create a Diversion", new Trait[6]
                             {
                                             Trait.Basic,
@@ -224,7 +225,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                             Trait.AlwaysHits,
                                             Trait.Auditory,
                                             Trait.Linguistic
-                            }, "Choose any number of enemy creatures you can see.\n\nMake one Deception check against the Perception DC of all those creatures. On a success, you become Hidden to those creatures.\n\nWhether or not you succeed,  creatures you attempt to divert gain a +4 circumstance bonus to their Perception DCs against your attempts to Create a Diversion for the rest of the encounter.", Target.MultipleCreatureTargets(Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100)).WithMinimumTargets(1).WithMustBeDistinct().WithSimultaneousAnimation()
+                            }, originalDescription, Target.MultipleCreatureTargets(Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100)).WithMinimumTargets(1).WithMustBeDistinct().WithSimultaneousAnimation()
                             .WithAdditionalRequirementOnSelf((Creature attacker, MultipleCreatureTargetsTarget targets) =>
                             {
                                 if (FirearmUtilities.IsItemLoaded(item) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(item))
@@ -233,7 +234,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                 }
 
                                 return Usability.Usable;
-                            })).WithSoundEffect(SfxName.Feint).WithActionId(ActionId.CreateADiversion);
+                            })).WithSoundEffect(SfxName.Feint).WithActionId(ActionId.CreateADiversion)
+                            .WithTargetingTooltip((action, defender, index) => originalDescription);
                             createADiversion.WithEffectOnChosenTargets(async (creature, targets) =>
                             {
                                 FirearmUtilities.AwaitReloadItem(owner, item);
@@ -312,7 +314,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             createADiversion.Item = item;
                             createADiversion.Name = "Raconteur's Reload (Diversion)";
                             createADiversion.Illustration = new SideBySideIllustration(item.Illustration, createADiversion.Illustration);
-                            createADiversion.Description = "Interact to reload and then attempt a Deception check to Create a Diversion.";
+                            createADiversion.Description = "Interact to reload and then attempt a Deception check to Create a Diversion.\n\n" + createADiversion.Description;
 
                             // Adds all the posibilites for each weapon and finalizes the button
                             raconteursReloadSection.AddPossibility(new ActionPossibility(createADiversion));
@@ -441,7 +443,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             takeCoverAction.Item = item;
                             takeCoverAction.Name = "Covered Reload (Take Cover)";
                             takeCoverAction.Illustration = new SideBySideIllustration(item.Illustration, takeCoverAction.Illustration);
-                            takeCoverAction.Description = "Interact to reload and then Take Cover.";
+                            takeCoverAction.Description = "Interact to reload and then Take Cover.\n\n" + takeCoverAction.Description;
 
                             ActionPossibility takeCoverPossibility = new ActionPossibility(takeCoverAction);
                             raconteursReloadSection.AddPossibility(takeCoverPossibility);
@@ -524,7 +526,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             hideAction.Item = item;
                             hideAction.Name = "Covered Reload (Hide)";
                             hideAction.Illustration = new SideBySideIllustration(item.Illustration, hideAction.Illustration);
-                            hideAction.Description = "Interact to reload and then attempt a Stealth check to Hide.";
+                            hideAction.Description = "Interact to reload and then attempt a Stealth check to Hide.\n\n" + hideAction.Description;
 
                             // Adds all the posibilites for each weapon and finalizes the button
                             raconteursReloadSection.AddPossibility(new ActionPossibility(hideAction));
@@ -658,7 +660,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                         clearAPathAction.Item = item;
                                         clearAPathAction.ActionCost = 1;
                                         clearAPathAction.Illustration = new SideBySideIllustration(item.Illustration, clearAPathAction.Illustration);
-                                        clearAPathAction.Description = vanguardWay.SlingersReloadRulesText;
+                                        clearAPathAction.Description = vanguardWay.SlingersReloadRulesText.Substring(vanguardWay.SlingersReloadRulesText.IndexOf('\n') + 1);
                                         StrikeModifiers strikeModifiers = clearAPathAction.StrikeModifiers;
                                         strikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.Immediately)
                                         {

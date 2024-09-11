@@ -327,6 +327,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             return Usability.Usable;
                         });
 
+                        coverFireAction.WithTargetingTooltip((action, defender, index) => action.Description);
+
                         return coverFireAction;
                     };
 
@@ -460,7 +462,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         foreach (DamageKind damageKind in elementalDamageKinds)
                         {
                             string damageString = damageKind.ToString();
-                            ActionPossibility damageAction = new ActionPossibility(new CombatAction(coatedMunitionsEffect.Owner, illustraions[damageKind], damageString, [], "Deal 1 persistent " + damageString + " damage and 1 " + damageString + " splash damage.", Target.Self()
+                            ActionPossibility damageAction = new ActionPossibility(new CombatAction(coatedMunitionsEffect.Owner, illustraions[damageKind], damageString, [], "Your next Strike deals {Blue}" + damageString + "{/} instead of its normal damage type. You also deal {Blue}1{/} persistent {Blue}" + damageString + "{/} damage and {Blue}1{/} {Blue}" + damageString + "{/} splash damage.", Target.Self()
                                 .WithAdditionalRestriction((Creature user) =>
                                 {
                                     if (user.QEffects.Any(qe => qe.Name == "Coated Munitions is Applied"))

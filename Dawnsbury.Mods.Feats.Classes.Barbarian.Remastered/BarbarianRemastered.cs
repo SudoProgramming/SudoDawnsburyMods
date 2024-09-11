@@ -105,7 +105,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
 
             // Class Level 4 Feat - Scars of Steel - NOTE: Is Once per combat instead of once per day
             yield return new TrueFeat(ModManager.RegisterFeatName("Scars of Steel"), 4, "When you are struck with the mightiest of blows, you can flex your muscles to turn aside some of the damage.", "Once per day, when an opponent critically hits you with an attack that deals physical damage, you can spend a reaction to gain resistance to the triggering attack equal to your Constitution modifier plus half your level.", new Trait[] { Trait.Barbarian, Trait.Rage })
-            .WithActionCost(-2).WithPermanentQEffect("You gain resistance to the triggering attack equal to your Constitution modifier plus half your level as a reaction.", delegate (QEffect qf)
+            .WithActionCost(-2).WithPermanentQEffect("After being critically hit, gain resistence to the damage.", delegate (QEffect qf)
             {
                 // Checks the incoming damage and prompts for reaction if it's a crit and physical. Then applies the damage reduction
                 qf.YouAreDealtDamage = async (QEffect qEffect, Creature attacker, DamageStuff damage, Creature defender) =>
@@ -114,7 +114,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
                     if (damage.Kind.IsPhysical() && !qf.Owner.PersistentUsedUpResources.UsedUpActions.Contains("Scars of Steel") && damage.Power != null && damage.Power.CheckResult == CheckResult.CriticalSuccess && damage.Power.HasTrait(Trait.Attack) && await qf.Owner.Battle.AskToUseReaction(qf.Owner, "You were critically hit for a total damage of " + damage.Amount + ".\nUse Scars of Steel to gain " + possibleResistance + " damage resistence?"))
                     {
                         qf.Owner.PersistentUsedUpResources.UsedUpActions.Add("Scars of Steel");
-                        return new ReduceDamageModification(possibleResistance, "You reduced " + possibleResistance + " damage from the incoming damage.");
+                        return new ReduceDamageModification(possibleResistance, "Scars of Steel: You reduced " + possibleResistance + " damage from the incoming damage.");
                     }
 
                     return null;
@@ -175,7 +175,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
             // Adds the QEffect at the start of combat to prompt for a free action rage if the user is not wearing heavy armor
             classSelectionFeat.WithOnCreature(creature =>
             {
-                creature.AddQEffect(new QEffect("Quick-Tempered", "At the beginning of each encounter, you can enter rage as a free action if you are not wearing heavy armor.")
+                creature.AddQEffect(new QEffect("Quick-Tempered", "Rage as a free action if you're not wearing heavy armor")
                 {
                     StartOfCombat = async (QEffect qEffect) =>
                     {
@@ -196,7 +196,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
         private static void ReplaceDenyAdvantageWithFuriousFootfalslToClassSelection(ClassSelectionFeat classSelectionFeat)
         {
             // Replaces Deny Advantage with Furious Footfalls as a base class feature
-            classSelectionFeat.WithPermanentQEffect(null, (QEffect qEffect) =>
+            classSelectionFeat.WithPermanentQEffect("+5 Status to Speed and +10 when raging", (QEffect qEffect) =>
             {
                 qEffect.StartOfCombat = async (QEffect self) =>
                 {

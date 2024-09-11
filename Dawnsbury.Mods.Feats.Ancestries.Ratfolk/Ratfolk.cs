@@ -104,7 +104,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
         public static void AddSharpTeethLogic(AncestrySelectionFeat ratfolkFeat)
         {
             // Adds a permanent effect to add a Sharp Teeth. The teeth are upgraded if the owner has the Vicious Incisors feat
-            ratfolkFeat.WithPermanentQEffect(ratfolkFeat.FlavorText, delegate (QEffect self)
+            ratfolkFeat.WithPermanentQEffect(null, delegate (QEffect self)
             {
                 string teethDamage = "1d4";
                 List<Trait> sharpTeethTraits = new List<Trait>() { Trait.Unarmed, Trait.Brawling, Trait.Agile, Trait.Finesse };
@@ -126,7 +126,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
         public static void AddDesertRatLogic(HeritageSelectionFeat desertRatFeat)
         {
             // Adds a permanent effect to raise the speed to 30 feet if nothing is held
-            desertRatFeat.WithPermanentQEffect(desertRatFeat.FlavorText, delegate (QEffect self)
+            desertRatFeat.WithPermanentQEffect("30 feet Speed if nothing is held.", delegate (QEffect self)
             {
                 self.BonusToAllSpeeds = (QEffect bonusToSpeed) =>
                 {
@@ -147,7 +147,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
         public static void AddLongsnoutRatLogic(HeritageSelectionFeat longsnoutRat)
         {
             // Adds a permanenet effect to increase Seek checks within 30 feet
-            longsnoutRat.WithPermanentQEffect(longsnoutRat.FlavorText, delegate (QEffect self)
+            longsnoutRat.WithPermanentQEffect("+2 Circumstance to Seek within 30 ft.", delegate (QEffect self)
             {
                 self.BonusToAttackRolls = (QEffect bonusToSeek, CombatAction action, Creature? creature) =>
                 {
@@ -168,7 +168,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
         public static void AddSewerRatLogic(HeritageSelectionFeat sewerRat)
         {
             // Adds a permanent effect to add a +1 circumstance bonus to poison effect and bump successes to critical successes
-            sewerRat.WithPermanentQEffect(sewerRat.FlavorText, delegate (QEffect self)
+            sewerRat.WithPermanentQEffect("+1 Circumstance bonus to poison effects", delegate (QEffect self)
             {
                 self.AdjustSavingThrowResult = (QEffect effectBonus, CombatAction action, CheckResult result) =>
                 {
@@ -210,7 +210,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
                     character.GrantFeat(FeatName.Intimidation);
                 }
             });
-            shadowRat.WithPermanentQEffect(shadowRat.FlavorText, delegate (QEffect self)
+            shadowRat.WithPermanentQEffect("No language penalty against animals", delegate (QEffect self)
             {
                 self.YouBeginAction = async (QEffect adjustAction, CombatAction action) =>
                 {
@@ -231,10 +231,11 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
         /// <param name="snowRat">The snow rat heritage feat</param>
         public static void AddSnowRatLogic(HeritageSelectionFeat snowRat)
         {
-            // Adds a permanent effect to gain 1 cold resistance
-            snowRat.WithPermanentQEffect(snowRat.FlavorText, delegate (QEffect self)
+            // Adds a permanent effect to gain half level cold resistance
+            snowRat.WithPermanentQEffect("Cold Resistance", delegate (QEffect self)
             {
-                self.Owner.WeaknessAndResistance.AddResistance(DamageKind.Cold, 1);
+                int resistence = Math.Max((self.Owner.Level / 2), 1);
+                self.Owner.WeaknessAndResistance.AddResistance(DamageKind.Cold, resistence);
             });
         }
 
@@ -245,7 +246,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
         public static void AddAgileTailLogic(TrueFeat agileTail)
         {
             // Adds a permanent effect that allows the user to Trip without having a free hand
-            agileTail.WithPermanentQEffect(delegate (QEffect self)
+            agileTail.WithPermanentQEffect("Trip without free hand", delegate (QEffect self)
             {
                 self.Id = RatfolkQEIDs.AgileTail;
             });
@@ -266,7 +267,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
         public static void AddCheekPouchesLogic(TrueFeat cheekPouchesFeat)
         {
             // Adds a permanent effect that allows the first two draw actions to be done as a free action
-            cheekPouchesFeat.WithPermanentQEffect(delegate (QEffect self)
+            cheekPouchesFeat.WithPermanentQEffect("First two draws are free actions", delegate (QEffect self)
             {
                 self.Id = RatfolkQEIDs.CheekPouches;
                 self.Value = 2;
@@ -300,7 +301,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
         public static void AddTumblingTricksterLogic(TrueFeat tumblingTricksterFeat)
         {
             // Adds a permanent effect that gives the user +1 circumstance to AC against creatures tumbled through
-            tumblingTricksterFeat.WithPermanentQEffect(delegate (QEffect self)
+            tumblingTricksterFeat.WithPermanentQEffect("+1 Circumstance to AC after Tumble Through", delegate (QEffect self)
             {
                 // As you begin striding a tracking effect is added if a tumble through is needed
                 self.YouBeginAction = async (QEffect tumblingTrickersEffect, CombatAction action) =>

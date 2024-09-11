@@ -192,7 +192,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddSingularExpertiseLogic(Feat singularExpertiseFeat)
         {
             // Adds a permanent Bonus to Damage effect if the criteria matches
-            singularExpertiseFeat.WithPermanentQEffect(singularExpertiseFeat.FlavorText, delegate (QEffect self)
+            singularExpertiseFeat.WithPermanentQEffect("+1 Circumstance to Firearm/Crossbow damage", delegate (QEffect self)
             {
                 self.BonusToDamage = (QEffect self, CombatAction action, Creature defender) =>
                 {
@@ -213,7 +213,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddCoverFireLogic(TrueFeat coverFireFeat)
         {
             // Adds a permanent Cover Fire action for items that match the criteria
-            coverFireFeat.WithPermanentQEffect(coverFireFeat.FlavorText, delegate (QEffect self)
+            coverFireFeat.WithPermanentQEffect("+1 Circumstance to attack roll or target gets +2/+4 bonus to AC and range penalty", delegate (QEffect self)
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
@@ -342,7 +342,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddWarningShotLogic(TrueFeat warningShotFeat)
         {
             // Adds a permanent Warning Shot action for items that match the criteria
-            warningShotFeat.WithPermanentQEffect(warningShotFeat.FlavorText, delegate (QEffect self)
+            warningShotFeat.WithPermanentQEffect("Ranged Demoralize with no language penalty", delegate (QEffect self)
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
@@ -386,7 +386,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddPairedShotsLogic(TrueFeat pairedShotsFeat)
         {
             // Adds a permanent Paired Shots action if both held items are Firearms or Crossbows
-            pairedShotsFeat.WithPermanentQEffect(pairedShotsFeat.FlavorText, delegate (QEffect self)
+            pairedShotsFeat.WithPermanentQEffect("Stike with both weapons at same MAP", delegate (QEffect self)
             {
                 self.ProvideMainAction = (QEffect pairedShotEffect) =>
                 {
@@ -445,7 +445,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddCoatedMunitionsLogic(TrueFeat coatedMunitionsFeat)
         {
             // Adds a permanent Coated Munitions action if the appropiate weapon is held
-            coatedMunitionsFeat.WithPermanentQEffect(coatedMunitionsFeat.FlavorText, delegate (QEffect self)
+            coatedMunitionsFeat.WithPermanentQEffect("Add 1 persistent and 1 splash damage of chosen type to next Strike", delegate (QEffect self)
             {
                 self.ProvideActionIntoPossibilitySection = (QEffect coatedMunitionsEffect, PossibilitySection possibilitySection) =>
                 {
@@ -514,7 +514,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddBlackPowderBoostLogic(TrueFeat blackPowderBoostFeat)
         {
             // Adds a permanent Black Powder Boost action if the appropiate weapon is held
-            blackPowderBoostFeat.WithPermanentQEffect(blackPowderBoostFeat.FlavorText, delegate (QEffect self)
+            blackPowderBoostFeat.WithPermanentQEffect("+10 ft status bonus to Leap and Long Jump", delegate (QEffect self)
             {
                 self.ProvideActionIntoPossibilitySection = (QEffect blackPowderBoostEffect, PossibilitySection possibilitySection) =>
                 {
@@ -651,7 +651,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             // Adds to the creature a state check to add the Alchemical Shot action to appropiate held weapons with each alchemical bomb
             alchemicalShotFeat.WithOnCreature(creature =>
             {
-                creature.AddQEffect(new QEffect()
+                creature.AddQEffect(new QEffect("Alchemical Shot {icon:TwoActions}", "Changes damage to match selected bomb and deals an addition 1d6 persistent damage")
                 {
                     StateCheck = (QEffect permanentState) =>
                     {
@@ -765,7 +765,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddHitTheDirtLogic(TrueFeat hitTheDirtFeat)
         {
             // Adds a permanent Hit the Dirt reaction
-            hitTheDirtFeat.WithPermanentQEffect(hitTheDirtFeat.FlavorText, delegate (QEffect self)
+            hitTheDirtFeat.WithPermanentQEffect("+2 Circumstance to AC, then Leap and fall prone", delegate (QEffect self)
             {
                 self.YouAreTargeted = async (QEffect hitTheDirtEffect, CombatAction action) =>
                 {
@@ -815,7 +815,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddRunningReloadLogic(TrueFeat runningReloadFeat)
         {
             // Adds a permanent Running Reload action if the appropiate weapon is held
-            runningReloadFeat.WithPermanentQEffect(runningReloadFeat.FlavorText, delegate (QEffect self)
+            runningReloadFeat.WithPermanentQEffect("Stride and reload", delegate (QEffect self)
             {
                 self.ProvideActionIntoPossibilitySection = (QEffect runningReloadEffect, PossibilitySection possibilitySection) =>
                 {
@@ -870,7 +870,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddSwordAndPistolLogic(TrueFeat swordAndPistolFeat)
         {
             // Adds a permanent Effect that will adjust depending on if you attacked in melee or ranged with appropiate weapons
-            swordAndPistolFeat.WithPermanentQEffect(swordAndPistolFeat.FlavorText, delegate (QEffect self)
+            swordAndPistolFeat.WithPermanentQEffect("After melee Strikes and Ranged Strikes alter the opposite", delegate (QEffect self)
             {
                 self.BeforeYourActiveRoll = async (QEffect addingEffects, CombatAction action, Creature defender) =>
                 {
@@ -957,7 +957,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddPistolTwirlLogic(TrueFeat pistolTwirlFeat)
         {
             // Adds a permananet Pistol Twirl action for the appropiate weapons
-            pistolTwirlFeat.WithPermanentQEffect(pistolTwirlFeat.FlavorText, delegate (QEffect self)
+            pistolTwirlFeat.WithPermanentQEffect("Ranged Feint", delegate (QEffect self)
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
@@ -1031,7 +1031,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddRiskyReloadLogic(TrueFeat riskyReloadFeat)
         {
             // Adds a permanent Running Reload action if the appropiate weapon is held
-            riskyReloadFeat.WithPermanentQEffect(riskyReloadFeat.FlavorText, delegate (QEffect self)
+            riskyReloadFeat.WithPermanentQEffect("Reload and Strike", delegate (QEffect self)
             {
                 self.ProvideActionIntoPossibilitySection = (QEffect riskyReloadEffect, PossibilitySection possibilitySection) =>
                 {
@@ -1108,7 +1108,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddCrossbowCrackShotLogic(TrueFeat crossbowCrackShotFeat)
         {
             // Adds a Permanent effect for strikes that are crossbows
-            crossbowCrackShotFeat.WithPermanentQEffect(crossbowCrackShotFeat.FlavorText, delegate (QEffect self)
+            crossbowCrackShotFeat.WithPermanentQEffect("Reloading increase range by +10 and adds +1/+2 precision damage", delegate (QEffect self)
             {
                 self.AfterYouTakeAction = async (QEffect crossbowCrackshotEffect, CombatAction action) =>
                 {
@@ -1186,7 +1186,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddDefensiveAramentsLogic(TrueFeat defensiveAramentsFeat)
         {
             // Adds a permananet effect that adds the Parry trait to items that don't have it when appropiate
-            defensiveAramentsFeat.WithPermanentQEffect(defensiveAramentsFeat.FlavorText, delegate (QEffect self)
+            defensiveAramentsFeat.WithPermanentQEffect("Adds or increase Parry trait", delegate (QEffect self)
             {
                 self.StateCheck = (QEffect state) =>
                 {
@@ -1256,7 +1256,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddFakeOutLogic(TrueFeat fakeOutFeat)
         {
             // Adds a permanent effect with various pieces for each segment of the game state
-            fakeOutFeat.WithPermanentQEffect(fakeOutFeat.FlavorText, delegate (QEffect fakeOutEffect)
+            fakeOutFeat.WithPermanentQEffect("Aid ally Attack with a Strike", delegate (QEffect fakeOutEffect)
             {
                 // Start of combat the tracking Fakeout effect is added
                 fakeOutEffect.StartOfCombat = async (QEffect startOfCombat) =>

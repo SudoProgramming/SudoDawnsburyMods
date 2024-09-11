@@ -80,7 +80,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         {
             Feat drifterFeat = driftersWay.Feat;
             // Adds a permanent effect for the Reloading Strike action
-            drifterFeat.WithPermanentQEffect("Drifter's Reloading Strike", delegate (QEffect self)
+            drifterFeat.WithPermanentQEffect("Reload and melee Strike", delegate (QEffect self)
             {
                 self.ProvideMainAction = (reloadingStrikeShotEffect) =>
                 {
@@ -147,7 +147,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         {
             Feat drifterFeat = driftersWay.Feat;
             // Adds a permanent start of combat effect where you can stride to a tile closer to an enemy
-            drifterFeat.WithPermanentQEffect("Drifter's Into the Fray", delegate (QEffect self)
+            drifterFeat.WithPermanentQEffect("Stride as free action on Initiative", delegate (QEffect self)
             {
                 self.StartOfCombat = async (startOfCombat) =>
                 {
@@ -175,7 +175,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         {
             Feat pistoleroFeat = pistoleroWay.Feat;
             // Adds a permanent Raconteurs Reload action if the appropiate weapon is held
-            pistoleroFeat.WithPermanentQEffect(pistoleroFeat.FlavorText, delegate (QEffect self)
+            pistoleroFeat.WithPermanentQEffect("Reload and Create a Diversion or Demoralize", delegate (QEffect self)
             {
                 self.ProvideActionIntoPossibilitySection = (QEffect raconteursReloadEffect, PossibilitySection possibilitySection) =>
                 {
@@ -343,7 +343,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         {
             Feat pistoleroFeat = pistoleroWay.Feat;
             // Adds a permanent bonus to initiative and a start of combat stide with no reaction of 10 ft.
-            pistoleroFeat.WithPermanentQEffect("Pistolero's Ten Paces", delegate (QEffect self)
+            pistoleroFeat.WithPermanentQEffect("Step 10 ft on Initiative", delegate (QEffect self)
             {
                 self.StartOfCombat = async (startOfCombat) =>
                 {
@@ -375,7 +375,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         {
             Feat sniperFeat = sniperWay.Feat;
             // Adds a permanent Covered Reload action if the appropiate weapon is held
-            sniperFeat.WithPermanentQEffect(sniperFeat.FlavorText, delegate (QEffect self)
+            sniperFeat.WithPermanentQEffect("Reload and Take Cover or Hide", delegate (QEffect self)
             {
                 self.ProvideActionIntoPossibilitySection = (QEffect coveredReloadEffect, PossibilitySection possibilitySection) =>
                 {
@@ -561,7 +561,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
             });
 
             // Adds a permanent bonus to initiaitve bonus/penalty depending on your stealth. And the start of combat effect for hiding and dealing more damage.
-            sniperFeat.WithPermanentQEffect("Sniper's One Shot, One Kill", delegate (QEffect self)
+            sniperFeat.WithPermanentQEffect("Can roll Stealth as Initiative and gain 1d6 percision on first Strike", delegate (QEffect self)
             {
                 self.StartOfCombat = async (startOfCombat) =>
                 {
@@ -638,7 +638,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
             // Adds to the creature a state check to add the clear a path action to appropiate held weapons
             vanguardFeat.WithOnCreature(creature =>
             {
-                creature.AddQEffect(new QEffect()
+                creature.AddQEffect(new QEffect("Clear a Path {icon:Action}", "Reload and Shove")
                 {
                     StateCheck = (permanentState) =>
                     {
@@ -725,7 +725,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         {
             Feat vanguardFeat = vanguardWay.Feat;
             // Adds a permanent Start of combat effect for living fortification
-            vanguardFeat.WithPermanentQEffect("Living Fortification", delegate (QEffect self)
+            vanguardFeat.WithPermanentQEffect("+1/+2 Circumstance AC on Initiative", delegate (QEffect self)
             {
                 self.StartOfCombat = async (startOfCombat) =>
                 {

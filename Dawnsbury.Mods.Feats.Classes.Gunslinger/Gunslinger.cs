@@ -462,7 +462,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         foreach (DamageKind damageKind in elementalDamageKinds)
                         {
                             string damageString = damageKind.ToString();
-                            ActionPossibility damageAction = new ActionPossibility(new CombatAction(coatedMunitionsEffect.Owner, illustraions[damageKind], damageString, [], "Your next Strike deals {Blue}" + damageString + "{/} instead of its normal damage type. You also deal {Blue}1{/} persistent {Blue}" + damageString + "{/} damage and {Blue}1{/} {Blue}" + damageString + "{/} splash damage.", Target.Self()
+                            ActionPossibility damageAction = new ActionPossibility(new CombatAction(coatedMunitionsEffect.Owner, illustraions[damageKind], damageString, [], "You deal an additional {Blue}1{/} persistent {Blue}" + damageString + "{/} damage and {Blue}1{/} {Blue}" + damageString + "{/} splash damage.", Target.Self()
                                 .WithAdditionalRestriction((Creature user) =>
                                 {
                                     if (user.QEffects.Any(qe => qe.Name == "Coated Munitions is Applied"))
@@ -692,7 +692,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                             WeaponProperties = new WeaponProperties(item.WeaponProperties.Damage, alchemicalDamageType) { Sfx = item.WeaponProperties.Sfx }.WithRangeIncrement(item.WeaponProperties.RangeIncrement)
                                         };
 
-                                        CombatAction alchemicalShotAction = new CombatAction(permanentState.Owner, new SideBySideIllustration(item.Illustration, bomb.Illustration), "Alchemical Shot (" + bomb.Name + ")", [Trait.Basic, Trait.Strike], alchemicalShotFeat.RulesText, Target.Ranged(item.WeaponProperties.MaximumRange));
+                                        string alchemicalDamageString = alchemicalDamageType.ToString();
+                                        CombatAction alchemicalShotAction = new CombatAction(permanentState.Owner, new SideBySideIllustration(item.Illustration, bomb.Illustration), "Alchemical Shot (" + bomb.Name + ")", [Trait.Basic, Trait.Strike],
+                                            "Make a Strike that deals {Blue}" + alchemicalDamageString + "{/} instead of its normal damage type, and deals an additional {Blue}1d6{/} persistent {Blue}" + alchemicalDamageString + "{/} damage.", Target.Ranged(item.WeaponProperties.MaximumRange));
                                         alchemicalShotAction.Item = item;
                                         alchemicalShotAction.ActionCost = 2;
 
@@ -1087,6 +1089,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
                                     return Usability.Usable;
                                 });
+
+                                riskyReloadAction.WithTargetingTooltip((action, defender, index) => action.Description);
 
                                 ActionPossibility riskyReloadPossibility = new ActionPossibility(riskyReloadAction);
 

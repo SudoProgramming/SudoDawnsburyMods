@@ -151,7 +151,7 @@ This module adds the Ratfolk ancestry from Player Core 2. The following are all 
 # SudoProgramming's Modding Plans
 - [X] Update Barbarian to match the Remastered rules
 - [X] Add the Firearm items and traits
-- [X] Add the Gunslinger class]
+- [X] Add the Gunslinger class
 - [X] Add Ratfolk
 - [ ] Add the Thaumaturge class
 

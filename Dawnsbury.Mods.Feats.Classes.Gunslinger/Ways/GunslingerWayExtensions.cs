@@ -15,6 +15,7 @@ using Dawnsbury.Core.Mechanics.Core;
 using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics.Rules;
 using Dawnsbury.Core.Mechanics.Targeting;
+using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
 using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Core.Possibilities;
@@ -206,7 +207,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             {
                                 if (FirearmUtilities.IsItemLoaded(item) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(item))
                                 {
-                                    return Usability.NotUsable("Can not be reloaded.");
+                                    return Usability.NotUsable("Item is already loaded.");
                                 }
 
                                 return Usability.Usable;
@@ -215,106 +216,30 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             ActionPossibility demoralizePossibility = new ActionPossibility(demoralizeAction);
                             raconteursReloadSection.AddPossibility(demoralizePossibility);
 
-                            // HACK: Currently there is no CommonCombatActions for 'Create a Diversion' this should be replaced with that if it is ever added.
-                            string originalDescription = "Choose any number of enemy creatures you can see.\n\nMake one Deception check against the Perception DC of all those creatures. On a success, you become Hidden to those creatures.\n\nWhether or not you succeed,  creatures you attempt to divert gain a +4 circumstance bonus to their Perception DCs against your attempts to Create a Diversion for the rest of the encounter.";
-                            CombatAction createADiversion = new CombatAction(owner, (Illustration)IllustrationName.CreateADiversion, "Create a Diversion", new Trait[6]
-                            {
-                                            Trait.Basic,
-                                            Trait.Mental,
-                                            Trait.AttackDoesNotTargetAC,
-                                            Trait.AlwaysHits,
-                                            Trait.Auditory,
-                                            Trait.Linguistic
-                            }, originalDescription, Target.MultipleCreatureTargets(Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100), Target.Ranged(100)).WithMinimumTargets(1).WithMustBeDistinct().WithSimultaneousAnimation()
-                            .WithAdditionalRequirementOnSelf((Creature attacker, MultipleCreatureTargetsTarget targets) =>
-                            {
-                                if (FirearmUtilities.IsItemLoaded(item) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(item))
-                                {
-                                    return Usability.NotUsable("Can not be reloaded.");
-                                }
-
-                                return Usability.Usable;
-                            })).WithSoundEffect(SfxName.Feint).WithActionId(ActionId.CreateADiversion)
-                            .WithTargetingTooltip((action, defender, index) => originalDescription);
-                            createADiversion.WithEffectOnChosenTargets(async (creature, targets) =>
-                            {
-                                FirearmUtilities.AwaitReloadItem(owner, item);
-                                int roll = R.NextD20();
-                                foreach (Creature chosenCreature in targets.ChosenCreatures)
-                                {
-                                    CheckBreakdown breakdown = CombatActionExecution.BreakdownAttack(new CombatAction(owner, null, "Create a Diversion", new Trait[1]
-                                    {
-                                                    Trait.Basic
-                                    }, "[this condition has no description]", Target.Self()).WithActionId(ActionId.CreateADiversion).WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Deception), Checks.DefenseDC(Defense.Perception))), chosenCreature);
-                                    CheckBreakdownResult breakdownResult = new CheckBreakdownResult(breakdown, roll);
-                                    string str1 = breakdown.DescribeWithFinalRollTotal(breakdownResult);
-                                    StringBuilder stringHandler;
-                                    int d20Roll;
-                                    if (breakdownResult.CheckResult >= CheckResult.Success)
-                                    {
-                                        owner.DetectionStatus.HiddenTo.Add(chosenCreature);
-                                        Tile occupies = chosenCreature.Occupies;
-                                        Color lightBlue = Color.LightBlue;
-                                        string str2 = self?.ToString();
-                                        string str3 = chosenCreature?.ToString();
-                                        stringHandler = new StringBuilder(10);
-                                        stringHandler.Append(" (");
-                                        d20Roll = breakdownResult.D20Roll;
-                                        string str4 = d20Roll.ToString() + breakdown.TotalCheckBonus.WithPlus();
-                                        stringHandler.Append(str4);
-                                        stringHandler.Append("=");
-                                        stringHandler.Append(breakdownResult.D20Roll + breakdown.TotalCheckBonus);
-                                        stringHandler.Append(" vs. ");
-                                        stringHandler.Append(breakdown.TotalDC);
-                                        stringHandler.Append(").");
-                                        string stringAndClear = stringHandler.ToString();
-                                        string log = str2 + " successfully hid from " + str3 + stringAndClear;
-                                        string logDetails = str1;
-                                        occupies.Overhead("hidden from", lightBlue, log, "Create a Diversion", logDetails);
-                                    }
-                                    else
-                                    {
-                                        Tile occupies = chosenCreature.Occupies;
-                                        Color red = Color.Red;
-                                        string str5 = self?.ToString();
-                                        string str6 = chosenCreature?.ToString();
-                                        stringHandler = new StringBuilder(10);
-                                        stringHandler.Append(" (");
-                                        d20Roll = breakdownResult.D20Roll;
-                                        string str7 = d20Roll.ToString() + breakdown.TotalCheckBonus.WithPlus();
-                                        stringHandler.Append(str7);
-                                        stringHandler.Append("=");
-                                        stringHandler.Append(breakdownResult.D20Roll + breakdown.TotalCheckBonus);
-                                        stringHandler.Append(" vs. ");
-                                        stringHandler.Append(breakdown.TotalDC);
-                                        stringHandler.Append(").");
-                                        string stringAndClear = stringHandler.ToString();
-                                        string log = str5 + " failed to hide from " + str6 + stringAndClear;
-                                        string logDetails = str1;
-                                        occupies.Overhead("diversion failed", red, log, "Create a Diversion", logDetails);
-                                    }
-                                    chosenCreature.AddQEffect(new QEffect()
-                                    {
-                                        BonusToDefenses = (effect, action, defense) =>
-                                        {
-                                            if (defense != Defense.Perception || action == null || action.ActionId != ActionId.CreateADiversion || action.Owner != creature)
-                                                return null;
-                                            if (creature.HasEffect(QEffectId.ConfabulatorLegendary))
-                                                return null;
-                                            if (creature.HasEffect(QEffectId.ConfabulatorMaster))
-                                                return new Bonus(1, BonusType.Circumstance, "Fool me twice... (Confabulator master)");
-                                            return creature.HasEffect(QEffectId.ConfabulatorExpert) ? new Bonus(2, BonusType.Circumstance, "Fool me twice... (Confabulator)") : new Bonus(4, BonusType.Circumstance, "Fool me twice...");
-                                        }
-                                    });
-                                }
-                            });
-                            // HACK: This is the end of the 'Create a Diversion'
+                            CombatAction createADiversion = CommonCombatActions.CreateADiversion(owner);
 
                             createADiversion.ActionCost = 1;
                             createADiversion.Item = item;
                             createADiversion.Name = "Raconteur's Reload (Diversion)";
                             createADiversion.Illustration = new SideBySideIllustration(item.Illustration, createADiversion.Illustration);
                             createADiversion.Description = "Interact to reload and then attempt a Deception check to Create a Diversion.\n\n" + createADiversion.Description;
+                            createADiversion.WithEffectOnSelf(async innerSelf =>
+                            {
+                                FirearmUtilities.AwaitReloadItem(owner, item);
+                            });
+
+                            if (createADiversion.Target != null && createADiversion.Target is MultipleCreatureTargetsTarget createADiversionTarget)
+                            {
+                                createADiversionTarget.WithAdditionalRequirementOnSelf((restrictionOwner, targets) =>
+                                {
+                                    if (FirearmUtilities.IsItemLoaded(item) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(item))
+                                    {
+                                        return Usability.NotUsable("Item is already loaded.");
+                                    }
+
+                                    return Usability.Usable;
+                                });
+                            }
 
                             // Adds all the posibilites for each weapon and finalizes the button
                             raconteursReloadSection.AddPossibility(new ActionPossibility(createADiversion));
@@ -396,48 +321,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             bool canHide = self.Battle.AllCreatures.Any(cr => cr.EnemyOf(self) && HiddenRules.HasCoverOrConcealment(self, cr));
                             bool canTakeCover = !self.HasEffect(QEffectId.TakingCover);
 
-                            // HACK: Currently there is no CommonCombatActions for 'Take Cover' this should be replaced with that if it is ever added.
-                            CombatAction takeCoverAction = new CombatAction(self, (Illustration)IllustrationName.TakeCover, "Take cover", new Trait[1]
+                            CombatAction takeCoverAction = CommonCombatActions.TakeCover(self);
+                            takeCoverAction.WithEffectOnSelf((self) =>
                             {
-                                                Trait.Basic
-                            }, "{i}You hunker down.{/i}\n\nUntil you move, attack or become Unconscious, any standard cover you have instead counts as greater cover (you don't gain this benefit against creatures against whom you don't have standard cover).\n\nIn addition, if you're prone, you count as having greater cover from all ranged attacks.", Target.Self()
-                            .WithAdditionalRestriction((Creature innerSelf) =>
-                            {
-                                if (innerSelf.HasEffect(QEffectId.TakingCover))
-                                {
-                                    return "You're already taking cover.";
-                                }
-                                else if (FirearmUtilities.IsItemLoaded(item) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(item))
-                                {
-                                    return "Can not be reloaded.";
-                                }
-
-                                return null;
-                            }))
-                            .WithActionCost(1)
-                            .WithEffectOnSelf(async innerSelf =>
-                            {
-                                FirearmUtilities.AwaitReloadItem(innerSelf, item);
-                                innerSelf.AddQEffect(new QEffect("Taking cover", "Until you move, attack or become Unconscious, any standard cover you have instead counts as greater cover (you don't gain this benefit against creatures against whom you don't have standard cover).\n\nIn addition, if you're prone, you count as having greater cover from all ranged attacks.", ExpirationCondition.Never, innerSelf, (Illustration)IllustrationName.TakeCover)
-                                {
-                                    Id = QEffectId.TakingCover,
-                                    CountsAsABuff = true,
-                                    StateCheck = sc =>
-                                    {
-                                        if (!sc.Owner.HasEffect(QEffectId.Unconscious))
-                                            return;
-                                        sc.ExpiresAt = ExpirationCondition.Immediately;
-                                    },
-                                    AfterYouTakeAction = async (qfSelf, action) =>
-                                    {
-                                        if (action.Name == "Covered Reload" || !action.HasTrait(Trait.Attack) && !action.HasTrait(Trait.Move))
-                                            return;
-                                        qfSelf.ExpiresAt = ExpirationCondition.Immediately;
-                                    },
-                                    IncreaseCover = (qfSelf, attack, existingCover) => attack != null && attack.HasTrait(Trait.Ranged) && qfSelf.Owner.HasEffect(QEffectId.Prone) && existingCover < CoverKind.Greater || existingCover == CoverKind.Standard ? CoverKind.Greater : existingCover
-                                });
+                                FirearmUtilities.AwaitReloadItem(self, item);
                             });
-                            // HACK: This is the end of the 'Take Cover'
 
                             takeCoverAction.ActionCost = 1;
                             takeCoverAction.Item = item;
@@ -445,81 +333,25 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             takeCoverAction.Illustration = new SideBySideIllustration(item.Illustration, takeCoverAction.Illustration);
                             takeCoverAction.Description = "Interact to reload and then Take Cover.\n\n" + takeCoverAction.Description;
 
+                            if (takeCoverAction.Target != null && takeCoverAction.Target is SelfTarget takeCoverTarget)
+                            {
+                                takeCoverTarget.WithAdditionalRestriction((restrictionOwner) =>
+                                {
+                                    if (FirearmUtilities.IsItemLoaded(item) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(item))
+                                    {
+                                        return "Item is already loaded";
+                                    }
+                                    return null;
+                                });
+                            }
+
                             ActionPossibility takeCoverPossibility = new ActionPossibility(takeCoverAction);
                             raconteursReloadSection.AddPossibility(takeCoverPossibility);
 
-                            // HACK: Currently there is no CommonCombatActions for 'Hide' this should be replaced with that if it is ever added.
-                            CombatAction hideAction = new CombatAction(self, (Illustration)IllustrationName.Hide, "Hide", new Trait[2]
+                            CombatAction hideAction = CommonCombatActions.CreateHide(self);
+                            hideAction.WithEffectOnEachTarget(async (CombatAction action, Creature attacker, Creature defender, CheckResult result) =>
                             {
-                                                Trait.Basic,
-                                                Trait.AttackDoesNotTargetAC
-                            }, "Make one Stealth check against the Perception DCs of each enemy creature that can see you but that you have cover or concealment from. On a success, you become Hidden to that creature.", Target.Self((cr, ai) => ai.HideSelf())
-                            .WithAdditionalRestriction(innerSelf =>
-                            {
-                                if (HiddenRules.IsHiddenFromAllEnemies(innerSelf, innerSelf.Occupies))
-                                    return "You're already hidden from all enemies.";
-                                else if (FirearmUtilities.IsItemLoaded(item) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(item))
-                                {
-                                    return "Can not be reloaded.";
-                                }
-                                return !innerSelf.Battle.AllCreatures.Any(cr => cr.EnemyOf(innerSelf) && HiddenRules.HasCoverOrConcealment(innerSelf, cr)) ? "You don't have cover or concealment from any enemy." : null;
-                            })).WithActionCost(1).WithActionId(ActionId.Hide).WithSoundEffect(SfxName.Hide).WithEffectOnSelf(async innerSelf =>
-                            {
-                                FirearmUtilities.AwaitReloadItem(innerSelf, item);
-                                int roll = R.NextD20();
-                                foreach (Creature creature in innerSelf.Battle.AllCreatures.Where<Creature>(cr => cr.EnemyOf(innerSelf)))
-                                {
-                                    if (!innerSelf.DetectionStatus.HiddenTo.Contains(creature) && HiddenRules.HasCoverOrConcealment(innerSelf, creature))
-                                    {
-                                        CheckBreakdown breakdown = CombatActionExecution.BreakdownAttack(new CombatAction(innerSelf, (Illustration)IllustrationName.Hide, "Hide", new Trait[1]
-                                        {
-                                                            Trait.Basic
-                                        }, "[this condition has no description]", Target.Self()).WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Stealth), Checks.DefenseDC(Defense.Perception))), creature);
-                                        CheckBreakdownResult breakdownResult = new CheckBreakdownResult(breakdown, roll);
-                                        string str8 = breakdown.DescribeWithFinalRollTotal(breakdownResult);
-                                        StringBuilder stringHandler;
-                                        if (breakdownResult.CheckResult >= CheckResult.Success)
-                                        {
-                                            innerSelf.DetectionStatus.HiddenTo.Add(creature);
-                                            Tile occupies = creature.Occupies;
-                                            Color lightBlue = Color.LightBlue;
-                                            string str9 = innerSelf?.ToString();
-                                            string str10 = creature?.ToString();
-                                            stringHandler = new StringBuilder(string.Empty, 10);
-                                            stringHandler.Append(" (");
-                                            stringHandler.Append(breakdownResult.D20Roll.ToString() + breakdown.TotalCheckBonus.WithPlus());
-                                            stringHandler.Append("=");
-                                            stringHandler.Append(breakdownResult.D20Roll + breakdown.TotalCheckBonus);
-                                            stringHandler.Append(" vs. ");
-                                            stringHandler.Append(breakdown.TotalDC);
-                                            stringHandler.Append(").");
-                                            string stringAndClear = stringHandler.ToString();
-                                            string log = str9 + " successfully hid from " + str10 + stringAndClear;
-                                            string logDetails = str8;
-                                            occupies.Overhead("hidden from", lightBlue, log, "Hide", logDetails);
-                                        }
-                                        else
-                                        {
-                                            Tile occupies = creature.Occupies;
-                                            Color red = Color.Red;
-                                            string str11 = innerSelf?.ToString();
-                                            string str12 = creature?.ToString();
-                                            stringHandler = new StringBuilder(string.Empty, 10);
-                                            stringHandler.Append(" (");
-                                            stringHandler.Append(breakdownResult.D20Roll.ToString() + breakdown.TotalCheckBonus.WithPlus());
-                                            stringHandler.Append("=");
-                                            stringHandler.Append(breakdownResult.D20Roll + breakdown.TotalCheckBonus);
-                                            stringHandler.Append(" vs. ");
-                                            stringHandler.Append(breakdown.TotalDC);
-                                            stringHandler.Append(").");
-                                            string stringAndClear = stringHandler.ToString();
-                                            string log = str11 + " failed to hide from " + str12 + stringAndClear;
-                                            string logDetails = str8;
-                                            occupies.Overhead("hide failed", red, log, "Hide", logDetails);
-                                        }
-                                    }
-                                    // HACK: This is the end of the 'Hide'
-                                }
+                                FirearmUtilities.AwaitReloadItem(self, item);
                             });
 
                             hideAction.ActionCost = 1;
@@ -527,6 +359,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             hideAction.Name = "Covered Reload (Hide)";
                             hideAction.Illustration = new SideBySideIllustration(item.Illustration, hideAction.Illustration);
                             hideAction.Description = "Interact to reload and then attempt a Stealth check to Hide.\n\n" + hideAction.Description;
+
+                            if (hideAction.Target != null && hideAction.Target is SelfTarget hideTarget)
+                            {
+                                hideTarget.WithAdditionalRestriction((restrictionOwner) =>
+                                {
+                                    if (FirearmUtilities.IsItemLoaded(item) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(item))
+                                    {
+                                        return "Item is already loaded";
+                                    }
+                                    return null;
+                                });
+                            }
 
                             // Adds all the posibilites for each weapon and finalizes the button
                             raconteursReloadSection.AddPossibility(new ActionPossibility(hideAction));
@@ -645,75 +489,85 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                     StateCheck = (permanentState) =>
                     {
                         Creature owner = permanentState.Owner;
-                        if (owner.HeldItems.Count == 1 && owner.HeldItems.Any(item => item.HasTrait(Trait.TwoHanded) && FirearmUtilities.IsItemFirearmOrCrossbow(item)))
+                        owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
                         {
-                            Item item = owner.HeldItems[0];
-                            owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
+                            ProvideMainAction = (clearAPathEffect) =>
                             {
-                                ProvideMainAction = (clearAPathEffect) =>
+                                Item? item = owner.HeldItems.FirstOrDefault(item => FirearmUtilities.IsItemFirearmOrCrossbow(item));
+                                if (item == null)
                                 {
-                                    if ((!FirearmUtilities.IsItemLoaded(item) || FirearmUtilities.IsMultiAmmoWeaponReloadable(item)) && item.WeaponProperties != null)
-                                    {
-                                        // Creates a shove action and updates it's properties to match Clear a Path
-                                        CombatAction clearAPathAction = Possibilities.CreateShove(owner);
-                                        clearAPathAction.Name = "Clear a Path";
-                                        clearAPathAction.Item = item;
-                                        clearAPathAction.ActionCost = 1;
-                                        clearAPathAction.Illustration = new SideBySideIllustration(item.Illustration, clearAPathAction.Illustration);
-                                        clearAPathAction.Description = vanguardWay.SlingersReloadRulesText.Substring(vanguardWay.SlingersReloadRulesText.IndexOf('\n') + 1);
-                                        StrikeModifiers strikeModifiers = clearAPathAction.StrikeModifiers;
-                                        strikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.Immediately)
-                                        {
-                                            BonusToSkillChecks = (Skill skill, CombatAction action, Creature? target) =>
-                                            {
-                                                if (skill == Skill.Athletics && action.Item != null && action.Item.WeaponProperties != null && action.Item.WeaponProperties.ItemBonus > 0)
-                                                {
-                                                    return new Bonus(action.Item.WeaponProperties.ItemBonus, BonusType.Item, "Clear a Path", true);
-                                                }
-                                                return null;
-                                            }
-                                        };
-                                        clearAPathAction.WithEffectOnSelf((self) =>
-                                        {
-                                            FirearmUtilities.AwaitReloadItem(self, item);
-                                        });
-
-                                        return new ActionPossibility(clearAPathAction);
-                                    }
-
                                     return null;
-                                },
+                                }
 
-                                // Determines what the last action and sets the MAP to one less if it was a ranged strike with this item
-                                BeforeYourActiveRoll = async (QEffect beforeRoll, CombatAction action, Creature target) =>
+                                // Creates a shove action and updates it's properties to match Clear a Path
+                                CombatAction clearAPathAction = Possibilities.CreateShove(owner);
+                                clearAPathAction.Name = "Clear a Path";
+                                clearAPathAction.Item = item;
+                                clearAPathAction.ActionCost = 1;
+                                clearAPathAction.Illustration = new SideBySideIllustration(item.Illustration, clearAPathAction.Illustration);
+                                clearAPathAction.Description = vanguardWay.SlingersReloadRulesText.Substring(vanguardWay.SlingersReloadRulesText.IndexOf('\n') + 1);
+                                clearAPathAction.Target = Target.Melee().WithAdditionalConditionOnTargetCreature((Creature a, Creature d) =>
                                 {
-                                    List<CombatAction> actionsUsed = beforeRoll.Owner.Actions.ActionHistoryThisTurn.ToList();
-                                    if (actionsUsed.Count > 0)
+                                    if (!item.HasTrait(Trait.TwoHanded))
                                     {
-                                        CombatAction lastAction = actionsUsed.Last();
-                                        if (action.Name == "Clear a Path" && beforeRoll.Owner.Actions.AttackedThisManyTimesThisTurn > 0 && lastAction.HasTrait(Trait.Ranged) && lastAction.Name.ToLower().Contains("strike") && lastAction.Item != null && action.Item != null && action.Item == lastAction.Item)
-                                        {
-                                            beforeRoll.Owner.Actions.AttackedThisManyTimesThisTurn--;
-                                            beforeRoll.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
-                                            {
-                                                Id = GunslingerQEIDs.ClearAPath,
-                                                Tag = lastAction.Item,
-                                            });
-                                        }
+                                        return Usability.NotUsable("" + item.Name + " is NOT two-handed.");
                                     }
-                                },
-
-                                // Resets MAP and clears the effect
-                                AfterYouTakeAction = async (QEffect afterRoll, CombatAction action) =>
-                                {
-                                    if (action.Name == "Clear a Path" && afterRoll.Owner.HasEffect(GunslingerQEIDs.ClearAPath))
+                                    else if (FirearmUtilities.IsItemLoaded(item) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(item))
                                     {
-                                        afterRoll.Owner.Actions.AttackedThisManyTimesThisTurn++;
-                                        afterRoll.Owner.RemoveAllQEffects(qe => qe.Id == GunslingerQEIDs.ClearAPath);
+                                        return Usability.NotUsable("Item is already loaded.");
+                                    }
+
+                                    return Usability.Usable;
+                                });
+                                StrikeModifiers strikeModifiers = clearAPathAction.StrikeModifiers;
+                                strikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.Immediately)
+                                {
+                                    BonusToSkillChecks = (Skill skill, CombatAction action, Creature? target) =>
+                                    {
+                                        if (skill == Skill.Athletics && action.Item != null && action.Item.WeaponProperties != null && action.Item.WeaponProperties.ItemBonus > 0)
+                                        {
+                                            return new Bonus(action.Item.WeaponProperties.ItemBonus, BonusType.Item, "Clear a Path", true);
+                                        }
+                                        return null;
+                                    }
+                                };
+                                clearAPathAction.WithEffectOnSelf((self) =>
+                                {
+                                    FirearmUtilities.AwaitReloadItem(self, item);
+                                });
+
+                                return new ActionPossibility(clearAPathAction);
+                            },
+
+                            // Determines what the last action and sets the MAP to one less if it was a ranged strike with this item
+                            BeforeYourActiveRoll = async (QEffect beforeRoll, CombatAction action, Creature target) =>
+                            {
+                                List<CombatAction> actionsUsed = beforeRoll.Owner.Actions.ActionHistoryThisTurn.ToList();
+                                if (actionsUsed.Count > 0)
+                                {
+                                    CombatAction lastAction = actionsUsed.Last();
+                                    if (action.Name == "Clear a Path" && beforeRoll.Owner.Actions.AttackedThisManyTimesThisTurn > 0 && lastAction.HasTrait(Trait.Ranged) && lastAction.Name.ToLower().Contains("strike") && lastAction.Item != null && action.Item != null && action.Item == lastAction.Item)
+                                    {
+                                        beforeRoll.Owner.Actions.AttackedThisManyTimesThisTurn--;
+                                        beforeRoll.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
+                                        {
+                                            Id = GunslingerQEIDs.ClearAPath,
+                                            Tag = lastAction.Item,
+                                        });
                                     }
                                 }
-                            });
-                        }
+                            },
+
+                            // Resets MAP and clears the effect
+                            AfterYouTakeAction = async (QEffect afterRoll, CombatAction action) =>
+                            {
+                                if (action.Name == "Clear a Path" && afterRoll.Owner.HasEffect(GunslingerQEIDs.ClearAPath))
+                                {
+                                    afterRoll.Owner.Actions.AttackedThisManyTimesThisTurn++;
+                                    afterRoll.Owner.RemoveAllQEffects(qe => qe.Id == GunslingerQEIDs.ClearAPath);
+                                }
+                            }
+                        });
                     }
                 });
             });
@@ -767,7 +621,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
             // Cycles through all map tiles and determines if the tile is closer to an enemy and if the user can actually reach the tile
             foreach (Tile tile in self.Battle.Map.AllTiles)
             {
-                // HACK: Pathfinding is internal, So the reflection should be removed when and if it is made public
                 if (tile.IsFree && IsTileCloserToAnyOfTheseTiles(startingTile, tile, enemyTiles))
                 {
                     MovementStyle movementStyle = new MovementStyle()
@@ -779,7 +632,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                         Squares = movementStyle.MaximumSquares,
                         Style = movementStyle
                     };
-                    IList<Tile>? pathToTiles = (IList<Tile>?)(typeof(ModManager).Assembly.GetType("Dawnsbury.Core.Intelligence.Pathfinding").GetMethod("GetPath", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static).Invoke(null, [self, tile, tile.Battle, pathfindingDescription]));
+                    IList<Tile>? pathToTiles = Pathfinding.GetPath(self, tile, tile.Battle, pathfindingDescription);
                     if (pathToTiles != null)
                     {
                         options.Add(new TileOption(tile, "Tile (" + tile.X + "," + tile.Y + ")", null, (AIUsefulness)int.MinValue, true));
@@ -829,7 +682,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
             {
                 if (tile.IsFree && startingTile.DistanceTo(tile) <= range)
                 {
-                    // HACK: Pathfinding is internal, So the reflection should be removed when and if it is made public
                     MovementStyle movementStyle = new MovementStyle()
                     {
                         MaximumSquares = range
@@ -839,7 +691,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                         Squares = movementStyle.MaximumSquares,
                         Style = movementStyle
                     };
-                    IList<Tile>? pathToTiles = (IList<Tile>?)(typeof(ModManager).Assembly.GetType("Dawnsbury.Core.Intelligence.Pathfinding").GetMethod("GetPath", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static).Invoke(null, [self, tile, tile.Battle, pathfindingDescription]));
+                    IList<Tile>? pathToTiles = Pathfinding.GetPath(self, tile, tile.Battle, pathfindingDescription);
                     if (pathToTiles != null)
                     {
                         options.Add(new TileOption(tile, "Tile (" + tile.X + "," + tile.Y + ")", null, (AIUsefulness)int.MinValue, true));

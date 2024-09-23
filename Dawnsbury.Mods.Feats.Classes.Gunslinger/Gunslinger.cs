@@ -1323,17 +1323,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     if (await creature.Battle.AskToUseReaction(ally, "Make an attack roll to Aid the triggering attack." + fakeOutTargetTextAddition))
                                     {
                                         // Builds the strike for the aid strike
-                                        CombatAction basicStrike = ally.CreateStrike(mainWeapon);
-                                        CombatAction aidStrike = new CombatAction(ally, new SimpleIllustration(IllustrationName.None), "Aid Strike (" + mainWeapon.Name + ")", [], "{b}Critical Success{/b} Your ally gains a +2 circumstance bonus to the triggering action.\n\n\"{b}Success{/b} Your ally gains a +1 circumstance bonus to the triggering action.\n\n\"{b}Critical Failure{/b} Your ally gains a -1 circumstance penalty to the triggering action.\n\n", action.Target);;
+                                        CombatAction aidStrike = new CombatAction(ally, new SimpleIllustration(IllustrationName.None), "Aid Strike (" + mainWeapon.Name + ")", [], "{b}Critical Success{/b} Your ally gains a +2 circumstance bonus to the triggering action.\n\n\"{b}Success{/b} Your ally gains a +1 circumstance bonus to the triggering action.\n\n\"{b}Critical Failure{/b} Your ally gains a -1 circumstance penalty to the triggering action.\n\n", Target.Ranged(mainWeapon.WeaponProperties.MaximumRange));
                                         aidStrike.ActionCost = 0;
                                         aidStrike.Item = mainWeapon;
-                                        aidStrike.Traits = basicStrike.Traits;
                                         aidStrike.Traits.CombatAction = aidStrike;
                                         aidStrike.ChosenTargets = action.ChosenTargets;
-                                        aidStrike.Description = StrikeRules.CreateBasicStrikeDescription(basicStrike.StrikeModifiers, additionalSuccessText: "Your ally gains a +1 circumstance bonus to the triggering action.",  additionalCriticalSuccessText: "Your ally gains a +2 circumstance bonus to the triggering action.", additionalAftertext: "{b}Critical Failure{/b} \"Your ally gains a -1 circumstance penalty to the triggering action.");
                                         CalculatedNumberProducer attackCheck = Checks.Attack(mainWeapon);
                                         attackCheck.WithExtraBonus((Func<CombatAction, Creature, Creature?, Bonus?>)((combatAction, demoralizer, target) => ((creaturesAttacked.Contains(defender)) ? new Bonus(1, BonusType.Circumstance, "Attacked last round") : (Bonus)null)));
-                                        aidStrike.WithActiveRollSpecification(new ActiveRollSpecification(attackCheck, Checks.DefenseDC(Defense.AC)));
+                                        aidStrike.WithActiveRollSpecification(new ActiveRollSpecification(attackCheck, Checks.FlatDC(15)));
                                         aidStrike.WithEffectOnEachTarget(async delegate (CombatAction aidAction, Creature attacker, Creature defender, CheckResult result)
                                         {
                                             // Depending on the attacks result the original attacker gains a bonus
@@ -1366,11 +1363,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                                         }
                                                     });
                                                     break;
-                                            }
-
-                                            if (aidAction.Item != null)
-                                            {
-                                                FirearmUtilities.DischargeItem(aidAction.Item);
                                             }
                                         });
 

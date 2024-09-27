@@ -148,6 +148,9 @@ This module adds the Ratfolk ancestry from Player Core 2. The following are all 
 - Tumbling Trickster - Homebrew - After you successfully Tumble Through an enemy, you gain a +1 circumstance bonus to your AC that creature until the start of your next turn.
 - Vicious Incisors
 
+# Ancestry Paragon
+This mod adds the Ancestry Paragon Variation rules. You will get an additional Ancestry feat at level 1 and another at every odd level. Read more [here.](https://2e.aonprd.com/Rules.aspx?ID=1336)
+
 # SudoProgramming's Modding Plans
 - [X] Update Barbarian to match the Remastered rules
 - [X] Add the Firearm items and traits

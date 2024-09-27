@@ -307,7 +307,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                     {
                         combatAction.Traits.Add(Trait.Basic);
                     }
-                    combatAction.Description = StrikeRules.CreateBasicStrikeDescription(combatAction.StrikeModifiers, "You can fire both barrels of a double barrel weapon in a single Strike to increase the weapon damage die by one step. If the weapon has the fatal trait, this increases the fatal die by one step.", null, null, null, weaponDieIncreased: true);
+                    combatAction.Description = StrikeRules.CreateBasicStrikeDescription2(combatAction.StrikeModifiers, "You can fire both barrels of a double barrel weapon in a single Strike to increase the weapon damage die by one step. If the weapon has the fatal trait, this increases the fatal die by one step.", null, null, null, weaponDieIncreased: true);
 
                     // Updates our stike modifers by adding a QEffect to handle the fatal die upgrade logic
                     StrikeModifiers strikeModifiers = combatAction.StrikeModifiers;

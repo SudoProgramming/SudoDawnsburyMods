@@ -17,9 +17,9 @@ namespace Dawnsbury.Mods.Variant.AncestryParagon
         [DawnsburyDaysModMainMethod]
         public static void LoadMod()
         {
-            FeatName skippedAncestryFeat = ModManager.RegisterFeatName("Skipped Ancestry Feat", "Skipped Ancestry Feat");
+            FeatName skippedAncestryFeat = ModManager.RegisterFeatName("No ancestry feat", "No ancestry feat");
 
-            ModManager.AddFeat(new TrueFeat(skippedAncestryFeat, 1, "No Ancestry Feat", "A repeatable choice to skip selecting an Ancestry Feat", [Trait.Ancestry]).WithMultipleSelection());
+            ModManager.AddFeat(new TrueFeat(skippedAncestryFeat, 1, "No ancestry feat", "A repeatable choice to skip selecting an Ancestry Feat", [Trait.Ancestry]).WithMultipleSelection());
 
             ModManager.RegisterActionOnEachCharacterSheet((CharacterSheet sheet) =>
             {

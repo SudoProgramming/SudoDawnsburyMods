@@ -506,7 +506,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                 clearAPathAction.ActionCost = 1;
                                 clearAPathAction.Illustration = new SideBySideIllustration(item.Illustration, clearAPathAction.Illustration);
                                 clearAPathAction.Description = vanguardWay.SlingersReloadRulesText.Substring(vanguardWay.SlingersReloadRulesText.IndexOf('\n') + 1);
-                                clearAPathAction.Target = Target.Melee().WithAdditionalConditionOnTargetCreature((Creature a, Creature d) =>
+                                clearAPathAction.Target = Target.Touch().WithAdditionalConditionOnTargetCreature((Creature a, Creature d) =>
                                 {
                                     if (!item.HasTrait(Trait.TwoHanded))
                                     {

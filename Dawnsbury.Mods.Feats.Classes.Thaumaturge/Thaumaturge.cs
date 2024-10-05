@@ -26,6 +26,8 @@ using Dawnsbury.Core.Roller;
 using Dawnsbury.Core.Creatures.Parts;
 using Dawnsbury.Display;
 using Dawnsbury.Core.Coroutines.Options;
+using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
+using static System.Collections.Specialized.BitVector32;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -141,7 +143,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             .WithAdditionalConditionOnTargetCreature((attacker, defender) => attacker.HasEffect(ThaumaturgeQEIDs.UsedExploitVulnerability) ? Usability.NotUsable("Already Exploited Vulnerability this turn") : Usability.Usable))
                         .WithActiveRollSpecification(new ActiveRollSpecification(ThaumaturgeUtilities.RollEsotericLore, ThaumaturgeUtilities.CalculateEsotericLoreDC))
                         .WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
-                        {                       
+                        {         
                             attacker.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
                             {
                                 Id = ThaumaturgeQEIDs.UsedExploitVulnerability
@@ -155,7 +157,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                     Resistance weakness = weaknesses[0];
                                     if (weaknesses.Count > 1)
                                     {
-                                        ChoiceButtonOption selectedWeakness = await attacker.AskForChoiceAmongButtons(IllustrationName.GenericCombatManeuver, "Which weakness would you like to Exploit?", weaknesses.Select(weakness => weakness.DamageKind.HumanizeTitleCase2()).ToArray());
+                                        ChoiceButtonOption selectedWeakness = await attacker.AskForChoiceAmongButtons(IllustrationName.GenericCombatManeuver, "Which weakness would you like to exploit against all " + defender.BaseName + "?", weaknesses.Select(weakness => weakness.DamageKind.HumanizeTitleCase2()).ToArray());
                                         weakness = weaknesses[selectedWeakness.Index];
                                     }
                                     if (weakness.Value >= 2 + Math.Floor(attacker.Level / 2.0))
@@ -163,7 +165,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                         skipAntithesis = true;
                                         defender.AddQEffect(new QEffect(ExpirationCondition.Never)
                                         {
-                                            Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeaknessTarget,
+                                            Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
                                             Tag = attacker
                                         });
                                         attacker.AddQEffect(new QEffect(ExpirationCondition.Never)
@@ -183,16 +185,17 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                     }
                                 }
                             }
+                            // Add CLear Logic on Reuse
                             if (result >= CheckResult.Failure && !skipAntithesis)
                             {
                                 defender.AddQEffect(new QEffect(ExpirationCondition.Never)
                                 {
-                                    Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeaknessTarget,
+                                    Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
                                     Tag = attacker,
                                     StateCheck = (QEffect stateCheck) =>
                                     {
                                         Creature owner = stateCheck.Owner;
-                                        if (owner.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityWeaknessTarget))
+                                        if (owner.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget))
                                         {
                                             if (!owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
                                             {
@@ -243,6 +246,33 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddAmuletImplementLogic(Feat amuletImplementFeat)
         {
             AddImplementEnsureLogic(amuletImplementFeat);
+            amuletImplementFeat.WithPermanentQEffect(ImplementDetails.AmuletInitiateBenefitName, delegate (QEffect self)
+            {
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    Creature owner = startOfCombat.Owner;
+                    Creature[] allies = owner.Battle.AllCreatures.Where(creature => creature.FriendOf(owner)).ToArray();
+                    foreach (Creature ally in allies)
+                    {
+                        ally.AddQEffect(new QEffect(ExpirationCondition.Never)
+                        {
+                            YouAreDealtDamage = async (QEffect effect, Creature attacker, DamageStuff damage, Creature defender) =>
+                            {
+                                if (attacker.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget))
+                                {
+                                    QEffect exploitEffect = attacker.QEffects.First(qe => qe.Id == ThaumaturgeQEIDs.ExploitVulnerabilityTarget);
+                                    if (exploitEffect.Tag != null && exploitEffect.Tag is Creature thaumaturge && thaumaturge == owner && owner.Actions.CanTakeReaction() && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner) && ally.DistanceTo(owner) <= 3 && await owner.AskToUseReaction("Use " + ImplementDetails.AmuletInitiateBenefitName + " to give resistance equal to 2 + your level?"))
+                                    {
+                                        return new ReduceDamageModification(2 + owner.Level, "Amulet's Abeyance");
+                                    }
+                                }
+
+                                return null;
+                            }
+                        });
+                    }
+                };
+            });
         }
 
         /// <summary>
@@ -252,6 +282,53 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddBellImplementLogic(Feat bellImplementFeat)
         {
             AddImplementEnsureLogic(bellImplementFeat);
+            bellImplementFeat.WithPermanentQEffect(ImplementDetails.BellInitiateBenefitName, delegate (QEffect self)
+            {
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    Creature owner = startOfCombat.Owner;
+                    Creature[] allies = owner.Battle.AllCreatures.Where(creature => creature.FriendOf(owner)).ToArray();
+                    foreach (Creature ally in allies)
+                    {
+                        // TODO: Manipulate
+                        ally.AddQEffect(new QEffect(ExpirationCondition.Never)
+                        {
+                            YouAreTargeted = async (QEffect targeted, CombatAction action) =>
+                            {
+                                bool actionIsSpell = action.SpellInformation != null;
+                                if (action.Owner.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget))
+                                {
+                                    QEffect exploitEffect = action.Owner.QEffects.First(qe => qe.Id == ThaumaturgeQEIDs.ExploitVulnerabilityTarget);
+                                    if (exploitEffect.Tag != null && exploitEffect.Tag is Creature thaumaturge && thaumaturge == owner && owner.Actions.CanTakeReaction() && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner) && owner.DistanceTo(action.Owner) <= 6 && await owner.AskToUseReaction("Use " + ImplementDetails.BellInitiateBenefitName + ": " + (actionIsSpell ? " Target makes Fortitude save or becomes stupefied?" : " Target makes Will save or becomes your choice of enfeebled or clumsy?")))
+                                    {
+                                        CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(action.Owner, new CombatAction(owner, IllustrationName.GenericCombatManeuver, ImplementDetails.BellInitiateBenefitName, [Trait.Auditory, Trait.Emotion, Trait.Enchantment, Trait.Magical, Trait.Manipulate, Trait.Mental], ImplementDetails.BellInitiateBenefitRulesText, Target.Touch()), actionIsSpell ? Defense.Fortitude : Defense.Will, creature => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge));
+                                        if (savingThrowResult <= CheckResult.Failure)
+                                        {
+                                            if (actionIsSpell)
+                                            {
+                                                QEffect debuff = QEffect.Stupefied(savingThrowResult == CheckResult.CriticalFailure ? 2 : 1);
+                                                debuff.Source = owner;
+                                                debuff.ExpiresAt = ExpirationCondition.ExpiresAtStartOfSourcesTurn;
+                                                action.Owner.AddQEffect(debuff);
+                                            }
+                                            else
+                                            {
+                                                int debuffLevel = savingThrowResult == CheckResult.CriticalFailure ? 2 : 1;
+                                                ChoiceButtonOption userResponse = await owner.AskForChoiceAmongButtons(IllustrationName.GenericCombatManeuver, "Add Enfeebled " + debuffLevel + " or Clumsy " + debuffLevel + " to " + action.Owner.Name, ["Enfeebled " + debuffLevel, "Clumsy " + debuffLevel]);
+                                                QEffect debuff = (userResponse.Index == 0) ? QEffect.Enfeebled(debuffLevel) : QEffect.Clumsy(debuffLevel);
+                                                debuff.Source = owner;
+                                                debuff.ExpiresAt = ExpirationCondition.ExpiresAtStartOfSourcesTurn;
+                                                action.Owner.AddQEffect(debuff);
+
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                };
+            });
         }
 
         /// <summary>

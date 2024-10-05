@@ -254,7 +254,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
             {
                 if (action.ActionId == ActionId.Trip && action.Owner != null && action.Owner.HasEffect(RatfolkQEIDs.AgileTail))
                 {
-                    action.Target = Target.Melee()
+                    action.Target = Target.Touch()
                         .WithAdditionalConditionOnTargetCreature(((attacker, defender) => defender.HasEffect(QEffectId.Prone) ? Usability.CommonReasons.TargetIsAlreadyProne : Usability.Usable));
                 }
             });

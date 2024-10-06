@@ -290,7 +290,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     Creature[] allies = owner.Battle.AllCreatures.Where(creature => creature.FriendOf(owner)).ToArray();
                     foreach (Creature ally in allies)
                     {
-                        // TODO: Manipulate
                         ally.AddQEffect(new QEffect(ExpirationCondition.Never)
                         {
                             YouAreTargeted = async (QEffect targeted, CombatAction action) =>
@@ -301,7 +300,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                     QEffect exploitEffect = action.Owner.QEffects.First(qe => qe.Id == ThaumaturgeQEIDs.ExploitVulnerabilityTarget);
                                     if (exploitEffect.Tag != null && exploitEffect.Tag is Creature thaumaturge && thaumaturge == owner && owner.Actions.CanTakeReaction() && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner) && owner.DistanceTo(action.Owner) <= 6 && await owner.AskToUseReaction("Use " + ImplementDetails.BellInitiateBenefitName + ": " + (actionIsSpell ? " Target makes Fortitude save or becomes stupefied?" : " Target makes Will save or becomes your choice of enfeebled or clumsy?")))
                                     {
-                                        CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(action.Owner, new CombatAction(owner, IllustrationName.GenericCombatManeuver, ImplementDetails.BellInitiateBenefitName, [Trait.Auditory, Trait.Emotion, Trait.Enchantment, Trait.Magical, Trait.Manipulate, Trait.Mental], ImplementDetails.BellInitiateBenefitRulesText, Target.Touch()), actionIsSpell ? Defense.Fortitude : Defense.Will, creature => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge));
+                                        CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(action.Owner, new CombatAction(owner, IllustrationName.GenericCombatManeuver, ImplementDetails.BellInitiateBenefitName, [Trait.Auditory, Trait.Emotion, Trait.Enchantment, Trait.Magical, Trait.Manipulate, Trait.Mental, ThaumaturgeTraits.Thaumaturge], ImplementDetails.BellInitiateBenefitRulesText, Target.Touch()), actionIsSpell ? Defense.Fortitude : Defense.Will, creature => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge));
                                         if (savingThrowResult <= CheckResult.Failure)
                                         {
                                             if (actionIsSpell)
@@ -338,6 +337,90 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddChaliceImplementLogic(Feat chaliceImplementFeat)
         {
             AddImplementEnsureLogic(chaliceImplementFeat);
+            chaliceImplementFeat.WithPermanentQEffect(ImplementDetails.BellInitiateBenefitName, delegate (QEffect self)
+            {
+                self.ProvideActionIntoPossibilitySection = (QEffect coatedMunitionsEffect, PossibilitySection possibilitySection) =>
+                {
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
+                    {
+                        PossibilitySection chaliceSection = new PossibilitySection("Calice Possibilities");
+
+                        IllustrationName chaliceIllustrationName = IllustrationName.GenericCombatManeuver;
+                        List<Trait> chaliceTraits = [Trait.Magical, Trait.Manipulate, Trait.Necromancy, ThaumaturgeTraits.Thaumaturge];
+
+                        CombatAction sipAction = new CombatAction(self.Owner, chaliceIllustrationName, "Sip", chaliceTraits.ToArray(), ImplementDetails.ChaliceInitiateBenefitSipText, Target.AdjacentCreatureOrSelf()
+                            .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
+                            {
+                                if (user.QEffects.Any(qe => qe.Name == "Chalice Used this Round"))
+                                {
+                                    return Usability.NotUsable("Already used this round.");
+                                }
+                                else if (!ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner))
+                                {
+                                    return Usability.NotUsable("Not weilding Implement.");
+                                }
+                                return Usability.Usable;
+                            }));
+                        sipAction.WithActionCost(1);
+                        sipAction.WithEffectOnChosenTargets(async delegate (Creature user, ChosenTargets targets)
+                        {
+                            if (targets.ChosenCreature != null)
+                            {
+                                user.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
+                                {
+                                    Name = "Chalice Used this Round"
+                                });
+                                targets.ChosenCreature.GainTemporaryHP(2 + (int)(Math.Floor(user.Level / 2.0)));
+                            }
+                        });
+
+                        CombatAction drainAction = new CombatAction(self.Owner, chaliceIllustrationName, "Drain", (chaliceTraits.Concat([Trait.Healing, Trait.Positive])).ToArray(), ImplementDetails.ChaliceInitiateBenefitDrainText, Target.AdjacentCreatureOrSelf()
+                            .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
+                            {
+                                if (user.QEffects.Any(qe => qe.Name == "Chalice Used this Round"))
+                                {
+                                    return Usability.NotUsable("Already used this round.");
+                                }
+                                else if (user.QEffects.Any(qe => qe.Name == "Chalice is Drained"))
+                                {
+                                    return Usability.NotUsable("Already drained this encounter.");
+                                }
+                                else if (!ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner))
+                                {
+                                    return Usability.NotUsable("Not weilding Implement.");
+                                }
+                                return Usability.Usable;
+                            }));
+                        drainAction.WithActionCost(1);
+                        drainAction.WithEffectOnChosenTargets(async delegate (Creature user, ChosenTargets targets)
+                        {
+                            if (targets.ChosenCreature != null)
+                            {
+                                user.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
+                                {
+                                    Name = "Chalice Used this Round"
+                                });
+                                user.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                {
+                                    Name = "Chalice is Drained"
+                                });
+                                targets.ChosenCreature.Heal("" + (3 * user.Level), drainAction);
+                            }
+                        });
+
+                        ActionPossibility sipActionPossibility = new ActionPossibility(sipAction);
+                        chaliceSection.AddPossibility(sipActionPossibility);
+                        ActionPossibility drainActionPossibility = new ActionPossibility(drainAction);
+                        chaliceSection.AddPossibility(drainActionPossibility);
+
+                        SubmenuPossibility chaliceMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, ImplementDetails.ChaliceInitiateBenefitName);
+                        chaliceMenu.Subsections.Add(chaliceSection);
+                        return chaliceMenu;
+                    }
+
+                    return null;
+                };
+            });
         }
 
         /// <summary>

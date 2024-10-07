@@ -33,6 +33,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// </summary>
         public static readonly QEffectId UsedExploitVulnerability = ModManager.RegisterEnumMember<QEffectId>("Exploit Vulnerability Used This Turn QEID");
 
+        /// <summary>
+        /// The Lantern Searching persistent QEffect ID 
+        /// </summary>
+        public static readonly QEffectId LanternSearching = ModManager.RegisterEnumMember<QEffectId>("Lantern Searching QEID");
+
+        /// <summary>
+        /// The Location Tracking persistent QEffect ID 
+        /// </summary>
+        public static readonly QEffectId LocationTracking = ModManager.RegisterEnumMember<QEffectId>("LocationTracking QEID");
 
         /// <summary>
         /// The Implement Inventory Tracker persistent QEffect ID 

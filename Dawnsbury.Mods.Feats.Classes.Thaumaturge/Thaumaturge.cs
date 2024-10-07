@@ -28,6 +28,13 @@ using Dawnsbury.Display;
 using Dawnsbury.Core.Coroutines.Options;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
 using static System.Collections.Specialized.BitVector32;
+using Dawnsbury.Core.Tiles;
+using Dawnsbury.Modding;
+using Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb;
+using System.Reflection;
+using Dawnsbury.Core.Mechanics.Targeting.Targets;
+using Microsoft.Xna.Framework;
+using Dawnsbury.Auxiliary;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -337,7 +344,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddChaliceImplementLogic(Feat chaliceImplementFeat)
         {
             AddImplementEnsureLogic(chaliceImplementFeat);
-            chaliceImplementFeat.WithPermanentQEffect(ImplementDetails.BellInitiateBenefitName, delegate (QEffect self)
+            chaliceImplementFeat.WithPermanentQEffect(ImplementDetails.ChaliceInitiateBenefitName, delegate (QEffect self)
             {
                 self.ProvideActionIntoPossibilitySection = (QEffect coatedMunitionsEffect, PossibilitySection possibilitySection) =>
                 {
@@ -430,6 +437,48 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddLanternImplementLogic(Feat lanternImplementFeat)
         {
             AddImplementEnsureLogic(lanternImplementFeat);
+            lanternImplementFeat.WithPermanentQEffect("Lantern Initiate Benefit", delegate (QEffect self)
+            {
+                self.StateCheck = async (QEffect stateCheck) =>
+                {
+                    Creature owner = stateCheck.Owner;
+                    if (!owner.HasEffect(ThaumaturgeQEIDs.LanternSearching))
+                    {
+                        owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                        {
+                            Id = ThaumaturgeQEIDs.LanternSearching,
+                            Tag = new List<Tile>()
+                        });
+                    }
+
+                    QEffect lanternSearchingEffect = owner.FindQEffect(ThaumaturgeQEIDs.LanternSearching) ?? throw new Exception("QEffect for Lantern Searching not set properly");
+                    if (lanternSearchingEffect.Tag != null && lanternSearchingEffect.Tag is List<Tile> searchedTiles && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner) && owner.Occupies != null)
+                    {
+                        Tile[] tilesToSearch = owner.Battle.Map.AllTiles.Where(tile => tile != null && tile.DistanceTo(owner.Occupies) <= 4 && !searchedTiles.Contains(tile)).ToArray();
+                        foreach (Tile tile in tilesToSearch)
+                        {
+                            searchedTiles.Add(tile);
+                            foreach (TileQEffect tileQEffect in tile.QEffects)
+                            {
+                                if (tileQEffect.SeekDC != 0)
+                                {
+                                    CombatAction seekAction = new CombatAction(owner, IllustrationName.Seek, "Lantern Seek", [Trait.Concentrate, Trait.Secret, Trait.Basic, Trait.IsNotHostile, Trait.DoesNotBreakStealth, Trait.AttackDoesNotTargetAC], ImplementDetails.LanternInitiateBenefitRulesText, Target.Self())
+                                        .WithActionId(ActionId.Seek)
+                                        .WithActionCost(0)
+                                        .WithActiveRollSpecification(new ActiveRollSpecification(Checks.Perception(), Checks.FlatDC(tileQEffect.SeekDC)));
+                                    CheckBreakdown seekCheckBreakdown = CombatActionExecution.BreakdownAttack(seekAction, Creature.DefaultCreature);
+                                    CheckBreakdownResult seekResult = new CheckBreakdownResult(seekCheckBreakdown);
+                                    if (seekResult.CheckResult >= CheckResult.Success)
+                                    {
+                                        tile.Overhead(seekResult.CheckResult.HumanizeTitleCase2(), Color.LightBlue, owner + " rolls " + seekResult.CheckResult.HumanizeTitleCase2() + " on Lantern Seek.", "Lantern Seek", seekCheckBreakdown.DescribeWithFinalRollTotal(seekResult));
+                                        await tileQEffect.WhenSeeked.InvokeIfNotNull();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+            });
         }
 
         /// <summary>

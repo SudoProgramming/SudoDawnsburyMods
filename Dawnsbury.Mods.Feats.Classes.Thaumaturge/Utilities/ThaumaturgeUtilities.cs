@@ -1,4 +1,5 @@
 ﻿using Dawnsbury.Campaign.Encounters;
+using Dawnsbury.Core;
 using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Core.CombatActions;
@@ -6,7 +7,12 @@ using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Creatures.Parts;
 using Dawnsbury.Core.Mechanics.Core;
 using Dawnsbury.Core.Mechanics.Enumerations;
+using Dawnsbury.Core.Mechanics.Targeting.Targets;
+using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core.Mechanics.Treasure;
+using Dawnsbury.Core.Tiles;
+using Dawnsbury.Display.Illustrations;
+using Dawnsbury.Display.Text;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Enums;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents;
 using System;
@@ -14,6 +20,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Dawnsbury.Display;
+using Dawnsbury.Auxiliary;
+using Microsoft.Xna.Framework;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 {
@@ -237,6 +246,59 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                     }
                 }
             }
+        }
+
+        public static CombatAction CreateSeek(Creature owner, IllustrationName illustrationName, string name, AreaTarget areaTarget, int actionCost = 1)
+        {
+            return new CombatAction(owner, illustrationName, name, [Trait.Concentrate, Trait.Secret, Trait.Basic, Trait.IsNotHostile, Trait.DoesNotBreakStealth, Trait.AttackDoesNotTargetAC], "Make a Perception against against the Stealth DCs of any undetected or hidden creatures in the area." + S.FourDegreesOfSuccess("The creature stops being Undetected, and becomes Observed to you.", "If the creature is Undetected, it stops being Undetected; otherwise, if it's Hidden to you, it becomes Observed.", (string)null, (string)null), (Target)areaTarget.WithIncludeOnlyIf((Func<AreaTarget, Creature, bool>)((target, enemy) => enemy.EnemyOf(target.OwnerAction.Owner) && enemy.DetectionStatus.IsHiddenToAnEnemy)))
+            {
+                ActionId = ActionId.Seek,
+                ActionCost = actionCost
+            }.WithActiveRollSpecification(new ActiveRollSpecification(Checks.Perception(), Checks.DefenseDC(Defense.Stealth))).WithEffectOnEachTarget((Delegates.EffectOnEachTarget)(async (spell, caster, target, result) =>
+            {
+                switch (result)
+                {
+                    case CheckResult.Success:
+                        if (target.DetectionStatus.Undetected)
+                        {
+                            target.DetectionStatus.Undetected = false;
+                            target.Occupies.Overhead("detected", Color.Yellow, target?.ToString() + " is no longer undetected.");
+                            break;
+                        }
+                        if (!target.DetectionStatus.HiddenTo.Remove(caster))
+                            break;
+                        target.Occupies.Overhead("seen", Color.Black, target?.ToString() + " is no longer hidden to " + caster?.ToString() + ".");
+                        break;
+                    case CheckResult.CriticalSuccess:
+                        if (target.DetectionStatus.Undetected)
+                        {
+                            target.DetectionStatus.Undetected = false;
+                            target.Occupies.Overhead("detected", Color.Yellow, target?.ToString() + " is no longer undetected.");
+                        }
+                        if (!target.DetectionStatus.HiddenTo.Remove(caster))
+                            break;
+                        target.Occupies.Overhead("seen", Color.Black, target?.ToString() + " is no longer hidden to " + caster?.ToString() + ".");
+                        break;
+                }
+            })).WithEffectOnChosenTargets((Delegates.EffectOnChosenTargets)(async (spell, caster, targets) =>
+            {
+                foreach (Tile tile in targets.ChosenTiles)
+                {
+                    foreach (TileQEffect qeffect in tile.QEffects)
+                    {
+                        if (qeffect.SeekDC != 0)
+                        {
+                            CheckBreakdown breakdown = CombatActionExecution.BreakdownAttack(new CombatAction(caster, (Illustration)IllustrationName.Seek, name, Array.Empty<Trait>(), "", (Target)Target.Self()).WithActiveRollSpecification(new ActiveRollSpecification(Checks.Perception(), Checks.FlatDC(qeffect.SeekDC))), Creature.DefaultCreature);
+                            CheckBreakdownResult breakdownResult = new CheckBreakdownResult(breakdown);
+                            if (breakdownResult.CheckResult >= CheckResult.Success)
+                            {
+                                tile.Overhead(breakdownResult.CheckResult.HumanizeTitleCase2(), Color.LightBlue, caster?.ToString() + " rolls " + breakdownResult.CheckResult.HumanizeTitleCase2() + " on " + name + ".", name, breakdown.DescribeWithFinalRollTotal(breakdownResult));
+                                await qeffect.WhenSeeked.InvokeIfNotNull();
+                            }
+                        }
+                    }
+                }
+            }));
         }
 
         public static List<Resistance> GetHighestWeaknesses(Creature creature)

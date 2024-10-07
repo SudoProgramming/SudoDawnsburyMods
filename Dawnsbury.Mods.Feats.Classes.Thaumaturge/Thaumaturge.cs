@@ -35,6 +35,9 @@ using System.Reflection;
 using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Microsoft.Xna.Framework;
 using Dawnsbury.Auxiliary;
+using Dawnsbury.Audio;
+using Dawnsbury.Display.Illustrations;
+using Dawnsbury.Core.Animations;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -503,6 +506,34 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddMirrorImplementLogic(Feat mirrorImplementFeat)
         {
             AddImplementEnsureLogic(mirrorImplementFeat);
+            mirrorImplementFeat.WithPermanentQEffect(ImplementDetails.MirrorInitiateBenefitName, delegate (QEffect self)
+            {
+                self.ProvideMainAction = (QEffect mirrorsReflectionEffect) =>
+                {
+                    Creature owner = mirrorsReflectionEffect.Owner;
+                    if (!ThaumaturgeUtilities.IsCreatureWeildingImplement(owner))
+                    {
+                        return null;
+                    }
+
+                    return new ActionPossibility(new CombatAction(owner, IllustrationName.GenericCombatManeuver, ImplementDetails.MirrorInitiateBenefitName, [Trait.Illusion, Trait.Magical, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge], ImplementDetails.MirrorInitiateBenefitRulesText, Target.Tile((creature, tile) => tile.LooksFreeTo(creature) && creature.Occupies != null && creature.DistanceTo(tile) <= 3, (creature, tile) => (float) int.MinValue))
+                        .WithActionCost(1)
+                        .WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
+                        {
+                            if (targets.ChosenTile != null)
+                            {
+                                Tile chosenTile = targets.ChosenTile;
+                                Defenses cloneDefenses = new Defenses(0, 0, 0, 0);
+                                Abilities cloneAbilities = new Abilities(0, 0, 0, 0, 0, 0);
+                                Skills cloneSkills = new Skills();
+                                Creature mirrorClone = new Creature(owner.Illustration, owner.Name + " (Mirror Clone)", owner.Traits.ToList(), owner.Level, owner.Perception, owner.Speed, cloneDefenses, owner.HP, cloneAbilities, cloneSkills);
+                                owner.Battle.SpawnIllusoryCreature(mirrorClone, chosenTile);
+                                chosenTile.PrimaryOccupant = owner;
+                            }
+
+                        }));
+                };
+            });
         }
 
         /// <summary>

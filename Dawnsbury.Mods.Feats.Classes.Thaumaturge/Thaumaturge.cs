@@ -439,22 +439,37 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddImplementEnsureLogic(lanternImplementFeat);
             lanternImplementFeat.WithPermanentQEffect("Lantern Initiate Benefit", delegate (QEffect self)
             {
+                self.BonusToAttackRolls = (QEffect bonusToSeek, CombatAction action, Creature? creature) =>
+                {
+                    if (action.ActionId == ActionId.Seek)
+                    {
+                        return new Bonus(1, BonusType.Status, "Lantern Initiate Benefit", true);
+                    }
+
+                    return null;
+                };
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    startOfCombat.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                    {
+                        Id = ThaumaturgeQEIDs.LanternSearching,
+                        Tag = new List<Tile>()
+                    });
+                    startOfCombat.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                    {
+                        Id = ThaumaturgeQEIDs.LocationTracking,
+                        Tag = null
+                    });
+                };
                 self.StateCheck = async (QEffect stateCheck) =>
                 {
                     Creature owner = stateCheck.Owner;
-                    if (!owner.HasEffect(ThaumaturgeQEIDs.LanternSearching))
+                    QEffect? lanternSearchingEffect = owner.FindQEffect(ThaumaturgeQEIDs.LanternSearching);
+                    QEffect? locationTrackingEffect = owner.FindQEffect(ThaumaturgeQEIDs.LocationTracking);
+                    if (locationTrackingEffect != null && (locationTrackingEffect.Tag == null || (locationTrackingEffect.Tag is Tile lastTile && lastTile != owner.Occupies)) && lanternSearchingEffect != null && lanternSearchingEffect.Tag != null && lanternSearchingEffect.Tag is List<Tile> searchedTiles && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner))
                     {
-                        owner.AddQEffect(new QEffect(ExpirationCondition.Never)
-                        {
-                            Id = ThaumaturgeQEIDs.LanternSearching,
-                            Tag = new List<Tile>()
-                        });
-                    }
-
-                    QEffect lanternSearchingEffect = owner.FindQEffect(ThaumaturgeQEIDs.LanternSearching) ?? throw new Exception("QEffect for Lantern Searching not set properly");
-                    if (lanternSearchingEffect.Tag != null && lanternSearchingEffect.Tag is List<Tile> searchedTiles && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner) && owner.Occupies != null)
-                    {
-                        Tile[] tilesToSearch = owner.Battle.Map.AllTiles.Where(tile => tile != null && tile.DistanceTo(owner.Occupies) <= 4 && !searchedTiles.Contains(tile)).ToArray();
+                        locationTrackingEffect.Tag = owner.Occupies;
+                        Tile[] tilesToSearch = owner.Battle.Map.AllTiles.Where(tile => tile.DistanceTo(owner.Occupies) <= 4 && !searchedTiles.Contains(tile)).ToArray();
                         foreach (Tile tile in tilesToSearch)
                         {
                             searchedTiles.Add(tile);

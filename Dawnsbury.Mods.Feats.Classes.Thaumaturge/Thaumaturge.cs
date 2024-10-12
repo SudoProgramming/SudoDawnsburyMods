@@ -38,6 +38,7 @@ using Dawnsbury.Auxiliary;
 using Dawnsbury.Audio;
 using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Core.Animations;
+using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -530,7 +531,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                     ownerDefenses.GetBaseValue(Defense.Reflex) + ThaumaturgeUtilities.DetermineBonusIncreaseForDefense(owner, Defense.Reflex),
                                     ownerDefenses.GetBaseValue(Defense.Will) + ThaumaturgeUtilities.DetermineBonusIncreaseForDefense(owner, Defense.AC));
                                 Skills cloneSkills = new Skills();
-                                Creature mirrorClone = new Creature(owner.Illustration, owner.Name + " (Mirror Clone)", owner.Traits.ToList(), owner.Level, owner.Perception, owner.Speed, cloneDefenses, owner.HP, owner.Abilities, cloneSkills);
+                                MirrorClone mirrorClone = new MirrorClone(owner.Illustration, owner.Name, owner.Traits, owner.Level, owner.Perception, owner.Speed, cloneDefenses, owner.HP, owner.Abilities, cloneSkills);
                                 mirrorClone.PersistentCharacterSheet = owner.PersistentCharacterSheet;
                                 mirrorClone.BaseArmor = owner.BaseArmor;
                                 mirrorClone.RecalculateArmor();
@@ -541,11 +542,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 MirrorTrackingEffect ownersTrackingEffect = new MirrorTrackingEffect(owner, mirrorClone);
                                 MirrorTrackingEffect mirrorTrackingEffect = new MirrorTrackingEffect(mirrorClone, owner);
 
-                                MirrorManager ownersHPManager = new MirrorManager(owner, true);
-                                MirrorManager mirrorsHPManager = new MirrorManager(mirrorClone, false);
-
-                                MirrorManager.SubscribeToAllMirrorTrackingEffects(ownersHPManager, mirrorTrackingEffect);
-                                MirrorManager.SubscribeToAllMirrorTrackingEffects(mirrorsHPManager, ownersTrackingEffect);
+                                owner.SubscribeToAll(mirrorTrackingEffect);
+                                mirrorClone.SubscribeToAll(ownersTrackingEffect);
 
                                 owner.AddQEffect(ownersTrackingEffect);
                                 mirrorClone.AddQEffect(mirrorTrackingEffect);

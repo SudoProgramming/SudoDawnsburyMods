@@ -23,6 +23,8 @@ using System.Threading.Tasks;
 using Dawnsbury.Display;
 using Dawnsbury.Auxiliary;
 using Microsoft.Xna.Framework;
+using Dawnsbury.Core.Mechanics;
+using Dawnsbury.Core.Roller;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 {
@@ -305,6 +307,19 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
         {
             int highestWeaknesses = creature.WeaknessAndResistance.Weaknesses.Max(weakness => weakness.Value);
             return creature.WeaknessAndResistance.Weaknesses.Where(weakness => weakness.Value == highestWeaknesses).ToList();
+        }
+
+        public static int DetermineBonusIncreaseForDefense(Creature creature, Defense defense)
+        {
+            int total = 0;
+            foreach (Bonus? bonus in creature.Defenses.DetermineDefenseBonuses(null, null, defense, creature))
+            {
+                if (bonus != null)
+                {
+                    total += bonus.Amount;
+                }
+            }
+            return total;
         }
     }
 }

@@ -523,14 +523,33 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             if (targets.ChosenTile != null)
                             {
                                 Tile chosenTile = targets.ChosenTile;
-                                Defenses cloneDefenses = new Defenses(0, 0, 0, 0);
-                                Abilities cloneAbilities = new Abilities(0, 0, 0, 0, 0, 0);
+                                Defenses ownerDefenses = owner.Defenses;
+                                Defenses cloneDefenses = new Defenses(
+                                    ownerDefenses.GetBaseValue(Defense.AC) + ThaumaturgeUtilities.DetermineBonusIncreaseForDefense(owner, Defense.AC),
+                                    ownerDefenses.GetBaseValue(Defense.Fortitude) + ThaumaturgeUtilities.DetermineBonusIncreaseForDefense(owner, Defense.Fortitude),
+                                    ownerDefenses.GetBaseValue(Defense.Reflex) + ThaumaturgeUtilities.DetermineBonusIncreaseForDefense(owner, Defense.Reflex),
+                                    ownerDefenses.GetBaseValue(Defense.Will) + ThaumaturgeUtilities.DetermineBonusIncreaseForDefense(owner, Defense.AC));
                                 Skills cloneSkills = new Skills();
-                                Creature mirrorClone = new Creature(owner.Illustration, owner.Name + " (Mirror Clone)", owner.Traits.ToList(), owner.Level, owner.Perception, owner.Speed, cloneDefenses, owner.HP, cloneAbilities, cloneSkills);
-                                owner.Battle.SpawnIllusoryCreature(mirrorClone, chosenTile);
-                                chosenTile.PrimaryOccupant = owner;
-                            }
+                                Creature mirrorClone = new Creature(owner.Illustration, owner.Name + " (Mirror Clone)", owner.Traits.ToList(), owner.Level, owner.Perception, owner.Speed, cloneDefenses, owner.HP, owner.Abilities, cloneSkills);
+                                mirrorClone.PersistentCharacterSheet = owner.PersistentCharacterSheet;
+                                mirrorClone.BaseArmor = owner.BaseArmor;
+                                mirrorClone.RecalculateArmor();
+                                mirrorClone.EntersInitiativeOrder = false;
 
+                                owner.Battle.SpawnCreature(mirrorClone, owner.OwningFaction, chosenTile);
+
+                                MirrorTrackingEffect ownersTrackingEffect = new MirrorTrackingEffect(owner, mirrorClone);
+                                MirrorTrackingEffect mirrorTrackingEffect = new MirrorTrackingEffect(mirrorClone, owner);
+
+                                MirrorManager ownersHPManager = new MirrorManager(owner, true);
+                                MirrorManager mirrorsHPManager = new MirrorManager(mirrorClone, false);
+
+                                MirrorManager.SubscribeToAllMirrorTrackingEffects(ownersHPManager, mirrorTrackingEffect);
+                                MirrorManager.SubscribeToAllMirrorTrackingEffects(mirrorsHPManager, ownersTrackingEffect);
+
+                                owner.AddQEffect(ownersTrackingEffect);
+                                mirrorClone.AddQEffect(mirrorTrackingEffect);
+                            }
                         }));
                 };
             });
@@ -543,6 +562,19 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddRegaliaImplementLogic(Feat regaliaImplementFeat)
         {
             AddImplementEnsureLogic(regaliaImplementFeat);
+            regaliaImplementFeat.WithPermanentQEffect(ImplementDetails.MirrorInitiateBenefitName, delegate (QEffect self)
+            {
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    foreach (Creature ally in startOfCombat.Owner.Battle.AllCreatures.Where(creature => startOfCombat.Owner.FriendOf(creature)))
+                    {
+                        ally.AddQEffect(new QEffect(ExpirationCondition.Never)
+                        {
+
+                        });
+                    }
+                };
+            });
         }
 
         /// <summary>

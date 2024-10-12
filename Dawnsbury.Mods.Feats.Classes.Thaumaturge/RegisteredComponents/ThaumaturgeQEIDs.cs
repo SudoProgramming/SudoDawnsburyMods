@@ -41,11 +41,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// <summary>
         /// The Location Tracking persistent QEffect ID 
         /// </summary>
-        public static readonly QEffectId LocationTracking = ModManager.RegisterEnumMember<QEffectId>("LocationTracking QEID");
+        public static readonly QEffectId LocationTracking = ModManager.RegisterEnumMember<QEffectId>("Location Tracking QEID");
+
+        /// <summary>
+        /// The Mirror Tracking persistent QEffect ID 
+        /// </summary>
+        public static readonly QEffectId MirrorTracking = ModManager.RegisterEnumMember<QEffectId>("Mirror Tracking QEID");
 
         /// <summary>
         /// The Implement Inventory Tracker persistent QEffect ID 
         /// </summary>
         public static readonly QEffectId ImplementInventoryTracker = ModManager.RegisterEnumMember<QEffectId>("Implement Inventory Tracker QEID");
+
+        public static readonly QEffectId DraingedMirrorImplement = ModManager.RegisterEnumMember<QEffectId>("Drainged Mirror Implement QEID");
     }
 }

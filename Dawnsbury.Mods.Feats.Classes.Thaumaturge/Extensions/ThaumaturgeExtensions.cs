@@ -159,6 +159,31 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions
             }
         }
 
+        public static bool SwapPositions(this Creature self, Creature pairedCreature)
+        {
+            Tile cloneTile = pairedCreature.Occupies;
+            if (cloneTile != null)
+            {
+                MirrorTrackingEffect? mirrorTracking = self.FindQEffect(ThaumaturgeQEIDs.MirrorTracking) as MirrorTrackingEffect;
+                MirrorTrackingEffect? cloneTracking = pairedCreature.FindQEffect(ThaumaturgeQEIDs.MirrorTracking) as MirrorTrackingEffect;
+                if (cloneTracking != null && mirrorTracking != null)
+                {
+                    Tile temp = cloneTile;
+                    Tile ownerTile = self.Occupies;
+                    pairedCreature.TranslateTo(ownerTile);
+                    pairedCreature.AnimationData.ActualPosition = new Vector2(ownerTile.X, ownerTile.Y);
+                    cloneTracking.LastLocation = ownerTile;
+                    self.TranslateTo(temp);
+                    self.AnimationData.ActualPosition = new Vector2(temp.X, temp.Y);
+                    mirrorTracking.LastLocation = temp;
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static async Task<Tile?> GetTilesForSelfAndClone(Creature self, Tile clonesDeathTile)
         {
             string messageString = "Choose which version of " + self.Name + " is real.";

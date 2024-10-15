@@ -39,6 +39,7 @@ using Dawnsbury.Audio;
 using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Core.Animations;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions;
+using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -587,22 +588,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             .WithActionCost(0)
                             .WithEffectOnSelf(async (Creature self) =>
                             {
-                                Tile cloneTile = pairedCreature.Occupies;
-                                if (cloneTile != null)
-                                {
-                                    MirrorTrackingEffect? cloneTracking = pairedCreature.FindQEffect(ThaumaturgeQEIDs.MirrorTracking) as MirrorTrackingEffect;
-                                    if (cloneTracking != null)
-                                    {
-                                        Tile temp = cloneTile;
-                                        Tile ownerTile = self.Occupies;
-                                        pairedCreature.TranslateTo(ownerTile);
-                                        pairedCreature.AnimationData.ActualPosition = new Vector2(ownerTile.X, ownerTile.Y);
-                                        cloneTracking.LastLocation = ownerTile;
-                                        self.TranslateTo(temp);
-                                        self.AnimationData.ActualPosition = new Vector2(temp.X, temp.Y);
-                                        mirrorTracking.LastLocation = temp;
-                                    }
-                                }
+                                self.SwapPositions(pairedCreature);
                             }));
                     }
 
@@ -622,13 +608,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             {
                 self.StartOfCombat = async (QEffect startOfCombat) =>
                 {
-                    foreach (Creature ally in startOfCombat.Owner.Battle.AllCreatures.Where(creature => startOfCombat.Owner.FriendOf(creature)))
+                    Creature owner = startOfCombat.Owner;
+                    foreach (Creature ally in owner.Battle.AllCreatures.Where(creature => owner.FriendOf(creature)))
                     {
                         ally.AddQEffect(new QEffect(ExpirationCondition.Never)
                         {
                             BonusToDefenses = (QEffect bonusToDefenses, CombatAction? action, Defense defense) =>
                             {
-                                if (defense == Defense.Will && action != null && action.HasTrait(Trait.Fear) && ally.DistanceTo(self.Owner) <= 3)
+                                if (defense == Defense.Will && action != null && action.HasTrait(Trait.Fear) && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner) && ally.DistanceTo(owner) <= 3)
                                 {
                                     return new Bonus(1, BonusType.Status, ImplementDetails.RegaliaInitiateBenefitName, true);
                                 }
@@ -637,6 +624,33 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             }
                         });
                     }
+                };
+                self.EndOfYourTurn = async (QEffect endOfTurn, Creature self) =>
+                {
+                    foreach (Creature ally in self.Battle.AllCreatures.Where(creature => self.FriendOf(creature) && self.DistanceTo(creature) <= 3 && creature.HasEffect(QEffectId.Frightened)))
+                    {
+                        if (ThaumaturgeUtilities.IsCreatureWeildingImplement(self))
+                        {
+                            QEffect? frightened = ally.FindQEffect(QEffectId.Frightened);
+                            if (frightened != null)
+                            {
+                                frightened.Value -= 1;
+                                if (frightened.Value <= 0)
+                                {
+                                    frightened.ExpiresAt = ExpirationCondition.Immediately;
+                                }
+                            }
+                        }
+                    }
+                };
+                self.BonusToSkillChecks = (Skill skill, CombatAction action, Creature? target) =>
+                {
+                    if (ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner) && (skill == Skill.Deception || skill == Skill.Diplomacy || skill == Skill.Intimidation))
+                    {
+                        return new Bonus(1, BonusType.Circumstance, ImplementDetails.RegaliaInitiateBenefitName, true);
+                    }
+
+                    return null;
                 };
             });
         }

@@ -156,13 +156,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     if (ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner))
                     {
                         CombatAction exploitVulnerabilityAction = new CombatAction(
-                            self.Owner, 
-                            IllustrationName.GenericCombatManeuver, 
-                            "Exploit Vulnerability", 
-                            [Trait.Manipulate, ThaumaturgeTraits.Thaumaturge], 
+                            self.Owner,
+                            IllustrationName.GenericCombatManeuver,
+                            "Exploit Vulnerability",
+                            [Trait.Manipulate, ThaumaturgeTraits.Thaumaturge],
                             "{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement.\nYou scour your experiences and learning to identify something that might repel your foe. You retrieve an object from your esoterica with the appropriate supernatural qualities, then use your implement to stoke the remnants of its power into a blaze. Select a creature you can see and attempt an Esoteric Lore check against a standard DC for its level, as you retrieve the right object from your esoterica and use your implement to empower it. You gain the following effects until you Exploit Vulnerabilities again.\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn.",
                             Target.Ranged(100)
                             .WithAdditionalConditionOnTargetCreature((attacker, defender) => attacker.HasEffect(ThaumaturgeQEIDs.UsedExploitVulnerability) ? Usability.NotUsable("Already Exploited Vulnerability this turn") : Usability.Usable))
+                        .WithActionId(ThaumaturgeActionIDs.ExploitVulnerability)
                         .WithActiveRollSpecification(new ActiveRollSpecification(ThaumaturgeUtilities.RollEsotericLore, ThaumaturgeUtilities.CalculateEsotericLoreDC))
                         .WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
                         {         
@@ -662,6 +663,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddTomeImplementLogic(Feat tomeImplementFeat)
         {
             AddImplementEnsureLogic(tomeImplementFeat);
+            tomeImplementFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
+            {
+                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Extra Skill", "Tome Extra Skill", 1, (feat => feat is SkillSelectionFeat)));
+                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Extra Expert Skill", "Tome Extra Expert Skill", 3, (feat => feat is SkillIncreaseFeat)));
+            };
         }
 
         /// <summary>

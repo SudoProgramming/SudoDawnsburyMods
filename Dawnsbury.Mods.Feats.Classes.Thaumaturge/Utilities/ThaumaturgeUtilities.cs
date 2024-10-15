@@ -25,6 +25,7 @@ using Dawnsbury.Auxiliary;
 using Microsoft.Xna.Framework;
 using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Roller;
+using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Constants;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 {
@@ -47,7 +48,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
         {
             int level = roller.Level;
             int proficiency = level + ((roller.Level >= 3) ? 4 : 2);
-            return new CalculatedNumber(roller.Abilities.Charisma + proficiency, "Exploit Vulnerability Check", new List<Bonus?>());
+            List<Bonus?> bonusesToRoll = new List<Bonus?>();
+            if (roller.HasFeat(ThaumaturgeFeatNames.TomeImplement) && IsCreatureWeildingImplement(roller))
+            {
+                bonusesToRoll.Add(new Bonus(1, BonusType.Circumstance, ImplementDetails.TomeInitiateBenefitName, true));
+            }
+            return new CalculatedNumber(roller.Abilities.Charisma + proficiency, "Exploit Vulnerability Check", bonusesToRoll);
         }
 
         public static CalculatedNumber CalculateEsotericLoreDC(CombatAction action, Creature roller, Creature? defender)

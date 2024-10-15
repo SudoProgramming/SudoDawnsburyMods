@@ -48,7 +48,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Constants
 
         public static readonly string RegaliaInitiateBenefitRulesText = "While you hold your regalia, you gain an air of authority and bolster the courage of allies who believe in you. When you are holding your regalia, you gain an inspiring aura that stokes the courage of you and all allies in a 15-foot emanation who can see you, granting them a +1 status bonus to saving throws against fear. At the end of your turn, at the same time you would reduce your frightened value by 1, you reduce the frightened value of all allies within your inspiring aura by 1. Your aura has the emotion, mental, and visual traits.";
 
-        public static readonly string TomeInitiateBenefitName = string.Empty;
+        public static readonly string TomeInitiateBenefitName = "Tome Initiate Benefit";
 
         public static readonly string TomeInitiateBenefitFlavorText = "Tome implements embody lost knowledge and otherworldly insights. While a weathered book is most common, tome implements can have as many different form factors as there are ways to store knowledge, from carved clay tablets to bundles of knotted cords. Tome implements are associated with the harrow suit of books and the astrological signs of the stargazer and the underworld dragon.";
 

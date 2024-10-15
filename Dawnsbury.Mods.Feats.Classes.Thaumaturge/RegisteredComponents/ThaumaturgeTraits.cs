@@ -22,5 +22,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Implement trait
         /// </summary>
         public static readonly Trait Implement = ModManager.RegisterTrait("Implement", new TraitProperties("Implement", false));
+
+        public static readonly Trait MirrorCloneImmunity = ModManager.RegisterTrait("Mirror Clone Immunity", new TraitProperties("Mirror Clone Immunity", false));
     }
 }

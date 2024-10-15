@@ -42,7 +42,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Constants
 
         public static readonly string MirrorInitiateBenefitRulesText = "{b}Requirements{/b} You're holding your mirror implement.\n\nYou reflect an illusory image of yourself into another unoccupied space within 15 feet that you can see. You are treated as being in both spaces until the start of your next turn. You occupy both spaces.\n\nYour mirror self mimics your actions exactly, but any effects you generate come from only one of your positions; you decide which each time you act. For example, if you made a melee Strike against a creature within reach of the reflection, you'd mime the actions of the Strike, but only the reflection would actually make the Strike. Anything that targets or would affect your reflection affects you and uses your statistics. Something that would target or affect both of you affects you only once.\n\nThe effect also ends when you fall unconscious, at which point you decide which version is truly you.";
 
-        public static readonly string RegaliaInitiateBenefitName = string.Empty;
+        public static readonly string RegaliaInitiateBenefitName = "Regalia Initiate Benefit";
 
         public static readonly string RegaliaInitiateBenefitFlavorText = "Regalia implements represent rulership, leadership, and social connections. While they differ in shape depending on regional customs and markers used to signify authority, common regalia implements are scepters, jeweled orbs, and heraldic banners. Regalia implements are associated with the harrow suit of crowns and the astrological signs of the patriarch and the sovereign dragon.";
 

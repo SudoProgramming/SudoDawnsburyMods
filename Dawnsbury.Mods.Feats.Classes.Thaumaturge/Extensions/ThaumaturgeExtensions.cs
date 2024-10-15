@@ -6,10 +6,12 @@ using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Intelligence;
 using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Targeting;
+using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Tiles;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,8 +26,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions
         {
             effect.OnMove += self.HandleMovement;
             effect.OnHPChange += self.HandleHPChange;
+            effect.OnDamageTaken += self.HandleDamage;
             effect.OnAcquireQEffect += self.HandleQEffect;
-            effect.OnTarget += self.HandleTarget;
             effect.OnUnconscious += self.HandleUnconscious;
         }
 
@@ -42,8 +44,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions
         {
             effect.OnMove -= self.HandleMovement;
             effect.OnHPChange -= self.HandleHPChange;
+            effect.OnDamageTaken -= self.HandleDamage;
             effect.OnAcquireQEffect -= self.HandleQEffect;
-            effect.OnTarget -= self.HandleTarget;
             effect.OnUnconscious -= self.HandleUnconscious;
         }
 
@@ -86,24 +88,29 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions
             }
         }
 
+        public static void HandleDamage(this Creature self, Creature pairedCreature, int damage)
+        {
+            int newDamage = Math.Min(damage + self.Damage, self.MaxHP);
+            int adjustedDamage = newDamage - self.TemporaryHP;
+            if (newDamage != adjustedDamage)
+            {
+                if (adjustedDamage <= 0)
+                {
+                    self.TemporaryHP -= damage;
+                }
+                else
+                {
+                    newDamage -= self.TemporaryHP;
+                }
+            }
+            self.SetDamageImmediately(newDamage);
+        }
+
         public static void HandleQEffect(this Creature self, QEffect effect, Creature pairedCreature)
         {
             if (!self.HasEffect(effect))
             {
                 self.AddQEffect(effect);
-            }
-        }
-
-        public static void HandleTarget(this Creature self, Creature pairedCreature, CombatAction action)
-        {
-            Target target = action.Target;
-            ChosenTargets chosenTargets = action.ChosenTargets;
-            if (self is MirrorClone)
-            {
-                if (target.IsAreaTarget && chosenTargets.ChosenCreatures.Contains(pairedCreature))
-                {
-                    chosenTargets.ChosenCreatures.RemoveAll(creature => creature == self);
-                }
             }
         }
 
@@ -127,6 +134,28 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions
             {
                 self.TranslateTo(chosenTile);
                 self.AnimationData.ActualPosition = new Vector2(chosenTile.X, chosenTile.Y);
+            }
+        }
+
+        public static void HandleTarget(this Creature self, Creature pairedCreature, CombatAction action)
+        {
+            Target? target = action.Target is DependsOnActionsSpentTarget doat ? doat.TargetFromActionCount(action.SpentActions) : action.Target;
+            ChosenTargets chosenTargets = action.ChosenTargets;
+            if (self is MirrorClone && target != null)
+            {
+                if ((target.IsAreaTarget) && chosenTargets.ChosenCreatures.Contains(pairedCreature))
+                {
+                    if (!action.HasTrait(ThaumaturgeTraits.MirrorCloneImmunity))
+                    {
+                        action.Traits.Add(ThaumaturgeTraits.MirrorCloneImmunity);
+                    }
+                    self.AddQEffect(new QEffect(ExpirationCondition.EphemeralAtEndOfImmediateAction)
+                    {
+                        Id = ThaumaturgeQEIDs.MirrorImmunity,
+                        ImmuneToTrait = ThaumaturgeTraits.MirrorCloneImmunity,
+                        DoNotShowUpOverhead = true
+                    });
+                }
             }
         }
 

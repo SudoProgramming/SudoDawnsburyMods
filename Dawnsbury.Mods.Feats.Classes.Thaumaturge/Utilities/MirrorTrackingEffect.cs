@@ -1,6 +1,9 @@
 ﻿using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Mechanics;
+using Dawnsbury.Core.Mechanics.Enumerations;
+using Dawnsbury.Core.Mechanics.Targeting;
+using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Tiles;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents;
@@ -30,9 +33,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 
         public event Action<Creature> OnHPChange;
 
-        public event Action<QEffect, Creature> OnAcquireQEffect;
+        public event Action<Creature, int> OnDamageTaken;
 
-        public event Action<Creature, CombatAction> OnTarget;
+        public event Action<QEffect, Creature> OnAcquireQEffect;
 
         public List<QEffect> PassedOnQEffects;
 
@@ -44,8 +47,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             LastLocation = self.Occupies;
             PassedOnQEffects = new List<QEffect>();
             CloneDeathTile = null;
-
             Id = ThaumaturgeQEIDs.MirrorTracking;
+            ExpiresAt = ExpirationCondition.Never;
+            RoundsLeft = 2;
             StateCheck = async (QEffect stateCheck) =>
             {
                 if (this.Owner.Occupies != LastLocation)
@@ -75,7 +79,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             };
             YouAcquireQEffect = (QEffect youAcquireEffect, QEffect acquiredEffect) =>
             {
-                if (PassedOnQEffects.Contains(acquiredEffect))
+                if (acquiredEffect.Id == ThaumaturgeQEIDs.MirrorImmunity)
+                {
+                    return acquiredEffect;
+                }
+                else if (PassedOnQEffects.Contains(acquiredEffect))
                 {
                     PassedOnQEffects.Remove(acquiredEffect);
                 }
@@ -103,9 +111,22 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 
                 return acquiredEffect;
             };
+            StartOfYourTurn = async (QEffect startOfTurn, Creature self) =>
+            {
+                if (!(self is MirrorClone))
+                {
+                    PairedCreature.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.MirrorTracking);
+                    self.Battle.RemoveCreatureFromGame(pairedCreature);
+                    self.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.MirrorTracking);
+                }
+            };
             YouAreTargeted = async (QEffect youAreTargeted, CombatAction action) =>
             {
-                OnTarget?.Invoke(this.Owner, action);
+                this.Owner.HandleTarget(PairedCreature, action);
+            };
+            AfterYouTakeDamage = async (QEffect qeffect, int amount, DamageKind kind, CombatAction? action, bool critical) =>
+            {
+                OnDamageTaken?.Invoke(this.Owner, amount);
             };
         }
     }

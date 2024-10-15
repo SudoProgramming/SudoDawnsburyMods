@@ -130,6 +130,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             TrueFeat rootToLifeFeat = new TrueFeat(ThaumaturgeFeatNames.RootToLife, 1, "Marigold, spider lily, pennyroyal—many primal traditions connect flowers and plants with the boundary between life and death, and you can leverage this association to keep an ally on this side of the line.", "You place a small plant or similar symbol on an adjacent dying creature, immediately stabilizing them; the creature is no longer dying and is instead unconscious at 0 Hit Points.\n\nIf you spend 2 actions instead of 1, you empower the act further by uttering a quick folk blessing to chase away ongoing pain, adding the auditory trait to the action. When you do so, attempt flat checks to remove each source of persistent damage affecting the target; due to the particularly effective assistance, the DC is 10 instead of the usual 15.", [Trait.Manipulate, Trait.Necromancy, Trait.Primal, ThaumaturgeTraits.Thaumaturge]);
             // TODO
             yield return rootToLifeFeat;
+
+            TrueFeat scrollThaumaturgy = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Name", "Desc", [ThaumaturgeTraits.Thaumaturge]);
+            // TODO
+            yield return scrollThaumaturgy;
+
+            TrueFeat esotericWarden = new TrueFeat(ThaumaturgeFeatNames.EsotericWarden, 1, "Name", "Desc", [ThaumaturgeTraits.Thaumaturge]);
+            // TODO
+            yield return esotericWarden;
+
+
         }
 
         /// <summary>
@@ -521,6 +531,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         .WithActionCost(1)
                         .WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
                         {
+                            QEffect? mirrorTracking = owner.FindQEffect(ThaumaturgeQEIDs.MirrorTracking);
+                            if (mirrorTracking != null)
+                            {
+                                Creature pairedCreature = ((MirrorTrackingEffect)mirrorTracking).PairedCreature;
+                                pairedCreature.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.MirrorTracking);
+                                owner.Battle.RemoveCreatureFromGame(pairedCreature);
+                                owner.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.MirrorTracking);
+                            }
                             if (targets.ChosenTile != null)
                             {
                                 Tile chosenTile = targets.ChosenTile;
@@ -531,11 +549,19 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                     ownerDefenses.GetBaseValue(Defense.Reflex) + ThaumaturgeUtilities.DetermineBonusIncreaseForDefense(owner, Defense.Reflex),
                                     ownerDefenses.GetBaseValue(Defense.Will) + ThaumaturgeUtilities.DetermineBonusIncreaseForDefense(owner, Defense.AC));
                                 Skills cloneSkills = new Skills();
-                                MirrorClone mirrorClone = new MirrorClone(owner.Illustration, owner.Name, owner.Traits, owner.Level, owner.Perception, owner.Speed, cloneDefenses, owner.HP, owner.Abilities, cloneSkills);
+                                MirrorClone mirrorClone = new MirrorClone(owner.Illustration, owner.Name, owner.Traits, owner.Level, owner.Perception, owner.Speed, cloneDefenses, owner.MaxHP, owner.Abilities, cloneSkills);
+                                mirrorClone.SetDamageImmediately(owner.Damage);
                                 mirrorClone.PersistentCharacterSheet = owner.PersistentCharacterSheet;
                                 mirrorClone.BaseArmor = owner.BaseArmor;
                                 mirrorClone.RecalculateArmor();
                                 mirrorClone.EntersInitiativeOrder = false;
+                                foreach (QEffect effect in owner.QEffects)
+                                {
+                                    if (effect.ProvideMainAction == null && effect.ProvideActionIntoPossibilitySection == null)
+                                    {
+                                        mirrorClone.AddQEffect(effect);
+                                    }
+                                }
 
                                 owner.Battle.SpawnCreature(mirrorClone, owner.OwningFaction, chosenTile);
 
@@ -560,7 +586,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddRegaliaImplementLogic(Feat regaliaImplementFeat)
         {
             AddImplementEnsureLogic(regaliaImplementFeat);
-            regaliaImplementFeat.WithPermanentQEffect(ImplementDetails.MirrorInitiateBenefitName, delegate (QEffect self)
+            regaliaImplementFeat.WithPermanentQEffect(ImplementDetails.RegaliaInitiateBenefitName, delegate (QEffect self)
             {
                 self.StartOfCombat = async (QEffect startOfCombat) =>
                 {
@@ -568,7 +594,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     {
                         ally.AddQEffect(new QEffect(ExpirationCondition.Never)
                         {
+                            BonusToDefenses = (QEffect bonusToDefenses, CombatAction? action, Defense defense) =>
+                            {
+                                if (defense == Defense.Will && action != null && action.HasTrait(Trait.Fear) && ally.DistanceTo(self.Owner) <= 3)
+                                {
+                                    return new Bonus(1, BonusType.Status, ImplementDetails.RegaliaInitiateBenefitName, true);
+                                }
 
+                                return null;
+                            }
                         });
                     }
                 };

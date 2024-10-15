@@ -53,6 +53,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// </summary>
         public static readonly QEffectId ImplementInventoryTracker = ModManager.RegisterEnumMember<QEffectId>("Implement Inventory Tracker QEID");
 
+        public static readonly QEffectId MirrorImmunity = ModManager.RegisterEnumMember<QEffectId>("Mirror Immunity QEID");
+
         public static readonly QEffectId DraingedMirrorImplement = ModManager.RegisterEnumMember<QEffectId>("Drainged Mirror Implement QEID");
     }
 }

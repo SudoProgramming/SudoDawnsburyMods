@@ -40,6 +40,7 @@ using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Core.Animations;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions;
 using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
+using Dawnsbury.Campaign.Encounters;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -63,6 +64,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             Feat implementsEmpowermentFeat = new Feat(ThaumaturgeFeatNames.ImplementsEmpowerment, "The power of your implement can also be turned to the more common task of combat, its power adding to and amplifying the effects of runes and other magical empowerments.", "When you Strike, you can trace mystic patterns with an implement you're holding to empower the Strike, causing it to deal 2 additional damage per weapon damage die. Channeling the power requires full use of your hands. You don't gain the benefit of implement's empowerment if you are holding anything in either hand other than a single one-handed weapon, other implements, or esoterica, and you must be holding at least one implement to gain the benefit.", [], null);
             AddImplementsEmpowermentLogic(implementsEmpowermentFeat);
             yield return implementsEmpowermentFeat;
+
+            yield return new Feat(ThaumaturgeFeatNames.ColdWand, "Cold Wand", "Your wand is attuned to Cold.", [], null);
+
+            yield return new Feat(ThaumaturgeFeatNames.ElectricityWand, "Electricity Wand", "Your wand is attuned to Electricity.", [], null);
+
+            yield return new Feat(ThaumaturgeFeatNames.FireWand, "Fire Wand", "Your wand is attuned to Fire.", [], null);
 
             Feat amuletImplementFeat = new Feat(ThaumaturgeFeatNames.AmuletImplement, ImplementDetails.AmuletInitiateBenefitFlavorText, "You gain the " + ImplementDetails.AmuletInitiateBenefitName + " reaction.\n\n{b}" + ImplementDetails.AmuletInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.AmuletInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddAmuletImplementLogic(amuletImplementFeat);
@@ -362,7 +369,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddImplementEnsureLogic(chaliceImplementFeat);
             chaliceImplementFeat.WithPermanentQEffect(ImplementDetails.ChaliceInitiateBenefitName, delegate (QEffect self)
             {
-                self.ProvideActionIntoPossibilitySection = (QEffect coatedMunitionsEffect, PossibilitySection possibilitySection) =>
+                self.ProvideActionIntoPossibilitySection = (QEffect chaliceImplementEffect, PossibilitySection possibilitySection) =>
                 {
                     if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
                     {
@@ -662,9 +669,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="tomeImplementFeat">The Tome Implement feat object</param>
         public static void AddTomeImplementLogic(Feat tomeImplementFeat)
         {
-            AddImplementEnsureLogic(tomeImplementFeat);
             tomeImplementFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
             {
+                ThaumaturgeUtilities.EnsureCorrectImplements(sheet);
                 sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Extra Skill", "Tome Extra Skill", 1, (feat => feat is SkillSelectionFeat)));
                 sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Extra Expert Skill", "Tome Extra Expert Skill", 3, (feat => feat is SkillIncreaseFeat)));
             };
@@ -676,7 +683,143 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="wandImplementFeat">The Wand Implement feat object</param>
         public static void AddWandImplementLogic(Feat wandImplementFeat)
         {
-            AddImplementEnsureLogic(wandImplementFeat);
+            wandImplementFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
+            {
+                ThaumaturgeUtilities.EnsureCorrectImplements(sheet);
+                List<FeatName> wandFeatNames = new List<FeatName>() { ThaumaturgeFeatNames.ColdWand, ThaumaturgeFeatNames.ElectricityWand, ThaumaturgeFeatNames.FireWand } ;
+                sheet.AddSelectionOption(new SingleFeatSelectionOption("Thaumaturge Wand Type", "Wand", 1, feat => wandFeatNames.Contains(feat.FeatName)));
+            };
+            wandImplementFeat.WithPermanentQEffect(ImplementDetails.WandInitiateBenefitName, delegate (QEffect self)
+            {
+                self.ProvideActionIntoPossibilitySection = (QEffect wandImplementEffect, PossibilitySection possibilitySection) =>
+                {
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
+                    {
+                        Creature owner = wandImplementEffect.Owner;
+                        DamageKind? wandDamageKind = null;
+                        Trait? wandTraitForType = null;
+                        IllustrationName? projectileIllustration = null;
+                        SfxName? wandSfx = null;
+                        if (owner.HasFeat(ThaumaturgeFeatNames.ColdWand))
+                        {
+                            wandDamageKind = DamageKind.Cold;
+                            wandTraitForType = Trait.Cold;
+                            wandSfx = SfxName.RayOfFrost;
+                            projectileIllustration = IllustrationName.RayOfFrost;
+                        }
+                        else if (owner.HasFeat(ThaumaturgeFeatNames.ElectricityWand))
+                        {
+                            wandDamageKind = DamageKind.Electricity;
+                            wandTraitForType = Trait.Electricity;
+                            wandSfx = SfxName.ElectricArc;
+                            projectileIllustration = IllustrationName.ElectricArc;
+                        }
+                        else if (owner.HasFeat(ThaumaturgeFeatNames.FireWand)) 
+                        {
+                            wandDamageKind = DamageKind.Fire;
+                            wandTraitForType = Trait.Fire;
+                            wandSfx = SfxName.FireRay;
+                            projectileIllustration = IllustrationName.FireRay;
+                        }
+
+                        PossibilitySection wandSection = new PossibilitySection("Wand Possibilities");
+
+                        IllustrationName wandIllustrationName = IllustrationName.GenericCombatManeuver;
+                        List<Trait> wandTraits = [Trait.Concentrate, Trait.Evocation, Trait.Magical, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge];
+                        if (wandTraitForType != null)
+                        {
+                            wandTraits.Add((Trait)wandTraitForType);
+                        }
+
+                        CombatAction flingMagicAction = new CombatAction(self.Owner, wandIllustrationName, "Fling Magic", wandTraits.ToArray(), ImplementDetails.WandInitiateBenefitRulesText, Target.RangedCreature(12)
+                            .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
+                            {
+                                if (!ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner))
+                                {
+                                    return Usability.NotUsable("Not weilding Implement.");
+                                }
+                                return Usability.Usable;
+                            }));
+                        flingMagicAction.WithActionCost(2);
+                        flingMagicAction.WithSavingThrow(new SavingThrow(Defense.Reflex, creature => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge)));
+                        flingMagicAction.WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
+                        {
+                            if (wandDamageKind != null)
+                            {
+                                int level = owner.Level;
+                                KindedDamage wandDamage = new KindedDamage(DiceFormula.FromText("" + (1 + (int)(Math.Floor((level - 1) / 2.0))) + "d4 + " + attacker.Abilities.Charisma, "Fling Magic"), (DamageKind)wandDamageKind);
+                                DamageEvent wandDamageEvent = new DamageEvent(action, defender, result, [wandDamage], result == CheckResult.CriticalFailure, result == CheckResult.Success);
+                                if (result <= CheckResult.Success)
+                                {
+                                    await attacker.DealDirectDamage(wandDamageEvent);
+                                }
+                            }
+                        });
+
+                        CombatAction boostedFlingMagicAction = new CombatAction(self.Owner, wandIllustrationName, "Boosted Fling Magic", wandTraits.ToArray(), ImplementDetails.WandInitiateBenefitRulesText, Target.RangedCreature(12)
+                            .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
+                            {
+                                if (owner.HasEffect(ThaumaturgeQEIDs.BoostedWandUsed))
+                                {
+                                    int value = owner.GetQEffectValue(ThaumaturgeQEIDs.BoostedWandUsed);
+                                    return Usability.NotUsable("Wand isn't charged yet. (" + value + " turns left)");
+                                }
+                                else if (!ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner))
+                                {
+                                    return Usability.NotUsable("Not weilding Implement.");
+                                }
+                                return Usability.Usable;
+                            }));
+                        boostedFlingMagicAction.WithActionCost(2);
+                        boostedFlingMagicAction.WithSavingThrow(new SavingThrow(Defense.Reflex, creature => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge)));
+                        boostedFlingMagicAction.WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
+                        {
+                            if (wandDamageKind != null)
+                            {
+                                int level = owner.Level;
+                                KindedDamage wandDamage = new KindedDamage(DiceFormula.FromText("" + (1 + (int)(Math.Floor((level - 1) / 2.0))) + "d6 + " + attacker.Abilities.Charisma, "Boosted Fling Magic"), (DamageKind)wandDamageKind);
+                                DamageEvent wandDamageEvent = new DamageEvent(action, defender, result, [wandDamage], result == CheckResult.CriticalFailure, result == CheckResult.Success);
+                                if (result <= CheckResult.Success)
+                                {
+                                    await attacker.DealDirectDamage(wandDamageEvent);
+                                }
+
+                                DiceFormula boostedRoll = DiceFormula.FromText("1d4", "Boosted Fling Magic");
+                                int boostedResult = boostedRoll.RollResult();
+                                owner.Battle.Log(owner.Name + " can't Boost again for " + boostedResult + " turns.");
+                                owner.AddQEffect(new QEffect(ExpirationCondition.CountsDownAtStartOfSourcesTurn)
+                                {
+                                    Id = ThaumaturgeQEIDs.BoostedWandUsed,
+                                    Source = owner,
+                                    Value = 1 + boostedResult
+                                });
+                            }
+                        });
+
+                        if (wandSfx != null)
+                        {
+                            flingMagicAction.WithSoundEffect((SfxName)wandSfx);
+                            boostedFlingMagicAction.WithSoundEffect((SfxName)wandSfx);
+                        }
+                        if (projectileIllustration != null)
+                        {
+                            flingMagicAction.ProjectileIllustration = projectileIllustration;
+                            boostedFlingMagicAction.ProjectileIllustration = projectileIllustration;
+                        }
+
+                        ActionPossibility flingMagicActionPossibility = new ActionPossibility(flingMagicAction);
+                        wandSection.AddPossibility(flingMagicActionPossibility);
+                        ActionPossibility boostedFlingMagicPossibility = new ActionPossibility(boostedFlingMagicAction);
+                        wandSection.AddPossibility(boostedFlingMagicPossibility);
+
+                        SubmenuPossibility wandMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, ImplementDetails.WandInitiateBenefitName);
+                        wandMenu.Subsections.Add(wandSection);
+                        return wandMenu;
+                    }
+
+                    return null;
+                };
+            });
         }
 
         /// <summary>

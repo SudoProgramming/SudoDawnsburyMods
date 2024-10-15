@@ -56,5 +56,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         public static readonly QEffectId MirrorImmunity = ModManager.RegisterEnumMember<QEffectId>("Mirror Immunity QEID");
 
         public static readonly QEffectId DraingedMirrorImplement = ModManager.RegisterEnumMember<QEffectId>("Drainged Mirror Implement QEID");
+
+        public static readonly QEffectId BoostedWandUsed = ModManager.RegisterEnumMember<QEffectId>("Boosted Wand Used QEID");
     }
 }

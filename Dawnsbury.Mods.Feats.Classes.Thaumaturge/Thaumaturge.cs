@@ -527,7 +527,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         return null;
                     }
 
-                    return new ActionPossibility(new CombatAction(owner, IllustrationName.GenericCombatManeuver, ImplementDetails.MirrorInitiateBenefitName, [Trait.Illusion, Trait.Magical, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge], ImplementDetails.MirrorInitiateBenefitRulesText, Target.Tile((creature, tile) => tile.LooksFreeTo(creature) && creature.Occupies != null && creature.DistanceTo(tile) <= 3, (creature, tile) => (float) int.MinValue))
+                    return new ActionPossibility(new CombatAction(owner, IllustrationName.GenericCombatManeuver, ImplementDetails.MirrorInitiateBenefitName, [Trait.Illusion, Trait.Magical, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge], ImplementDetails.MirrorInitiateBenefitRulesText, Target.Tile((creature, tile) => tile.LooksFreeTo(creature) && creature.Occupies != null && creature.DistanceTo(tile) <= 3, (creature, tile) => (float)int.MinValue))
                         .WithActionCost(1)
                         .WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
                         {
@@ -575,6 +575,38 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 mirrorClone.AddQEffect(mirrorTrackingEffect);
                             }
                         }));
+                };
+                self.ProvideActionIntoPossibilitySection = (QEffect swapToClone, PossibilitySection possibilitySection) =>
+                {
+                    Creature owner = swapToClone.Owner;
+                    MirrorTrackingEffect? mirrorTracking = owner.FindQEffect(ThaumaturgeQEIDs.MirrorTracking) as MirrorTrackingEffect;
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions && mirrorTracking != null)
+                    {
+                        Creature pairedCreature = mirrorTracking.PairedCreature;
+                        return new ActionPossibility(new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Swap to Clone", [], "Swaps to the clone, in which you can continue your turn.", Target.Self())
+                            .WithActionCost(0)
+                            .WithEffectOnSelf(async (Creature self) =>
+                            {
+                                Tile cloneTile = pairedCreature.Occupies;
+                                if (cloneTile != null)
+                                {
+                                    MirrorTrackingEffect? cloneTracking = pairedCreature.FindQEffect(ThaumaturgeQEIDs.MirrorTracking) as MirrorTrackingEffect;
+                                    if (cloneTracking != null)
+                                    {
+                                        Tile temp = cloneTile;
+                                        Tile ownerTile = self.Occupies;
+                                        pairedCreature.TranslateTo(ownerTile);
+                                        pairedCreature.AnimationData.ActualPosition = new Vector2(ownerTile.X, ownerTile.Y);
+                                        cloneTracking.LastLocation = ownerTile;
+                                        self.TranslateTo(temp);
+                                        self.AnimationData.ActualPosition = new Vector2(temp.X, temp.Y);
+                                        mirrorTracking.LastLocation = temp;
+                                    }
+                                }
+                            }));
+                    }
+
+                    return null;
                 };
             });
         }

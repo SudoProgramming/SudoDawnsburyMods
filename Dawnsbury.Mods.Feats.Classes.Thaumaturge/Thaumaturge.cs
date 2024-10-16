@@ -41,6 +41,7 @@ using Dawnsbury.Core.Animations;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions;
 using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
 using Dawnsbury.Campaign.Encounters;
+using static Dawnsbury.Core.Possibilities.Usability;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -136,7 +137,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 });
 
             TrueFeat rootToLifeFeat = new TrueFeat(ThaumaturgeFeatNames.RootToLife, 1, "Marigold, spider lily, pennyroyal—many primal traditions connect flowers and plants with the boundary between life and death, and you can leverage this association to keep an ally on this side of the line.", "You place a small plant or similar symbol on an adjacent dying creature, immediately stabilizing them; the creature is no longer dying and is instead unconscious at 0 Hit Points.\n\nIf you spend 2 actions instead of 1, you empower the act further by uttering a quick folk blessing to chase away ongoing pain, adding the auditory trait to the action. When you do so, attempt flat checks to remove each source of persistent damage affecting the target; due to the particularly effective assistance, the DC is 10 instead of the usual 15.", [Trait.Manipulate, Trait.Necromancy, Trait.Primal, ThaumaturgeTraits.Thaumaturge]);
-            // TODO
+            AddRootToLifeLogic(rootToLifeFeat);
             yield return rootToLifeFeat;
 
             TrueFeat scrollThaumaturgy = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Name", "Desc", [ThaumaturgeTraits.Thaumaturge]);
@@ -889,6 +890,84 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     if (action.Item != null && action.Item.WeaponProperties != null && ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner))
                     {
                         return new Bonus(2 * action.Item.WeaponProperties.DamageDieCount, BonusType.Untyped, "Implements Empowerment");
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Root To Life feat
+        /// </summary>
+        /// <param name="rootToLifeFeat">The Root To Life feat object</param>
+        public static void AddRootToLifeLogic(Feat rootToLifeFeat)
+        {
+            rootToLifeFeat.WithPermanentQEffect("Root to Life", delegate (QEffect self)
+            {
+                self.ProvideActionIntoPossibilitySection = (QEffect rootToLifeEffect, PossibilitySection possibilitySection) =>
+                {
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
+                    {
+                        Creature owner = rootToLifeEffect.Owner;
+                        PossibilitySection rootToLifeSection = new PossibilitySection("Root to Life Possibilities");
+
+                        IllustrationName rootToLifeIllustrationName = IllustrationName.GenericCombatManeuver;
+                        List<Trait> rootToLifeTraits = [Trait.Manipulate, Trait.Necromancy, Trait.Primal, ThaumaturgeTraits.Thaumaturge];
+
+                        CombatAction oneActionRootToLifeAction = new CombatAction(self.Owner, rootToLifeIllustrationName, "Root to Life", rootToLifeTraits.ToArray(), rootToLifeFeat.RulesText, Target.AdjacentFriend()
+                            .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
+                            {
+                                if (!target.FriendOf(user) || !target.HasEffect(QEffectId.Dying))
+                                {
+                                    return Usability.CommonReasons.NotDying;
+                                }
+
+                                return Usability.Usable;
+                            }));
+                        oneActionRootToLifeAction.WithActionCost(1);
+                        oneActionRootToLifeAction.WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
+                        {
+                            QEffect? dyingEffect = defender.FindQEffect(QEffectId.Dying);
+                            if (dyingEffect != null)
+                            {
+                                dyingEffect.Value = 0;
+                            }
+                        });
+
+                        CombatAction twoActionRootToLifeAction = new CombatAction(self.Owner, rootToLifeIllustrationName, "Root to Life", rootToLifeTraits.Concat([Trait.Auditory]).ToArray(), rootToLifeFeat.RulesText, Target.AdjacentFriend()
+                            .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
+                            {
+                                if (target.QEffects.Where(qe => qe.Id == QEffectId.PersistentDamage).Count() == 0 && (!target.FriendOf(user) || !target.HasEffect(QEffectId.Dying)))
+                                {
+                                    return Usability.CommonReasons.NotDying;
+                                }
+
+                                return Usability.Usable;
+                            }));
+                        twoActionRootToLifeAction.WithActionCost(2);
+                        twoActionRootToLifeAction.WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
+                        {
+                            QEffect? dyingEffect = defender.FindQEffect(QEffectId.Dying);
+                            if (dyingEffect != null)
+                            {
+                                dyingEffect.Value = 0;
+                            }
+
+                            foreach (QEffect persistentDamageEffect in defender.QEffects.Where(qe => qe.Id == QEffectId.PersistentDamage))
+                            {
+                                persistentDamageEffect.RollPersistentDamageRecoveryCheck(true);
+                            }
+                        });
+
+                        ActionPossibility oneActionRootToLifeActionPossibility = new ActionPossibility(oneActionRootToLifeAction);
+                        rootToLifeSection.AddPossibility(oneActionRootToLifeActionPossibility);
+                        ActionPossibility twoActionRootToLifeActionPossibility = new ActionPossibility(twoActionRootToLifeAction);
+                        rootToLifeSection.AddPossibility(twoActionRootToLifeActionPossibility);
+
+                        SubmenuPossibility rootToLifeMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, "Root to Life");
+                        rootToLifeMenu.Subsections.Add(rootToLifeSection);
+                        return rootToLifeMenu;
                     }
 
                     return null;

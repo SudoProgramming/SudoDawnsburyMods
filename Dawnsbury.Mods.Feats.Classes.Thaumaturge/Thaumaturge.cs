@@ -42,6 +42,7 @@ using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions;
 using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
 using Dawnsbury.Campaign.Encounters;
 using static Dawnsbury.Core.Possibilities.Usability;
+using System.Diagnostics;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -130,6 +131,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     sheet.AddFeat(implementsEmpowermentFeat, null);
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("FirstImplement", "First Implement", 1, (Feat ft) => ft.HasTrait(ThaumaturgeTraits.Implement)));
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("ThaumaturgeFeat1", "Thaumaturge feat", 1, (Feat ft) => ft.HasTrait(ThaumaturgeTraits.Thaumaturge)));
+                    sheet.SetProficiency(ThaumaturgeTraits.Thaumaturge, Proficiency.Trained);
                     sheet.AddAtLevel(3, delegate (CalculatedCharacterSheetValues values)
                     {
                         values.SetProficiency(Trait.Reflex, Proficiency.Expert);
@@ -140,13 +142,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddRootToLifeLogic(rootToLifeFeat);
             yield return rootToLifeFeat;
 
-            TrueFeat scrollThaumaturgy = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Name", "Desc", [ThaumaturgeTraits.Thaumaturge]);
-            // TODO
-            yield return scrollThaumaturgy;
+            TrueFeat scrollThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Your multidisciplinary study of magic means you know how to activate the magic in scrolls with ease.", "You can activate scrolls of any magical tradition, using your thaumaturge class DC for the scroll's DC, rather than a particular spell DC. If a spell is on the spell list for multiple traditions, you choose which tradition to use at the time you activate the scroll. You can draw and activate scrolls with the same hand holding an implement.", [ThaumaturgeTraits.Thaumaturge]);
+            AddScrollThaumaturgyLogic(scrollThaumaturgyFeat);
+            yield return scrollThaumaturgyFeat;
 
-            TrueFeat esotericWarden = new TrueFeat(ThaumaturgeFeatNames.EsotericWarden, 1, "Name", "Desc", [ThaumaturgeTraits.Thaumaturge]);
+            TrueFeat esotericWardenFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericWarden, 1, "Name", "Desc", [ThaumaturgeTraits.Thaumaturge]);
             // TODO
-            yield return esotericWarden;
+            yield return esotericWardenFeat;
 
 
         }
@@ -938,7 +940,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         CombatAction twoActionRootToLifeAction = new CombatAction(self.Owner, rootToLifeIllustrationName, "Root to Life", rootToLifeTraits.Concat([Trait.Auditory]).ToArray(), rootToLifeFeat.RulesText, Target.AdjacentFriend()
                             .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
                             {
-                                if (target.QEffects.Where(qe => qe.Id == QEffectId.PersistentDamage).Count() == 0 && (!target.FriendOf(user) || !target.HasEffect(QEffectId.Dying)))
+                                if (target.QEffects.Where(qe => qe.Id == QEffectId.PersistentDamage).Count() == 0 || !target.FriendOf(user) || !target.HasEffect(QEffectId.Dying))
                                 {
                                     return Usability.CommonReasons.NotDying;
                                 }
@@ -968,6 +970,171 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         SubmenuPossibility rootToLifeMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, "Root to Life");
                         rootToLifeMenu.Subsections.Add(rootToLifeSection);
                         return rootToLifeMenu;
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Scroll Thaumaturgy feat
+        /// </summary>
+        /// <param name="scrollThaumaturgyFeat">The Scroll Thaumaturgy feat object</param>
+        public static void AddScrollThaumaturgyLogic(Feat scrollThaumaturgyFeat)
+        {
+            scrollThaumaturgyFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
+            {
+                sheet.SpellTraditionsKnown.Add(Trait.Spell);
+                sheet.SetProficiency(Trait.Spell, Proficiency.Trained);
+            };
+            scrollThaumaturgyFeat.WithOnCreature(creature =>
+            {
+                creature.AddSpellcastingSource(SpellcastingKind.Innate, ThaumaturgeTraits.Thaumaturge, Ability.Charisma, Trait.Spell);
+            });
+            scrollThaumaturgyFeat.WithPermanentQEffect("Scroll Thaumaturgy", delegate (QEffect self)
+            {
+                self.YouBeginAction = async (QEffect youBeginAction, CombatAction action) =>
+                {
+                    foreach (QEffect scrollAndImplementEffect in youBeginAction.Owner.QEffects.Where(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement))
+                    {
+                        if (action.CastFromScroll != null && scrollAndImplementEffect != null && scrollAndImplementEffect.Tag != null && scrollAndImplementEffect.Tag is ImplementAndHeldItem implementAndHeldItem && action.CastFromScroll == implementAndHeldItem.HeldItem && implementAndHeldItem.Illustration is SideBySideIllustration sideBySideIllustration)
+                        {
+                            implementAndHeldItem.Implement.Illustration = sideBySideIllustration.Left;
+                            implementAndHeldItem.Implement.Name = implementAndHeldItem.OriginalImplementName;
+                            scrollAndImplementEffect.ExpiresAt = ExpirationCondition.EphemeralAtEndOfImmediateAction;
+                        }
+                    }
+                };
+                self.EndOfCombat = async (QEffect endOfCombat, bool didWin) =>
+                {
+                    if (didWin)
+                    {
+                        Creature owner = endOfCombat.Owner;
+                        foreach (QEffect scrollAndImplementEffect in owner.QEffects.Where(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement))
+                        {
+                            if (scrollAndImplementEffect != null && scrollAndImplementEffect.Tag != null && scrollAndImplementEffect.Tag is ImplementAndHeldItem implementAndHeldItem)
+                            {
+                                owner.CarriedItems.Add(implementAndHeldItem.HeldItem);
+                                owner.HeldItems.RemoveAll(item => item == implementAndHeldItem.Implement);
+                                owner.CarriedItems.RemoveAll(item => item == implementAndHeldItem.Implement);
+                            }
+                        }
+                    }
+                };
+                self.ProvideActionIntoPossibilitySection = (QEffect rootToLifeEffect, PossibilitySection possibilitySection) =>
+                {
+                    Creature owner = rootToLifeEffect.Owner;
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.ItemActions && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner))
+                    {
+                        SubmenuPossibility? inventory = (SubmenuPossibility?)possibilitySection.Possibilities.FirstOrDefault(possibility => possibility is SubmenuPossibility submenuPossibility && submenuPossibility.Caption == "Inventory");
+                        if (inventory != null)
+                        {
+                            PossibilitySection? drawOrStowPossibilitySection = inventory.Subsections.FirstOrDefault(possibility => possibility.Name == "Draw or stow items");
+                            if (drawOrStowPossibilitySection != null)
+                            {
+                                List<int> implementIndexes = new List<int>();
+                                for (int i = 0; i < owner.HeldItems.Count; i++)
+                                {
+                                    Item? heldItem = owner.HeldItems[i];
+                                    if (heldItem != null && heldItem.HasTrait(ThaumaturgeTraits.Implement))
+                                    {
+                                        implementIndexes.Add(i);
+                                    }
+                                }
+
+                                foreach (int implementIndex in implementIndexes)
+                                {
+                                    if (implementIndex >= 0 && implementIndex < drawOrStowPossibilitySection.Possibilities.Count)
+                                    {
+                                        Possibility possibility = drawOrStowPossibilitySection.Possibilities[implementIndex];
+                                        if (possibility is SubmenuPossibility itemSubMenu)
+                                        {
+
+                                            string drawOrReplace = "Draw";
+                                            QEffect? matchingHeldScrollImplementEffect = owner.QEffects.FirstOrDefault(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement && qe.Tag != null && qe.Tag is ImplementAndHeldItem implementAndHeldItem && implementAndHeldItem.Implement == owner.HeldItems[implementIndex]);
+                                            if (matchingHeldScrollImplementEffect != null)
+                                            {
+                                                drawOrReplace = "Replace";
+                                            }
+
+                                            PossibilitySection drawScrollSection = new PossibilitySection(drawOrReplace + " scroll");
+                                            foreach (Item scroll in owner.CarriedItems.Where(item => item.HasTrait(Trait.Scroll)))
+                                            {
+                                                CombatAction drawScrollImplementAction = new CombatAction(owner, scroll.Illustration, drawOrReplace + " " + scroll.Name, [Trait.Manipulate], drawOrReplace + " a scroll into the same hand you are holding this implement in.\n----\n" + scroll.Description, Target.Self())
+                                                    .WithActionCost(1)
+                                                    .WithEffectOnSelf((Creature self) =>
+                                                    {
+                                                        if (self.HeldItems[implementIndex] is Implement implement)
+                                                        {
+                                                            ImplementAndHeldItem implementAndScroll = new ImplementAndHeldItem(implement, scroll);
+
+                                                            self.CarriedItems.Remove(scroll);
+                                                            if (matchingHeldScrollImplementEffect != null && matchingHeldScrollImplementEffect.Tag != null && matchingHeldScrollImplementEffect.Tag is ImplementAndHeldItem previousImplementAndHeldItem)
+                                                            {
+                                                                Item previousScroll = previousImplementAndHeldItem.HeldItem;
+                                                                self.CarriedItems.Add(previousScroll);
+                                                                self.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement && qe == matchingHeldScrollImplementEffect);
+                                                            }
+
+                                                            self.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                                            {
+                                                                Id = ThaumaturgeQEIDs.HeldScrollAndImplement,
+                                                                Tag = implementAndScroll
+                                                            });
+
+                                                            implement.Illustration = implementAndScroll.Illustration;
+                                                            implement.Name = implement.Name + " " + scroll.Name;
+                                                        }
+                                                    });
+
+                                                Possibility drawScrollPossibility = new ActionPossibility(drawScrollImplementAction);
+                                                drawScrollSection.AddPossibility(drawScrollPossibility);
+                                            }
+
+                                            itemSubMenu.Subsections.Add(drawScrollSection);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        foreach (QEffect heldItemAndImplementEffect in owner.QEffects.Where(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement))
+                        {
+                            if (heldItemAndImplementEffect != null && heldItemAndImplementEffect.Tag != null && heldItemAndImplementEffect.Tag is ImplementAndHeldItem scrollAndImplement)
+                            {
+                                Item scroll = scrollAndImplement.HeldItem;
+                                ScrollProperties scrollProperties = scroll.ScrollProperties;
+                                if (scrollProperties != null)
+                                {
+                                    if (scrollProperties.Spell.CombatActionSpell.Owner != owner)
+                                    {
+                                        scroll.ScrollProperties.Spell = scroll.ScrollProperties.Spell.Duplicate(owner, scroll.ScrollProperties.Spell.SpellLevel, true);
+                                        CombatAction itemSpell = scroll.ScrollProperties.Spell.CombatActionSpell;
+                                        itemSpell.CastFromScroll = scroll;
+                                        if (owner.Spellcasting != null)
+                                            itemSpell.SpellcastingSource = owner.Spellcasting.Sources.FirstOrDefault<SpellcastingSource>((Func<SpellcastingSource, bool>)(source => itemSpell.Traits.Contains(source.SpellcastingTradition)));
+                                        CharacterSheet persistentCharacterSheet2 = itemSpell.Owner.PersistentCharacterSheet;
+                                        if (persistentCharacterSheet2 != null && !persistentCharacterSheet2.CanUse(scroll) && owner.HasEffect(QEffectId.TrickMagicItem) && itemSpell.ActionCost != 3 && owner.Spellcasting != null)
+                                        {
+                                            CommonSpellEffects.IncreaseActionCostByOne(itemSpell);
+                                            itemSpell.Description += "\n\n{b}Uses Trick Magic Item.{/b} The spell costs 1 more action that normal, and you must succeed at a skill check to activate it.";
+                                            itemSpell.SpellcastingSource = owner.Spellcasting.GetSourceByOrigin(Trait.UsesTrickMagicItem);
+                                            itemSpell.Traits.Add(Trait.UsesTrickMagicItem);
+                                        }
+                                        if (itemSpell.SpellcastingSource == null)
+                                            itemSpell.SpellcastingSource = SpellcastingSource.EmptySource;
+                                    }
+
+                                    Possibility spellPossibility = Possibilities.CreateSpellPossibility(scroll.ScrollProperties.Spell.CombatActionSpell);
+                                    spellPossibility.Illustration = scroll.Illustration;
+                                    spellPossibility.Caption = scroll.Name;
+                                    spellPossibility.PossibilitySize = PossibilitySize.Full;
+                                    spellPossibility.PossibilityGroup = "Use item";
+                                    possibilitySection.AddPossibility(spellPossibility);
+                                }
+                            }
+                        }
                     }
 
                     return null;

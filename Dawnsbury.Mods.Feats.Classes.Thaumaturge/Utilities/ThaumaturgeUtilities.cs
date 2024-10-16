@@ -176,12 +176,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 
             foreach (ImplementIDs implementID in implementsToRemove)
             {
-                RemoveImplement(character, GetImplementBaseItemName(implementID));
+                if (implementID != ImplementIDs.Weapon)
+                {
+                    RemoveImplement(character, GetImplementBaseItemName(implementID));
+                }
             }
 
             foreach (ImplementIDs implementID in implementsToAdd)
             {
-                AddImplement(character, CreateImplement(implementID));
+                if (implementID != ImplementIDs.Weapon)
+                {
+                    AddImplement(character, CreateImplement(implementID));
+                }
             }
         }
 

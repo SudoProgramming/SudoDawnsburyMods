@@ -193,15 +193,24 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                     if (weakness.Value >= 2 + Math.Floor(attacker.Level / 2.0))
                                     {
                                         skipAntithesis = true;
-                                        defender.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                        foreach (Creature creature in attacker.Battle.AllCreatures.Where(creature => !creature.FriendOf(attacker) && creature.BaseName == defender.BaseName))
                                         {
-                                            Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
-                                            Tag = attacker
-                                        });
+                                            creature.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                            {
+                                                Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
+                                                Illustration = IllustrationName.GenericCombatManeuver,
+                                                Name = "Exploited Vulnerability",
+                                                Description = "Exploited Weakness by " + attacker.Name + " - " + weakness.DamageKind.HumanizeTitleCase2() + " " + weakness.Value,
+                                                Tag = attacker
+                                            });
+                                        }
                                         attacker.AddQEffect(new QEffect(ExpirationCondition.Never)
                                         {
                                             Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeakness,
                                             Tag = defender,
+                                            Illustration = IllustrationName.GenericCombatManeuver,
+                                            Name = "Exploit Vulnerability",
+                                            Description = "Exploiting Weakness to all " + defender.BaseName + " - " + weakness.DamageKind.HumanizeTitleCase2() + " " + weakness.Value,
                                             AddExtraKindedDamageOnStrike = (CombatAction action, Creature damageTarget) =>
                                             {
                                                 if (damageTarget == defender || damageTarget.BaseName == defender.BaseName)
@@ -218,10 +227,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             // Add CLear Logic on Reuse
                             if (result >= CheckResult.Failure && !skipAntithesis)
                             {
+                                int antithesisAmount = (int)(2 + Math.Floor(attacker.Level / 2.0));
                                 defender.AddQEffect(new QEffect(ExpirationCondition.Never)
                                 {
                                     Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
                                     Tag = attacker,
+                                    Illustration = IllustrationName.GenericCombatManeuver,
+                                    Name = "Exploited Vulnerability",
+                                    Description = "Exploited Weakness by " + attacker.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
                                     StateCheck = (QEffect stateCheck) =>
                                     {
                                         Creature owner = stateCheck.Owner;
@@ -229,7 +242,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                         {
                                             if (!owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
                                             {
-                                                owner.WeaknessAndResistance.AddWeakness(ThaumaturgeDamageKinds.PersonalAntithesis, (int)(2 + Math.Floor(attacker.Level / 2.0)));
+                                                owner.WeaknessAndResistance.AddWeakness(ThaumaturgeDamageKinds.PersonalAntithesis, antithesisAmount);
                                             }
                                         }
                                         else if(owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
@@ -242,6 +255,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 {
                                     Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeakness,
                                     Tag = defender,
+                                    Illustration = IllustrationName.GenericCombatManeuver,
+                                    Name = "Exploit Vulnerability",
+                                    Description = "Exploiting Weakness to " + defender.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
                                     AddExtraKindedDamageOnStrike = (CombatAction action, Creature damageTarget) =>
                                     {
                                         if (damageTarget == defender)
@@ -786,7 +802,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 
                                 DiceFormula boostedRoll = DiceFormula.FromText("1d4", "Boosted Fling Magic");
                                 int boostedResult = boostedRoll.RollResult();
-                                owner.Battle.Log(owner.Name + " can't Boost again for " + boostedResult + " turns.");
+                                owner.Battle.Log(owner.Name + " can't Boost again for " + boostedResult + " rounds.");
                                 owner.AddQEffect(new QEffect(ExpirationCondition.CountsDownAtStartOfSourcesTurn)
                                 {
                                     Id = ThaumaturgeQEIDs.BoostedWandUsed,
@@ -829,6 +845,34 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddWeaponImplementLogic(Feat weaponImplementFeat)
         {
             AddImplementEnsureLogic(weaponImplementFeat);
+            weaponImplementFeat.WithPermanentQEffect(ImplementDetails.WeaponInitiateBenefitName, delegate (QEffect self)
+            {
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    Creature owner = startOfCombat.Owner;
+                    Item? weaponImplement = owner.HeldItems.FirstOrDefault(item => item != null && item.WeaponProperties != null && !item.HasTrait(Trait.TwoHanded));
+                    if (weaponImplement == null)
+                    {
+                        weaponImplement = owner.CarriedItems.FirstOrDefault(item => item != null && item.WeaponProperties != null && !item.HasTrait(Trait.TwoHanded));
+                    }
+
+                    if (weaponImplement != null)
+                    {
+                        weaponImplement.Traits.Add(ThaumaturgeTraits.Implement);
+                        owner.AddQEffect(QEffect.AttackOfOpportunity("Implement's Interruption", ImplementDetails.WeaponInitiateBenefitRulesText, (QEffect resirctions, Creature target) =>
+                        {
+                            QEffect? exploitTargetEffect = target.FindQEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget);
+                            if (exploitTargetEffect != null && exploitTargetEffect.Tag != null && exploitTargetEffect.Tag is Creature thaumaturge && thaumaturge == owner)
+                            {
+                                return true;
+                            }
+
+                            return false;
+                        }
+                        , false));
+                    }
+                };
+            });
         }
 
         /// <summary>

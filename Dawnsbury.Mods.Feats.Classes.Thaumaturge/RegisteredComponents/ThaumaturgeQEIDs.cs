@@ -33,10 +33,30 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// </summary>
         public static readonly QEffectId UsedExploitVulnerability = ModManager.RegisterEnumMember<QEffectId>("Exploit Vulnerability Used This Turn QEID");
 
+        /// <summary>
+        /// The Lantern Searching persistent QEffect ID 
+        /// </summary>
+        public static readonly QEffectId LanternSearching = ModManager.RegisterEnumMember<QEffectId>("Lantern Searching QEID");
+
+        /// <summary>
+        /// The Location Tracking persistent QEffect ID 
+        /// </summary>
+        public static readonly QEffectId LocationTracking = ModManager.RegisterEnumMember<QEffectId>("Location Tracking QEID");
+
+        /// <summary>
+        /// The Mirror Tracking persistent QEffect ID 
+        /// </summary>
+        public static readonly QEffectId MirrorTracking = ModManager.RegisterEnumMember<QEffectId>("Mirror Tracking QEID");
 
         /// <summary>
         /// The Implement Inventory Tracker persistent QEffect ID 
         /// </summary>
         public static readonly QEffectId ImplementInventoryTracker = ModManager.RegisterEnumMember<QEffectId>("Implement Inventory Tracker QEID");
+
+        public static readonly QEffectId MirrorImmunity = ModManager.RegisterEnumMember<QEffectId>("Mirror Immunity QEID");
+
+        public static readonly QEffectId DraingedMirrorImplement = ModManager.RegisterEnumMember<QEffectId>("Drainged Mirror Implement QEID");
+
+        public static readonly QEffectId BoostedWandUsed = ModManager.RegisterEnumMember<QEffectId>("Boosted Wand Used QEID");
     }
 }

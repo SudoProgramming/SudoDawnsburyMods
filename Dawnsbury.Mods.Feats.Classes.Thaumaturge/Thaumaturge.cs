@@ -28,6 +28,19 @@ using Dawnsbury.Display;
 using Dawnsbury.Core.Coroutines.Options;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
 using static System.Collections.Specialized.BitVector32;
+using Dawnsbury.Core.Tiles;
+using Dawnsbury.Modding;
+using Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb;
+using System.Reflection;
+using Dawnsbury.Core.Mechanics.Targeting.Targets;
+using Microsoft.Xna.Framework;
+using Dawnsbury.Auxiliary;
+using Dawnsbury.Audio;
+using Dawnsbury.Display.Illustrations;
+using Dawnsbury.Core.Animations;
+using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions;
+using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
+using Dawnsbury.Campaign.Encounters;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -51,6 +64,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             Feat implementsEmpowermentFeat = new Feat(ThaumaturgeFeatNames.ImplementsEmpowerment, "The power of your implement can also be turned to the more common task of combat, its power adding to and amplifying the effects of runes and other magical empowerments.", "When you Strike, you can trace mystic patterns with an implement you're holding to empower the Strike, causing it to deal 2 additional damage per weapon damage die. Channeling the power requires full use of your hands. You don't gain the benefit of implement's empowerment if you are holding anything in either hand other than a single one-handed weapon, other implements, or esoterica, and you must be holding at least one implement to gain the benefit.", [], null);
             AddImplementsEmpowermentLogic(implementsEmpowermentFeat);
             yield return implementsEmpowermentFeat;
+
+            yield return new Feat(ThaumaturgeFeatNames.ColdWand, "Cold Wand", "Your wand is attuned to Cold.", [], null);
+
+            yield return new Feat(ThaumaturgeFeatNames.ElectricityWand, "Electricity Wand", "Your wand is attuned to Electricity.", [], null);
+
+            yield return new Feat(ThaumaturgeFeatNames.FireWand, "Fire Wand", "Your wand is attuned to Fire.", [], null);
 
             Feat amuletImplementFeat = new Feat(ThaumaturgeFeatNames.AmuletImplement, ImplementDetails.AmuletInitiateBenefitFlavorText, "You gain the " + ImplementDetails.AmuletInitiateBenefitName + " reaction.\n\n{b}" + ImplementDetails.AmuletInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.AmuletInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddAmuletImplementLogic(amuletImplementFeat);
@@ -84,7 +103,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddWandImplementLogic(wandImplementFeat);
             yield return wandImplementFeat;
 
-            Feat weaponImplementFeat = new Feat(ThaumaturgeFeatNames.WeaponImplement, ImplementDetails.WeaponInitiateBenefitFlavorText, "You gain the " + ImplementDetails.WeaponInitiateBenefitName + " reaction.\n\n{b}" + ImplementDetails.WeaponInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.WeaponInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            Feat weaponImplementFeat = new Feat(ThaumaturgeFeatNames.WeaponImplement, ImplementDetails.WeaponInitiateBenefitFlavorText, "You gain the " + ImplementDetails.WeaponInitiateBenefitName + " reaction.\n\n{b}NOTE: The Weapon Implement will be applied to your first One-Handed weapon at the start of each encounter.{/b}\n\n{b}" + ImplementDetails.WeaponInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.WeaponInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddWeaponImplementLogic(weaponImplementFeat);
             yield return weaponImplementFeat;
 
@@ -119,6 +138,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             TrueFeat rootToLifeFeat = new TrueFeat(ThaumaturgeFeatNames.RootToLife, 1, "Marigold, spider lily, pennyroyal—many primal traditions connect flowers and plants with the boundary between life and death, and you can leverage this association to keep an ally on this side of the line.", "You place a small plant or similar symbol on an adjacent dying creature, immediately stabilizing them; the creature is no longer dying and is instead unconscious at 0 Hit Points.\n\nIf you spend 2 actions instead of 1, you empower the act further by uttering a quick folk blessing to chase away ongoing pain, adding the auditory trait to the action. When you do so, attempt flat checks to remove each source of persistent damage affecting the target; due to the particularly effective assistance, the DC is 10 instead of the usual 15.", [Trait.Manipulate, Trait.Necromancy, Trait.Primal, ThaumaturgeTraits.Thaumaturge]);
             // TODO
             yield return rootToLifeFeat;
+
+            TrueFeat scrollThaumaturgy = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Name", "Desc", [ThaumaturgeTraits.Thaumaturge]);
+            // TODO
+            yield return scrollThaumaturgy;
+
+            TrueFeat esotericWarden = new TrueFeat(ThaumaturgeFeatNames.EsotericWarden, 1, "Name", "Desc", [ThaumaturgeTraits.Thaumaturge]);
+            // TODO
+            yield return esotericWarden;
+
+
         }
 
         /// <summary>
@@ -134,13 +163,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     if (ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner))
                     {
                         CombatAction exploitVulnerabilityAction = new CombatAction(
-                            self.Owner, 
-                            IllustrationName.GenericCombatManeuver, 
-                            "Exploit Vulnerability", 
-                            [Trait.Manipulate, ThaumaturgeTraits.Thaumaturge], 
+                            self.Owner,
+                            IllustrationName.GenericCombatManeuver,
+                            "Exploit Vulnerability",
+                            [Trait.Manipulate, ThaumaturgeTraits.Thaumaturge],
                             "{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement.\nYou scour your experiences and learning to identify something that might repel your foe. You retrieve an object from your esoterica with the appropriate supernatural qualities, then use your implement to stoke the remnants of its power into a blaze. Select a creature you can see and attempt an Esoteric Lore check against a standard DC for its level, as you retrieve the right object from your esoterica and use your implement to empower it. You gain the following effects until you Exploit Vulnerabilities again.\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn.",
                             Target.Ranged(100)
                             .WithAdditionalConditionOnTargetCreature((attacker, defender) => attacker.HasEffect(ThaumaturgeQEIDs.UsedExploitVulnerability) ? Usability.NotUsable("Already Exploited Vulnerability this turn") : Usability.Usable))
+                        .WithActionId(ThaumaturgeActionIDs.ExploitVulnerability)
                         .WithActiveRollSpecification(new ActiveRollSpecification(ThaumaturgeUtilities.RollEsotericLore, ThaumaturgeUtilities.CalculateEsotericLoreDC))
                         .WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
                         {         
@@ -163,15 +193,24 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                     if (weakness.Value >= 2 + Math.Floor(attacker.Level / 2.0))
                                     {
                                         skipAntithesis = true;
-                                        defender.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                        foreach (Creature creature in attacker.Battle.AllCreatures.Where(creature => !creature.FriendOf(attacker) && creature.BaseName == defender.BaseName))
                                         {
-                                            Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
-                                            Tag = attacker
-                                        });
+                                            creature.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                            {
+                                                Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
+                                                Illustration = IllustrationName.GenericCombatManeuver,
+                                                Name = "Exploited Vulnerability",
+                                                Description = "Exploited Weakness by " + attacker.Name + " - " + weakness.DamageKind.HumanizeTitleCase2() + " " + weakness.Value,
+                                                Tag = attacker
+                                            });
+                                        }
                                         attacker.AddQEffect(new QEffect(ExpirationCondition.Never)
                                         {
                                             Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeakness,
                                             Tag = defender,
+                                            Illustration = IllustrationName.GenericCombatManeuver,
+                                            Name = "Exploit Vulnerability",
+                                            Description = "Exploiting Weakness to all " + defender.BaseName + " - " + weakness.DamageKind.HumanizeTitleCase2() + " " + weakness.Value,
                                             AddExtraKindedDamageOnStrike = (CombatAction action, Creature damageTarget) =>
                                             {
                                                 if (damageTarget == defender || damageTarget.BaseName == defender.BaseName)
@@ -188,10 +227,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             // Add CLear Logic on Reuse
                             if (result >= CheckResult.Failure && !skipAntithesis)
                             {
+                                int antithesisAmount = (int)(2 + Math.Floor(attacker.Level / 2.0));
                                 defender.AddQEffect(new QEffect(ExpirationCondition.Never)
                                 {
                                     Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
                                     Tag = attacker,
+                                    Illustration = IllustrationName.GenericCombatManeuver,
+                                    Name = "Exploited Vulnerability",
+                                    Description = "Exploited Weakness by " + attacker.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
                                     StateCheck = (QEffect stateCheck) =>
                                     {
                                         Creature owner = stateCheck.Owner;
@@ -199,7 +242,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                         {
                                             if (!owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
                                             {
-                                                owner.WeaknessAndResistance.AddWeakness(ThaumaturgeDamageKinds.PersonalAntithesis, (int)(2 + Math.Floor(attacker.Level / 2.0)));
+                                                owner.WeaknessAndResistance.AddWeakness(ThaumaturgeDamageKinds.PersonalAntithesis, antithesisAmount);
                                             }
                                         }
                                         else if(owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
@@ -212,6 +255,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 {
                                     Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeakness,
                                     Tag = defender,
+                                    Illustration = IllustrationName.GenericCombatManeuver,
+                                    Name = "Exploit Vulnerability",
+                                    Description = "Exploiting Weakness to " + defender.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
                                     AddExtraKindedDamageOnStrike = (CombatAction action, Creature damageTarget) =>
                                     {
                                         if (damageTarget == defender)
@@ -290,7 +336,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     Creature[] allies = owner.Battle.AllCreatures.Where(creature => creature.FriendOf(owner)).ToArray();
                     foreach (Creature ally in allies)
                     {
-                        // TODO: Manipulate
                         ally.AddQEffect(new QEffect(ExpirationCondition.Never)
                         {
                             YouAreTargeted = async (QEffect targeted, CombatAction action) =>
@@ -301,7 +346,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                     QEffect exploitEffect = action.Owner.QEffects.First(qe => qe.Id == ThaumaturgeQEIDs.ExploitVulnerabilityTarget);
                                     if (exploitEffect.Tag != null && exploitEffect.Tag is Creature thaumaturge && thaumaturge == owner && owner.Actions.CanTakeReaction() && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner) && owner.DistanceTo(action.Owner) <= 6 && await owner.AskToUseReaction("Use " + ImplementDetails.BellInitiateBenefitName + ": " + (actionIsSpell ? " Target makes Fortitude save or becomes stupefied?" : " Target makes Will save or becomes your choice of enfeebled or clumsy?")))
                                     {
-                                        CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(action.Owner, new CombatAction(owner, IllustrationName.GenericCombatManeuver, ImplementDetails.BellInitiateBenefitName, [Trait.Auditory, Trait.Emotion, Trait.Enchantment, Trait.Magical, Trait.Manipulate, Trait.Mental], ImplementDetails.BellInitiateBenefitRulesText, Target.Touch()), actionIsSpell ? Defense.Fortitude : Defense.Will, creature => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge));
+                                        CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(action.Owner, new CombatAction(owner, IllustrationName.GenericCombatManeuver, ImplementDetails.BellInitiateBenefitName, [Trait.Auditory, Trait.Emotion, Trait.Enchantment, Trait.Magical, Trait.Manipulate, Trait.Mental, ThaumaturgeTraits.Thaumaturge], ImplementDetails.BellInitiateBenefitRulesText, Target.Touch()), actionIsSpell ? Defense.Fortitude : Defense.Will, creature => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge));
                                         if (savingThrowResult <= CheckResult.Failure)
                                         {
                                             if (actionIsSpell)
@@ -338,6 +383,90 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddChaliceImplementLogic(Feat chaliceImplementFeat)
         {
             AddImplementEnsureLogic(chaliceImplementFeat);
+            chaliceImplementFeat.WithPermanentQEffect(ImplementDetails.ChaliceInitiateBenefitName, delegate (QEffect self)
+            {
+                self.ProvideActionIntoPossibilitySection = (QEffect chaliceImplementEffect, PossibilitySection possibilitySection) =>
+                {
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
+                    {
+                        PossibilitySection chaliceSection = new PossibilitySection("Calice Possibilities");
+
+                        IllustrationName chaliceIllustrationName = IllustrationName.GenericCombatManeuver;
+                        List<Trait> chaliceTraits = [Trait.Magical, Trait.Manipulate, Trait.Necromancy, ThaumaturgeTraits.Thaumaturge];
+
+                        CombatAction sipAction = new CombatAction(self.Owner, chaliceIllustrationName, "Sip", chaliceTraits.ToArray(), ImplementDetails.ChaliceInitiateBenefitSipText, Target.AdjacentCreatureOrSelf()
+                            .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
+                            {
+                                if (user.QEffects.Any(qe => qe.Name == "Chalice Used this Round"))
+                                {
+                                    return Usability.NotUsable("Already used this round.");
+                                }
+                                else if (!ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner))
+                                {
+                                    return Usability.NotUsable("Not weilding Implement.");
+                                }
+                                return Usability.Usable;
+                            }));
+                        sipAction.WithActionCost(1);
+                        sipAction.WithEffectOnChosenTargets(async delegate (Creature user, ChosenTargets targets)
+                        {
+                            if (targets.ChosenCreature != null)
+                            {
+                                user.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
+                                {
+                                    Name = "Chalice Used this Round"
+                                });
+                                targets.ChosenCreature.GainTemporaryHP(2 + (int)(Math.Floor(user.Level / 2.0)));
+                            }
+                        });
+
+                        CombatAction drainAction = new CombatAction(self.Owner, chaliceIllustrationName, "Drain", (chaliceTraits.Concat([Trait.Healing, Trait.Positive])).ToArray(), ImplementDetails.ChaliceInitiateBenefitDrainText, Target.AdjacentCreatureOrSelf()
+                            .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
+                            {
+                                if (user.QEffects.Any(qe => qe.Name == "Chalice Used this Round"))
+                                {
+                                    return Usability.NotUsable("Already used this round.");
+                                }
+                                else if (user.QEffects.Any(qe => qe.Name == "Chalice is Drained"))
+                                {
+                                    return Usability.NotUsable("Already drained this encounter.");
+                                }
+                                else if (!ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner))
+                                {
+                                    return Usability.NotUsable("Not weilding Implement.");
+                                }
+                                return Usability.Usable;
+                            }));
+                        drainAction.WithActionCost(1);
+                        drainAction.WithEffectOnChosenTargets(async delegate (Creature user, ChosenTargets targets)
+                        {
+                            if (targets.ChosenCreature != null)
+                            {
+                                user.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
+                                {
+                                    Name = "Chalice Used this Round"
+                                });
+                                user.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                {
+                                    Name = "Chalice is Drained"
+                                });
+                                targets.ChosenCreature.Heal("" + (3 * user.Level), drainAction);
+                            }
+                        });
+
+                        ActionPossibility sipActionPossibility = new ActionPossibility(sipAction);
+                        chaliceSection.AddPossibility(sipActionPossibility);
+                        ActionPossibility drainActionPossibility = new ActionPossibility(drainAction);
+                        chaliceSection.AddPossibility(drainActionPossibility);
+
+                        SubmenuPossibility chaliceMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, ImplementDetails.ChaliceInitiateBenefitName);
+                        chaliceMenu.Subsections.Add(chaliceSection);
+                        return chaliceMenu;
+                    }
+
+                    return null;
+                };
+            });
         }
 
         /// <summary>
@@ -347,6 +476,63 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddLanternImplementLogic(Feat lanternImplementFeat)
         {
             AddImplementEnsureLogic(lanternImplementFeat);
+            lanternImplementFeat.WithPermanentQEffect("Lantern Initiate Benefit", delegate (QEffect self)
+            {
+                self.BonusToAttackRolls = (QEffect bonusToSeek, CombatAction action, Creature? creature) =>
+                {
+                    if (action.ActionId == ActionId.Seek)
+                    {
+                        return new Bonus(1, BonusType.Status, "Lantern Initiate Benefit", true);
+                    }
+
+                    return null;
+                };
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    startOfCombat.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                    {
+                        Id = ThaumaturgeQEIDs.LanternSearching,
+                        Tag = new List<Tile>()
+                    });
+                    startOfCombat.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                    {
+                        Id = ThaumaturgeQEIDs.LocationTracking,
+                        Tag = null
+                    });
+                };
+                self.StateCheck = async (QEffect stateCheck) =>
+                {
+                    Creature owner = stateCheck.Owner;
+                    QEffect? lanternSearchingEffect = owner.FindQEffect(ThaumaturgeQEIDs.LanternSearching);
+                    QEffect? locationTrackingEffect = owner.FindQEffect(ThaumaturgeQEIDs.LocationTracking);
+                    if (locationTrackingEffect != null && (locationTrackingEffect.Tag == null || (locationTrackingEffect.Tag is Tile lastTile && lastTile != owner.Occupies)) && lanternSearchingEffect != null && lanternSearchingEffect.Tag != null && lanternSearchingEffect.Tag is List<Tile> searchedTiles && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner))
+                    {
+                        locationTrackingEffect.Tag = owner.Occupies;
+                        Tile[] tilesToSearch = owner.Battle.Map.AllTiles.Where(tile => tile.DistanceTo(owner.Occupies) <= 4 && !searchedTiles.Contains(tile)).ToArray();
+                        foreach (Tile tile in tilesToSearch)
+                        {
+                            searchedTiles.Add(tile);
+                            foreach (TileQEffect tileQEffect in tile.QEffects)
+                            {
+                                if (tileQEffect.SeekDC != 0)
+                                {
+                                    CombatAction seekAction = new CombatAction(owner, IllustrationName.Seek, "Lantern Seek", [Trait.Concentrate, Trait.Secret, Trait.Basic, Trait.IsNotHostile, Trait.DoesNotBreakStealth, Trait.AttackDoesNotTargetAC], ImplementDetails.LanternInitiateBenefitRulesText, Target.Self())
+                                        .WithActionId(ActionId.Seek)
+                                        .WithActionCost(0)
+                                        .WithActiveRollSpecification(new ActiveRollSpecification(Checks.Perception(), Checks.FlatDC(tileQEffect.SeekDC)));
+                                    CheckBreakdown seekCheckBreakdown = CombatActionExecution.BreakdownAttack(seekAction, Creature.DefaultCreature);
+                                    CheckBreakdownResult seekResult = new CheckBreakdownResult(seekCheckBreakdown);
+                                    if (seekResult.CheckResult >= CheckResult.Success)
+                                    {
+                                        tile.Overhead(seekResult.CheckResult.HumanizeTitleCase2(), Color.LightBlue, owner + " rolls " + seekResult.CheckResult.HumanizeTitleCase2() + " on Lantern Seek.", "Lantern Seek", seekCheckBreakdown.DescribeWithFinalRollTotal(seekResult));
+                                        await tileQEffect.WhenSeeked.InvokeIfNotNull();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+            });
         }
 
         /// <summary>
@@ -356,6 +542,83 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddMirrorImplementLogic(Feat mirrorImplementFeat)
         {
             AddImplementEnsureLogic(mirrorImplementFeat);
+            mirrorImplementFeat.WithPermanentQEffect(ImplementDetails.MirrorInitiateBenefitName, delegate (QEffect self)
+            {
+                self.ProvideMainAction = (QEffect mirrorsReflectionEffect) =>
+                {
+                    Creature owner = mirrorsReflectionEffect.Owner;
+                    if (!ThaumaturgeUtilities.IsCreatureWeildingImplement(owner))
+                    {
+                        return null;
+                    }
+
+                    return new ActionPossibility(new CombatAction(owner, IllustrationName.GenericCombatManeuver, ImplementDetails.MirrorInitiateBenefitName, [Trait.Illusion, Trait.Magical, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge], ImplementDetails.MirrorInitiateBenefitRulesText, Target.Tile((creature, tile) => tile.LooksFreeTo(creature) && creature.Occupies != null && creature.DistanceTo(tile) <= 3, (creature, tile) => (float)int.MinValue))
+                        .WithActionCost(1)
+                        .WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
+                        {
+                            QEffect? mirrorTracking = owner.FindQEffect(ThaumaturgeQEIDs.MirrorTracking);
+                            if (mirrorTracking != null)
+                            {
+                                Creature pairedCreature = ((MirrorTrackingEffect)mirrorTracking).PairedCreature;
+                                pairedCreature.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.MirrorTracking);
+                                owner.Battle.RemoveCreatureFromGame(pairedCreature);
+                                owner.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.MirrorTracking);
+                            }
+                            if (targets.ChosenTile != null)
+                            {
+                                Tile chosenTile = targets.ChosenTile;
+                                Defenses ownerDefenses = owner.Defenses;
+                                Defenses cloneDefenses = new Defenses(
+                                    ownerDefenses.GetBaseValue(Defense.AC) + ThaumaturgeUtilities.DetermineBonusIncreaseForDefense(owner, Defense.AC),
+                                    ownerDefenses.GetBaseValue(Defense.Fortitude) + ThaumaturgeUtilities.DetermineBonusIncreaseForDefense(owner, Defense.Fortitude),
+                                    ownerDefenses.GetBaseValue(Defense.Reflex) + ThaumaturgeUtilities.DetermineBonusIncreaseForDefense(owner, Defense.Reflex),
+                                    ownerDefenses.GetBaseValue(Defense.Will) + ThaumaturgeUtilities.DetermineBonusIncreaseForDefense(owner, Defense.AC));
+                                Skills cloneSkills = new Skills();
+                                MirrorClone mirrorClone = new MirrorClone(owner.Illustration, owner.Name, owner.Traits, owner.Level, owner.Perception, owner.Speed, cloneDefenses, owner.MaxHP, owner.Abilities, cloneSkills);
+                                mirrorClone.SetDamageImmediately(owner.Damage);
+                                mirrorClone.PersistentCharacterSheet = owner.PersistentCharacterSheet;
+                                mirrorClone.BaseArmor = owner.BaseArmor;
+                                mirrorClone.RecalculateArmor();
+                                mirrorClone.EntersInitiativeOrder = false;
+                                foreach (QEffect effect in owner.QEffects)
+                                {
+                                    if (effect.ProvideMainAction == null && effect.ProvideActionIntoPossibilitySection == null)
+                                    {
+                                        mirrorClone.AddQEffect(effect);
+                                    }
+                                }
+
+                                owner.Battle.SpawnCreature(mirrorClone, owner.OwningFaction, chosenTile);
+
+                                MirrorTrackingEffect ownersTrackingEffect = new MirrorTrackingEffect(owner, mirrorClone);
+                                MirrorTrackingEffect mirrorTrackingEffect = new MirrorTrackingEffect(mirrorClone, owner);
+
+                                owner.SubscribeToAll(mirrorTrackingEffect);
+                                mirrorClone.SubscribeToAll(ownersTrackingEffect);
+
+                                owner.AddQEffect(ownersTrackingEffect);
+                                mirrorClone.AddQEffect(mirrorTrackingEffect);
+                            }
+                        }));
+                };
+                self.ProvideActionIntoPossibilitySection = (QEffect swapToClone, PossibilitySection possibilitySection) =>
+                {
+                    Creature owner = swapToClone.Owner;
+                    MirrorTrackingEffect? mirrorTracking = owner.FindQEffect(ThaumaturgeQEIDs.MirrorTracking) as MirrorTrackingEffect;
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions && mirrorTracking != null)
+                    {
+                        Creature pairedCreature = mirrorTracking.PairedCreature;
+                        return new ActionPossibility(new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Swap to Clone", [], "Swaps to the clone, in which you can continue your turn.", Target.Self())
+                            .WithActionCost(0)
+                            .WithEffectOnSelf(async (Creature self) =>
+                            {
+                                self.SwapPositions(pairedCreature);
+                            }));
+                    }
+
+                    return null;
+                };
+            });
         }
 
         /// <summary>
@@ -365,6 +628,55 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddRegaliaImplementLogic(Feat regaliaImplementFeat)
         {
             AddImplementEnsureLogic(regaliaImplementFeat);
+            regaliaImplementFeat.WithPermanentQEffect(ImplementDetails.RegaliaInitiateBenefitName, delegate (QEffect self)
+            {
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    Creature owner = startOfCombat.Owner;
+                    foreach (Creature ally in owner.Battle.AllCreatures.Where(creature => owner.FriendOf(creature)))
+                    {
+                        ally.AddQEffect(new QEffect(ExpirationCondition.Never)
+                        {
+                            BonusToDefenses = (QEffect bonusToDefenses, CombatAction? action, Defense defense) =>
+                            {
+                                if (defense == Defense.Will && action != null && action.HasTrait(Trait.Fear) && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner) && ally.DistanceTo(owner) <= 3)
+                                {
+                                    return new Bonus(1, BonusType.Status, ImplementDetails.RegaliaInitiateBenefitName, true);
+                                }
+
+                                return null;
+                            }
+                        });
+                    }
+                };
+                self.EndOfYourTurn = async (QEffect endOfTurn, Creature self) =>
+                {
+                    foreach (Creature ally in self.Battle.AllCreatures.Where(creature => self.FriendOf(creature) && self.DistanceTo(creature) <= 3 && creature.HasEffect(QEffectId.Frightened)))
+                    {
+                        if (ThaumaturgeUtilities.IsCreatureWeildingImplement(self))
+                        {
+                            QEffect? frightened = ally.FindQEffect(QEffectId.Frightened);
+                            if (frightened != null)
+                            {
+                                frightened.Value -= 1;
+                                if (frightened.Value <= 0)
+                                {
+                                    frightened.ExpiresAt = ExpirationCondition.Immediately;
+                                }
+                            }
+                        }
+                    }
+                };
+                self.BonusToSkillChecks = (Skill skill, CombatAction action, Creature? target) =>
+                {
+                    if (ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner) && (skill == Skill.Deception || skill == Skill.Diplomacy || skill == Skill.Intimidation))
+                    {
+                        return new Bonus(1, BonusType.Circumstance, ImplementDetails.RegaliaInitiateBenefitName, true);
+                    }
+
+                    return null;
+                };
+            });
         }
 
         /// <summary>
@@ -373,7 +685,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="tomeImplementFeat">The Tome Implement feat object</param>
         public static void AddTomeImplementLogic(Feat tomeImplementFeat)
         {
-            AddImplementEnsureLogic(tomeImplementFeat);
+            tomeImplementFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
+            {
+                ThaumaturgeUtilities.EnsureCorrectImplements(sheet);
+                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Extra Skill", "Tome Extra Skill", 1, (feat => feat is SkillSelectionFeat)));
+                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Extra Expert Skill", "Tome Extra Expert Skill", 3, (feat => feat is SkillIncreaseFeat)));
+            };
         }
 
         /// <summary>
@@ -382,7 +699,143 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="wandImplementFeat">The Wand Implement feat object</param>
         public static void AddWandImplementLogic(Feat wandImplementFeat)
         {
-            AddImplementEnsureLogic(wandImplementFeat);
+            wandImplementFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
+            {
+                ThaumaturgeUtilities.EnsureCorrectImplements(sheet);
+                List<FeatName> wandFeatNames = new List<FeatName>() { ThaumaturgeFeatNames.ColdWand, ThaumaturgeFeatNames.ElectricityWand, ThaumaturgeFeatNames.FireWand } ;
+                sheet.AddSelectionOption(new SingleFeatSelectionOption("Thaumaturge Wand Type", "Wand", 1, feat => wandFeatNames.Contains(feat.FeatName)));
+            };
+            wandImplementFeat.WithPermanentQEffect(ImplementDetails.WandInitiateBenefitName, delegate (QEffect self)
+            {
+                self.ProvideActionIntoPossibilitySection = (QEffect wandImplementEffect, PossibilitySection possibilitySection) =>
+                {
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
+                    {
+                        Creature owner = wandImplementEffect.Owner;
+                        DamageKind? wandDamageKind = null;
+                        Trait? wandTraitForType = null;
+                        IllustrationName? projectileIllustration = null;
+                        SfxName? wandSfx = null;
+                        if (owner.HasFeat(ThaumaturgeFeatNames.ColdWand))
+                        {
+                            wandDamageKind = DamageKind.Cold;
+                            wandTraitForType = Trait.Cold;
+                            wandSfx = SfxName.RayOfFrost;
+                            projectileIllustration = IllustrationName.RayOfFrost;
+                        }
+                        else if (owner.HasFeat(ThaumaturgeFeatNames.ElectricityWand))
+                        {
+                            wandDamageKind = DamageKind.Electricity;
+                            wandTraitForType = Trait.Electricity;
+                            wandSfx = SfxName.ElectricArc;
+                            projectileIllustration = IllustrationName.ElectricArc;
+                        }
+                        else if (owner.HasFeat(ThaumaturgeFeatNames.FireWand)) 
+                        {
+                            wandDamageKind = DamageKind.Fire;
+                            wandTraitForType = Trait.Fire;
+                            wandSfx = SfxName.FireRay;
+                            projectileIllustration = IllustrationName.FireRay;
+                        }
+
+                        PossibilitySection wandSection = new PossibilitySection("Wand Possibilities");
+
+                        IllustrationName wandIllustrationName = IllustrationName.GenericCombatManeuver;
+                        List<Trait> wandTraits = [Trait.Concentrate, Trait.Evocation, Trait.Magical, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge];
+                        if (wandTraitForType != null)
+                        {
+                            wandTraits.Add((Trait)wandTraitForType);
+                        }
+
+                        CombatAction flingMagicAction = new CombatAction(self.Owner, wandIllustrationName, "Fling Magic", wandTraits.ToArray(), ImplementDetails.WandInitiateBenefitRulesText, Target.RangedCreature(12)
+                            .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
+                            {
+                                if (!ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner))
+                                {
+                                    return Usability.NotUsable("Not weilding Implement.");
+                                }
+                                return Usability.Usable;
+                            }));
+                        flingMagicAction.WithActionCost(2);
+                        flingMagicAction.WithSavingThrow(new SavingThrow(Defense.Reflex, creature => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge)));
+                        flingMagicAction.WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
+                        {
+                            if (wandDamageKind != null)
+                            {
+                                int level = owner.Level;
+                                KindedDamage wandDamage = new KindedDamage(DiceFormula.FromText("" + (1 + (int)(Math.Floor((level - 1) / 2.0))) + "d4 + " + attacker.Abilities.Charisma, "Fling Magic"), (DamageKind)wandDamageKind);
+                                DamageEvent wandDamageEvent = new DamageEvent(action, defender, result, [wandDamage], result == CheckResult.CriticalFailure, result == CheckResult.Success);
+                                if (result <= CheckResult.Success)
+                                {
+                                    await attacker.DealDirectDamage(wandDamageEvent);
+                                }
+                            }
+                        });
+
+                        CombatAction boostedFlingMagicAction = new CombatAction(self.Owner, wandIllustrationName, "Boosted Fling Magic", wandTraits.ToArray(), ImplementDetails.WandInitiateBenefitRulesText, Target.RangedCreature(12)
+                            .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
+                            {
+                                if (owner.HasEffect(ThaumaturgeQEIDs.BoostedWandUsed))
+                                {
+                                    int value = owner.GetQEffectValue(ThaumaturgeQEIDs.BoostedWandUsed);
+                                    return Usability.NotUsable("Wand isn't charged yet. (" + value + " turns left)");
+                                }
+                                else if (!ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner))
+                                {
+                                    return Usability.NotUsable("Not weilding Implement.");
+                                }
+                                return Usability.Usable;
+                            }));
+                        boostedFlingMagicAction.WithActionCost(2);
+                        boostedFlingMagicAction.WithSavingThrow(new SavingThrow(Defense.Reflex, creature => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge)));
+                        boostedFlingMagicAction.WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
+                        {
+                            if (wandDamageKind != null)
+                            {
+                                int level = owner.Level;
+                                KindedDamage wandDamage = new KindedDamage(DiceFormula.FromText("" + (1 + (int)(Math.Floor((level - 1) / 2.0))) + "d6 + " + attacker.Abilities.Charisma, "Boosted Fling Magic"), (DamageKind)wandDamageKind);
+                                DamageEvent wandDamageEvent = new DamageEvent(action, defender, result, [wandDamage], result == CheckResult.CriticalFailure, result == CheckResult.Success);
+                                if (result <= CheckResult.Success)
+                                {
+                                    await attacker.DealDirectDamage(wandDamageEvent);
+                                }
+
+                                DiceFormula boostedRoll = DiceFormula.FromText("1d4", "Boosted Fling Magic");
+                                int boostedResult = boostedRoll.RollResult();
+                                owner.Battle.Log(owner.Name + " can't Boost again for " + boostedResult + " rounds.");
+                                owner.AddQEffect(new QEffect(ExpirationCondition.CountsDownAtStartOfSourcesTurn)
+                                {
+                                    Id = ThaumaturgeQEIDs.BoostedWandUsed,
+                                    Source = owner,
+                                    Value = 1 + boostedResult
+                                });
+                            }
+                        });
+
+                        if (wandSfx != null)
+                        {
+                            flingMagicAction.WithSoundEffect((SfxName)wandSfx);
+                            boostedFlingMagicAction.WithSoundEffect((SfxName)wandSfx);
+                        }
+                        if (projectileIllustration != null)
+                        {
+                            flingMagicAction.ProjectileIllustration = projectileIllustration;
+                            boostedFlingMagicAction.ProjectileIllustration = projectileIllustration;
+                        }
+
+                        ActionPossibility flingMagicActionPossibility = new ActionPossibility(flingMagicAction);
+                        wandSection.AddPossibility(flingMagicActionPossibility);
+                        ActionPossibility boostedFlingMagicPossibility = new ActionPossibility(boostedFlingMagicAction);
+                        wandSection.AddPossibility(boostedFlingMagicPossibility);
+
+                        SubmenuPossibility wandMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, ImplementDetails.WandInitiateBenefitName);
+                        wandMenu.Subsections.Add(wandSection);
+                        return wandMenu;
+                    }
+
+                    return null;
+                };
+            });
         }
 
         /// <summary>
@@ -392,6 +845,34 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddWeaponImplementLogic(Feat weaponImplementFeat)
         {
             AddImplementEnsureLogic(weaponImplementFeat);
+            weaponImplementFeat.WithPermanentQEffect(ImplementDetails.WeaponInitiateBenefitName, delegate (QEffect self)
+            {
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    Creature owner = startOfCombat.Owner;
+                    Item? weaponImplement = owner.HeldItems.FirstOrDefault(item => item != null && item.WeaponProperties != null && !item.HasTrait(Trait.TwoHanded));
+                    if (weaponImplement == null)
+                    {
+                        weaponImplement = owner.CarriedItems.FirstOrDefault(item => item != null && item.WeaponProperties != null && !item.HasTrait(Trait.TwoHanded));
+                    }
+
+                    if (weaponImplement != null)
+                    {
+                        weaponImplement.Traits.Add(ThaumaturgeTraits.Implement);
+                        owner.AddQEffect(QEffect.AttackOfOpportunity("Implement's Interruption", ImplementDetails.WeaponInitiateBenefitRulesText, (QEffect resirctions, Creature target) =>
+                        {
+                            QEffect? exploitTargetEffect = target.FindQEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget);
+                            if (exploitTargetEffect != null && exploitTargetEffect.Tag != null && exploitTargetEffect.Tag is Creature thaumaturge && thaumaturge == owner)
+                            {
+                                return true;
+                            }
+
+                            return false;
+                        }
+                        , false));
+                    }
+                };
+            });
         }
 
         /// <summary>

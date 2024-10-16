@@ -24,7 +24,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Constants
 
         public static readonly string ChaliceInitiateBenefitFlavorText = "Chalice implements are vessels that fill with liquid, associating them with healing, nourishment, and life. Your chalice might be a traditional cup or goblet, but it could also be a small amphora, a polished gourd, or even a hollowed-out skull. Chalice implements are associated with the astrological signs of the mother and the newlyweds, as well as the sea dragon.";
 
-        public static readonly string ChaliceInitiateBenefitRulesText = "{b}Frequency{/b} once per round\n{b}Requirements{/b} You are holding your chalice implement.\n\nYou drink from the liquid that slowly collects in your chalice or administer it to an adjacent ally. The drinker chooses whether to take a small sip or to drain the contents.\n\n{b}Sip{/b} A sip grants the drinker an amount of temporary Hit Points equal to 2 + half your level that last until the end of your next turn.\n\n{b}Drain{/b} {i}(healing, positive){/i} Drinking deep instead heals the drinker 3 Hit Points for each level you have. After the chalice is drained, it's left with only its slowly collecting dregs; the chalice can't be drained again, though it can still be sipped from. If 10 minutes pass without anyone drinking from the chalice, it refills itself and can be drained again. If the drinker has negative healing, it can still heal in this way, and the effect has the negative trait instead of healing and positive.";
+        public static readonly string ChaliceInitiateBenefitRulesText = "{b}Frequency{/b} once per round\n{b}Requirements{/b} You are holding your chalice implement.\n\nYou drink from the liquid that slowly collects in your chalice or administer it to an adjacent ally. The drinker chooses whether to take a small sip or to drain the contents.\n\n" + ChaliceInitiateBenefitSipText + "\n\n" + ChaliceInitiateBenefitDrainText;
+
+        public static readonly string ChaliceInitiateBenefitSipText = "{b}Sip{/b} A sip grants the drinker an amount of temporary Hit Points equal to 2 + half your level.";
+
+        public static readonly string ChaliceInitiateBenefitDrainText = "{b}Drain{/b} {i}(healing, positive){/i} Drinking deep instead heals the drinker 3 Hit Points for each level you have. The chalice can not be drained again this encounter.";
 
         public static readonly string LanternInitiateBenefitName = string.Empty;
 
@@ -38,13 +42,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Constants
 
         public static readonly string MirrorInitiateBenefitRulesText = "{b}Requirements{/b} You're holding your mirror implement.\n\nYou reflect an illusory image of yourself into another unoccupied space within 15 feet that you can see. You are treated as being in both spaces until the start of your next turn. You occupy both spaces.\n\nYour mirror self mimics your actions exactly, but any effects you generate come from only one of your positions; you decide which each time you act. For example, if you made a melee Strike against a creature within reach of the reflection, you'd mime the actions of the Strike, but only the reflection would actually make the Strike. Anything that targets or would affect your reflection affects you and uses your statistics. Something that would target or affect both of you affects you only once.\n\nThe effect also ends when you fall unconscious, at which point you decide which version is truly you.";
 
-        public static readonly string RegaliaInitiateBenefitName = string.Empty;
+        public static readonly string RegaliaInitiateBenefitName = "Regalia Initiate Benefit";
 
         public static readonly string RegaliaInitiateBenefitFlavorText = "Regalia implements represent rulership, leadership, and social connections. While they differ in shape depending on regional customs and markers used to signify authority, common regalia implements are scepters, jeweled orbs, and heraldic banners. Regalia implements are associated with the harrow suit of crowns and the astrological signs of the patriarch and the sovereign dragon.";
 
         public static readonly string RegaliaInitiateBenefitRulesText = "While you hold your regalia, you gain an air of authority and bolster the courage of allies who believe in you. When you are holding your regalia, you gain an inspiring aura that stokes the courage of you and all allies in a 15-foot emanation who can see you, granting them a +1 status bonus to saving throws against fear. At the end of your turn, at the same time you would reduce your frightened value by 1, you reduce the frightened value of all allies within your inspiring aura by 1. Your aura has the emotion, mental, and visual traits.";
 
-        public static readonly string TomeInitiateBenefitName = string.Empty;
+        public static readonly string TomeInitiateBenefitName = "Tome Initiate Benefit";
 
         public static readonly string TomeInitiateBenefitFlavorText = "Tome implements embody lost knowledge and otherworldly insights. While a weathered book is most common, tome implements can have as many different form factors as there are ways to store knowledge, from carved clay tablets to bundles of knotted cords. Tome implements are associated with the harrow suit of books and the astrological signs of the stargazer and the underworld dragon.";
 

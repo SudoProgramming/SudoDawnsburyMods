@@ -72,5 +72,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Root to Life class Feat
         /// </summary>
         public static readonly FeatName RootToLife = ModManager.RegisterFeatName("Root to Life", "Root to Life {icon:Action} or {icon:TwoActions}");
+
+        public static readonly FeatName ScrollThaumaturgy = ModManager.RegisterFeatName("Scroll Thaumaturgy", "Scroll Thaumaturgy");
+
+        public static readonly FeatName EsotericWarden = ModManager.RegisterFeatName("Esoteric Warden", "Esoteric Warden");
+
+        public static readonly FeatName ColdWand = ModManager.RegisterFeatName("Cold Wand", "Cold Wand");
+
+        public static readonly FeatName ElectricityWand = ModManager.RegisterFeatName("Electricity Wand", "Electricity Wand");
+
+        public static readonly FeatName FireWand = ModManager.RegisterFeatName("Fire Wand", "Fire Wand");
     }
 }

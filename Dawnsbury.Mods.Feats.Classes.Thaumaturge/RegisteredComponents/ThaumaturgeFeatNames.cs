@@ -1,4 +1,5 @@
-﻿using Dawnsbury.Core.CharacterBuilder.Feats;
+﻿using Dawnsbury.Core;
+using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Modding;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
@@ -86,6 +87,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         public static readonly FeatName BreachedDefenses = ModManager.RegisterFeatName("Breached Defenses", "Breached Defenses");
 
         public static readonly FeatName InstructiveStrike = ModManager.RegisterFeatName("Instructive Strike", "Instructive Strike");
+
+        public static readonly FeatName LingeringPainStrike = ModManager.RegisterFeatName("Lingering Pain Strike", "Lingering Pain Strike");
 
         public static readonly FeatName ColdWand = ModManager.RegisterFeatName("Cold Wand", "Cold Wand");
 

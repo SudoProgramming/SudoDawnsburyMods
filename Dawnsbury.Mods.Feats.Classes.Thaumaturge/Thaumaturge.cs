@@ -45,6 +45,7 @@ using static Dawnsbury.Core.Possibilities.Usability;
 using System.Diagnostics;
 using System.Data.SqlTypes;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Dawnsbury.Core.Mechanics.Rules;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -161,21 +162,25 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddEsotericWardenLogic(esotericWardenFeat);
             yield return esotericWardenFeat;
 
-            TrueFeat turnAwayMisfortuneFeat = new TrueFeat(ThaumaturgeFeatNames.TurnAwayMisfortune, 2, "You perform a superstition, such as casting salt over your shoulder to ward off bad luck.", "{b}Trigger{/b} You would attempt a roll affected by a misfortune effect.\n\nTurn Away Misfortune's fortune trait cancels out the misfortune effect, causing you to roll normally. As normal, you can apply only one fortune ability to a roll, so if you Turned Away Misfortune on an attack roll, you couldn't also use an ability like Halfling Luck to alter the roll further.", [Trait.Abjuration, Trait.Fortune, Trait.Manipulate, Trait.Occult, ThaumaturgeTraits.Thaumaturge]);
-            turnAwayMisfortuneFeat.WithActionCost(-1);
-            // HACK: This feat knowingly does nothing, since Misfortune is not in Dawnsbury Days. This should be fixed if added.
-            // This is left in as an option as a player won't know what is coming
-            yield return turnAwayMisfortuneFeat;
+            //TrueFeat turnAwayMisfortuneFeat = new TrueFeat(ThaumaturgeFeatNames.TurnAwayMisfortune, 2, "You perform a superstition, such as casting salt over your shoulder to ward off bad luck.", "{b}Trigger{/b} You would attempt a roll affected by a misfortune effect.\n\nTurn Away Misfortune's fortune trait cancels out the misfortune effect, causing you to roll normally. As normal, you can apply only one fortune ability to a roll, so if you Turned Away Misfortune on an attack roll, you couldn't also use an ability like Halfling Luck to alter the roll further.", [Trait.Abjuration, Trait.Fortune, Trait.Manipulate, Trait.Occult, ThaumaturgeTraits.Thaumaturge]);
+            //turnAwayMisfortuneFeat.WithActionCost(-1);
+            //// HACK: This feat knowingly does nothing, since Misfortune is not in Dawnsbury Days. This should be fixed if added.
+            //// This is left in as an option as a player won't know what is coming
+            //yield return turnAwayMisfortuneFeat;
 
-            TrueFeat breachedDefensesFeat = new TrueFeat(ThaumaturgeFeatNames.BreachedDefenses, 4, "You can find the one weak point in a creature's scales, wards, or armor to get past its resistances", "When you succeed at Exploit Vulnerability, you learn about the highest of the creature's resistances that can be bypassed (for example, if the creature has resistance to physical damage except silver), if the creature has one. If you prefer, you can choose the following benefit instead of one of the usual two benefits from Exploit Vulnerability.\n\n{b}Breached Defenses{/b} You can choose this benefit only if you succeeded at Exploit Vulnerability and learned the creature has at least one resistance that can be bypassed. Choose one such resistance. Your unarmed and weapon Strikes bypass the chosen resistance", [ThaumaturgeTraits.Thaumaturge]);
-            // HACK: This feat knowingly does nothing, since no ignorable resistance is in Dawnsbury Days. This should be fixed if added.
-            // This is left in as an option as a player won't know what is coming
-            yield return breachedDefensesFeat;
+            //TrueFeat breachedDefensesFeat = new TrueFeat(ThaumaturgeFeatNames.BreachedDefenses, 4, "You can find the one weak point in a creature's scales, wards, or armor to get past its resistances", "When you succeed at Exploit Vulnerability, you learn about the highest of the creature's resistances that can be bypassed (for example, if the creature has resistance to physical damage except silver), if the creature has one. If you prefer, you can choose the following benefit instead of one of the usual two benefits from Exploit Vulnerability.\n\n{b}Breached Defenses{/b} You can choose this benefit only if you succeeded at Exploit Vulnerability and learned the creature has at least one resistance that can be bypassed. Choose one such resistance. Your unarmed and weapon Strikes bypass the chosen resistance", [ThaumaturgeTraits.Thaumaturge]);
+            //// HACK: Will only work in V3
+            //yield return breachedDefensesFeat;
 
             TrueFeat instructiveStrikeFeat = new TrueFeat(ThaumaturgeFeatNames.InstructiveStrike, 4, "You attack your foe and analyze how it reacts.", "{b}Requirements{/b} You are holding your implement\n\nMake a Strike. On a hit, you can immediately attempt a check to Exploit Vulnerability on the target. On a critical hit, you gain a +2 circumstance bonus to that check.", [ThaumaturgeTraits.Thaumaturge]);
             instructiveStrikeFeat.WithActionCost(1);
             AddInstructiveStrikeLogic(instructiveStrikeFeat);
             yield return instructiveStrikeFeat;
+
+            TrueFeat lingeringPainStrikeFeat = new TrueFeat(ThaumaturgeFeatNames.LingeringPainStrike, 4, "You attack with in such a way that your foes feel faint afterwards.", "{b}Requirements{/b} You are holding your implement\n\nMake a Strike. On a hit, the target also rolls a Fortitude save against your DC, and is sickened 1 on a failure.", [ThaumaturgeTraits.Thaumaturge]);
+            lingeringPainStrikeFeat.WithActionCost(2);
+            AddLingeringPainStrikeLogic(lingeringPainStrikeFeat);
+            yield return lingeringPainStrikeFeat;
         }
 
         /// <summary>
@@ -1248,7 +1253,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <summary>
         /// Adds the logic for the Divine Disharmony feat
         /// </summary>
-        /// <param name="instructiveStrikeFeat">The Divine Disharmony feat object</param>
+        /// <param name="divineDisharmonyFeat">The Divine Disharmony feat object</param>
         public static void AddDivineDisharmonyLogic(Feat divineDisharmonyFeat)
         {
             divineDisharmonyFeat.WithPermanentQEffect("Divine Disharmony", delegate (QEffect self)
@@ -1285,6 +1290,49 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     if (action.ActionId == ThaumaturgeActionIDs.DivineDisharmony && target != null && target.Spellcasting != null && target.Spellcasting.PrimarySpellcastingSource.SpellcastingTradition == Trait.Divine)
                     {
                         return new Bonus(2, BonusType.Circumstance, "Divine Disharmony", true);
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Lingering Pain Strike feat
+        /// </summary>
+        /// <param name="lingeringPainStrikeFeat">The Lingering Pain Strike feat object</param>
+        public static void AddLingeringPainStrikeLogic(Feat lingeringPainStrikeFeat)
+        {
+            lingeringPainStrikeFeat.WithPermanentQEffect("Lingering Pain Strike", delegate (QEffect self)
+            {
+                self.ProvideStrikeModifier = (Item item) =>
+                {
+                    if (item.WeaponProperties != null)
+                    {
+                        CombatAction lingeringPainStrikeStrike = self.Owner.CreateStrike(item);
+                        lingeringPainStrikeStrike.WithActionCost(2);
+                        lingeringPainStrikeStrike.Traits.Add(Trait.Mental);
+                        lingeringPainStrikeStrike.Traits.Add(Trait.Fear);
+                        lingeringPainStrikeStrike.Traits.Add(Trait.Emotion);
+                        lingeringPainStrikeStrike.Traits.Add(Trait.Basic);
+                        lingeringPainStrikeStrike.Illustration = (Illustration)new SideBySideIllustration(lingeringPainStrikeStrike.Illustration, (Illustration)IllustrationName.Sickened);
+                        lingeringPainStrikeStrike.Name = "Lingering Pain Strike";
+                        lingeringPainStrikeStrike.StrikeModifiers.OnEachTarget += (Func<Creature, Creature, CheckResult, Task>)(async (attacker, defender, checkResult) =>
+                        {
+                            if (checkResult >= CheckResult.Success)
+                            {
+                                ActiveRollSpecification activeRollSpecification = new ActiveRollSpecification(Checks.SavingThrow(Defense.Fortitude), Checks.FlatDC(ThaumaturgeUtilities.CalculateClassDC(attacker, ThaumaturgeTraits.Thaumaturge)));
+                                int classDC = ThaumaturgeUtilities.CalculateClassDC(attacker, ThaumaturgeTraits.Thaumaturge);
+                                CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(defender, lingeringPainStrikeStrike, Defense.Fortitude, creature => classDC);
+                                if (savingThrowResult <= CheckResult.Failure)
+                                {
+                                    defender.AddQEffect(QEffect.Sickened(1, classDC));
+                                }
+                            }
+
+                        });
+
+                        return lingeringPainStrikeStrike;
                     }
 
                     return null;

@@ -144,6 +144,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddAmmunitionThaumaturgyLogic(ammunitionThaumaturgyFeat);
             yield return ammunitionThaumaturgyFeat;
 
+            TrueFeat divineDisharmonyFeat = new TrueFeat(ThaumaturgeFeatNames.DivineDisharmony, 1, "From your collection of religious trinkets, you pull out opposing divine objects—such as the religious symbols of two deities that are hated enemies—and combine them in a display that causes discordant clashes of divine energy that are especially distracting to the faithful.", "Roll the best check between Deception or Intimidation against the Will DC of a creature you can see within 60 feet, with the following results. If the creature has access to divine spells, you gain a +2 circumstance bonus to your skill check.\n\n{b}Critical Success{/b} The creature is flat-footed to your attacks until the end of your next turn.\n\n{b}Success{/b} The creature is flat-footed against your attacks until the end of your current turn.", [Trait.Divine, Trait.Enchantment, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge]);
+            divineDisharmonyFeat.WithActionCost(1);
+            AddDivineDisharmonyLogic(divineDisharmonyFeat);
+            yield return divineDisharmonyFeat;
+
             TrueFeat rootToLifeFeat = new TrueFeat(ThaumaturgeFeatNames.RootToLife, 1, "Marigold, spider lily, pennyroyal—many primal traditions connect flowers and plants with the boundary between life and death, and you can leverage this association to keep an ally on this side of the line.", "You place a small plant or similar symbol on an adjacent dying creature, immediately stabilizing them; the creature is no longer dying and is instead unconscious at 0 Hit Points.\n\nIf you spend 2 actions instead of 1, you empower the act further by uttering a quick folk blessing to chase away ongoing pain, adding the auditory trait to the action. When you do so, attempt flat checks to remove each source of persistent damage affecting the target; due to the particularly effective assistance, the DC is 10 instead of the usual 15.", [Trait.Manipulate, Trait.Necromancy, Trait.Primal, ThaumaturgeTraits.Thaumaturge]);
             AddRootToLifeLogic(rootToLifeFeat);
             yield return rootToLifeFeat;
@@ -1236,6 +1241,53 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             }
                         }
                     }
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Divine Disharmony feat
+        /// </summary>
+        /// <param name="instructiveStrikeFeat">The Divine Disharmony feat object</param>
+        public static void AddDivineDisharmonyLogic(Feat divineDisharmonyFeat)
+        {
+            divineDisharmonyFeat.WithPermanentQEffect("Divine Disharmony", delegate (QEffect self)
+            {
+                self.ProvideMainAction = (QEffect provideMainAction) =>
+                {
+                    Creature owner = provideMainAction.Owner;
+                    PossibilitySection divineDisharmonySection = new PossibilitySection("Divine Disharmony Possibilities");
+
+                    CombatAction divineDisharmonyAction = new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Divine Disharmony", [Trait.Divine, Trait.Enchantment, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge], divineDisharmonyFeat.RulesText,Target.RangedCreature(12));
+                    divineDisharmonyAction.WithActionCost(1);
+                    divineDisharmonyAction.WithActionId(ThaumaturgeActionIDs.DivineDisharmony);
+                    divineDisharmonyAction.WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Deception, Skill.Intimidation), Checks.DefenseDC(Defense.Will)));
+                    divineDisharmonyAction.WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
+                    {
+                        if (result >= CheckResult.Success)
+                        {
+                            QEffect flatFooted = QEffect.FlatFooted("Divine Disharmony");
+                            flatFooted.Owner = defender;
+                            flatFooted.ExpiresAt = ExpirationCondition.ExpiresAtEndOfYourTurn;
+                            if (result == CheckResult.CriticalSuccess)
+                            {
+                                flatFooted.CannotExpireThisTurn = true;
+                            }
+
+                            defender.AddQEffect(flatFooted);
+                        }
+                    });
+
+                    return new ActionPossibility(divineDisharmonyAction);
+                };
+                self.BonusToSkillChecks = (Skill skill, CombatAction action, Creature? target) =>
+                {
+                    if (action.ActionId == ThaumaturgeActionIDs.DivineDisharmony && target != null && target.Spellcasting != null && target.Spellcasting.PrimarySpellcastingSource.SpellcastingTradition == Trait.Divine)
+                    {
+                        return new Bonus(2, BonusType.Circumstance, "Divine Disharmony", true);
+                    }
+
+                    return null;
                 };
             });
         }

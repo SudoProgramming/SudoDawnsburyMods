@@ -75,6 +75,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// </summary>
         public static readonly FeatName RootToLife = ModManager.RegisterFeatName("Root to Life", "Root to Life {icon:Action} or {icon:TwoActions}");
 
+        public static readonly FeatName DivineDisharmony = ModManager.RegisterFeatName("Divine Disharmony", "Divine Disharmony");
+
         public static readonly FeatName ScrollThaumaturgy = ModManager.RegisterFeatName("Scroll Thaumaturgy", "Scroll Thaumaturgy");
 
         public static readonly FeatName EsotericWarden = ModManager.RegisterFeatName("Esoteric Warden", "Esoteric Warden");

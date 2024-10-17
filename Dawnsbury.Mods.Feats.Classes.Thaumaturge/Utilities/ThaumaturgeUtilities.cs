@@ -26,6 +26,9 @@ using Microsoft.Xna.Framework;
 using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Roller;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Constants;
+using Dawnsbury.Core.Coroutines.Options;
+using Dawnsbury.Core.Mechanics.Damage;
+using Dawnsbury.Core.Possibilities;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 {
@@ -44,6 +47,126 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             return false;
         }
 
+        public static CombatAction CreateExploitVulnerabilityAction(Creature owner)
+        {
+            CombatAction exploitVulnerabilityAction = new CombatAction(
+                owner,
+                IllustrationName.GenericCombatManeuver,
+                "Exploit Vulnerability",
+                [Trait.Manipulate, ThaumaturgeTraits.Thaumaturge],
+                "{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement.\nYou scour your experiences and learning to identify something that might repel your foe. You retrieve an object from your esoterica with the appropriate supernatural qualities, then use your implement to stoke the remnants of its power into a blaze. Select a creature you can see and attempt an Esoteric Lore check against a standard DC for its level, as you retrieve the right object from your esoterica and use your implement to empower it. You gain the following effects until you Exploit Vulnerabilities again.\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn.",
+                Target.Ranged(100)
+                .WithAdditionalConditionOnTargetCreature((attacker, defender) => attacker.HasEffect(ThaumaturgeQEIDs.UsedExploitVulnerability) ? Usability.NotUsable("Already Exploited Vulnerability this turn") : Usability.Usable))
+                .WithActionId(ThaumaturgeActionIDs.ExploitVulnerability)
+                .WithActiveRollSpecification(new ActiveRollSpecification(ThaumaturgeUtilities.RollEsotericLore, ThaumaturgeUtilities.CalculateEsotericLoreDC))
+                .WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
+                {
+                    attacker.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
+                    {
+                        Id = ThaumaturgeQEIDs.UsedExploitVulnerability
+                    });
+                    bool skipAntithesis = false;
+                    if (result >= CheckResult.Success)
+                    {
+                        if (defender.WeaknessAndResistance.Weaknesses.Count(resistance => resistance.DamageKind != ThaumaturgeDamageKinds.PersonalAntithesis) > 0)
+                        {
+                            List<Resistance> weaknesses = ThaumaturgeUtilities.GetHighestWeaknesses(defender);
+                            Resistance weakness = weaknesses[0];
+                            if (weaknesses.Count > 1)
+                            {
+                                ChoiceButtonOption selectedWeakness = await attacker.AskForChoiceAmongButtons(IllustrationName.GenericCombatManeuver, "Which weakness would you like to exploit against all " + defender.BaseName + "?", weaknesses.Select(weakness => weakness.DamageKind.HumanizeTitleCase2()).ToArray());
+                                weakness = weaknesses[selectedWeakness.Index];
+                            }
+                            if (weakness.Value >= 2 + Math.Floor(attacker.Level / 2.0))
+                            {
+                                skipAntithesis = true;
+                                foreach (Creature creature in attacker.Battle.AllCreatures.Where(creature => !creature.FriendOf(attacker) && creature.BaseName == defender.BaseName))
+                                {
+                                    creature.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                    {
+                                        Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
+                                        Illustration = IllustrationName.GenericCombatManeuver,
+                                        Name = "Exploited Vulnerability",
+                                        Description = "Exploited Weakness by " + attacker.Name + " - " + weakness.DamageKind.HumanizeTitleCase2() + " " + weakness.Value,
+                                        Tag = attacker
+                                    });
+                                }
+                                attacker.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                {
+                                    Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeakness,
+                                    Tag = defender,
+                                    Illustration = IllustrationName.GenericCombatManeuver,
+                                    Name = "Exploit Vulnerability",
+                                    Description = "Exploiting Weakness to all " + defender.BaseName + " - " + weakness.DamageKind.HumanizeTitleCase2() + " " + weakness.Value,
+                                    AddExtraKindedDamageOnStrike = (CombatAction action, Creature damageTarget) =>
+                                    {
+                                        if (damageTarget == defender || damageTarget.BaseName == defender.BaseName)
+                                        {
+                                            return new KindedDamage(DiceFormula.FromText("0", "Exploit Vulnerability - Weakness " + weakness.DamageKind), weakness.DamageKind);
+                                        }
+
+                                        return null;
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    // Add CLear Logic on Reuse
+                    if (result >= CheckResult.Failure && !skipAntithesis)
+                    {
+                        int antithesisAmount = (int)(2 + Math.Floor(attacker.Level / 2.0));
+                        defender.AddQEffect(new QEffect(ExpirationCondition.Never)
+                        {
+                            Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
+                            Tag = attacker,
+                            Illustration = IllustrationName.GenericCombatManeuver,
+                            Name = "Exploited Vulnerability",
+                            Description = "Exploited Weakness by " + attacker.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
+                            StateCheck = (QEffect stateCheck) =>
+                            {
+                                Creature owner = stateCheck.Owner;
+                                if (owner.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget))
+                                {
+                                    if (!owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
+                                    {
+                                        owner.WeaknessAndResistance.AddWeakness(ThaumaturgeDamageKinds.PersonalAntithesis, antithesisAmount);
+                                    }
+                                }
+                                else if (owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
+                                    {
+                                        owner.WeaknessAndResistance.Weaknesses.RemoveAll(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis);
+                                    }
+                                }
+                            });
+                            attacker.AddQEffect(new QEffect(ExpirationCondition.Never)
+                            {
+                                Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeakness,
+                                Tag = defender,
+                                Illustration = IllustrationName.GenericCombatManeuver,
+                                Name = "Exploit Vulnerability",
+                                Description = "Exploiting Weakness to " + defender.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
+                                AddExtraKindedDamageOnStrike = (CombatAction action, Creature damageTarget) =>
+                                {
+                                    if (damageTarget == defender)
+                                    {
+                                        return new KindedDamage(DiceFormula.FromText("0", "Exploit Vulnerability - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2()), ThaumaturgeDamageKinds.PersonalAntithesis);
+                                    }
+
+                                    return null;
+                                    }
+                                });
+                            }
+                    else if (result == CheckResult.CriticalFailure)
+                    {
+                        QEffect flatFooted = QEffect.FlatFooted("Exploit Vulnerability");
+                        flatFooted.ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn;
+                        attacker.AddQEffect(flatFooted);
+                    }
+                });
+
+            return exploitVulnerabilityAction;
+        }
+
         public static CalculatedNumber RollEsotericLore(CombatAction action, Creature roller, Creature? defender)
         {
             int level = roller.Level;
@@ -52,6 +175,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             if (roller.HasFeat(ThaumaturgeFeatNames.TomeImplement) && IsCreatureWeildingImplement(roller))
             {
                 bonusesToRoll.Add(new Bonus(1, BonusType.Circumstance, ImplementDetails.TomeInitiateBenefitName, true));
+            }
+            QEffect? instructiveStike = roller.FindQEffect(ThaumaturgeQEIDs.InstructiveStrike);
+            if (instructiveStike != null)
+            {
+                bonusesToRoll.Add(new Bonus(instructiveStike.Value, BonusType.Circumstance, "Instructive Strike", true));
             }
             return new CalculatedNumber(roller.Abilities.Charisma + proficiency, "Exploit Vulnerability Check", bonusesToRoll);
         }

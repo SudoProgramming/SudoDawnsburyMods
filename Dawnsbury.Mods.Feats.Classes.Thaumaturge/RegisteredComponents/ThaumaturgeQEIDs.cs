@@ -64,5 +64,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         public static readonly QEffectId EsotericWardenAC = ModManager.RegisterEnumMember<QEffectId>("Esoteric Warden AC QEID");
 
         public static readonly QEffectId EsotericWardenSave = ModManager.RegisterEnumMember<QEffectId>("Esoteric Warden Save QEID");
+
+        public static readonly QEffectId InstructiveStrike = ModManager.RegisterEnumMember<QEffectId>("Instructive Strike QEID");
     }
 }

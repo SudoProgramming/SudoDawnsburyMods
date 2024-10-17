@@ -146,8 +146,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddScrollThaumaturgyLogic(scrollThaumaturgyFeat);
             yield return scrollThaumaturgyFeat;
 
-            TrueFeat esotericWardenFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericWarden, 1, "Name", "Desc", [ThaumaturgeTraits.Thaumaturge]);
-            // TODO
+            TrueFeat esotericWardenFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericWarden, 1, "When you apply antithetical material against a creature successfully, you also ward yourself against its next attacks.", "When you succeed at your check to Exploit a Vulnerability, you gain a +1 status bonus to your AC against the creature's next attack and a +1 status bonus to your next saving throw against the creature; if you critically succeed, these bonuses are +2 instead. You can gain these bonuses only once per day against a particular creature, and the benefit ends if you Exploit Vulnerability again.", [ThaumaturgeTraits.Thaumaturge]);
+            AddEsotericWardenLogic(esotericWardenFeat);
             yield return esotericWardenFeat;
 
 
@@ -184,7 +184,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             bool skipAntithesis = false;
                             if (result >= CheckResult.Success)
                             {
-                                if (defender.WeaknessAndResistance.Weaknesses.Count > 0)
+                                if (defender.WeaknessAndResistance.Weaknesses.Count(resistance => resistance.DamageKind != ThaumaturgeDamageKinds.PersonalAntithesis) > 0)
                                 {
                                     List<Resistance> weaknesses = ThaumaturgeUtilities.GetHighestWeaknesses(defender);
                                     Resistance weakness = weaknesses[0];
@@ -1022,9 +1022,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         }
                     }
                 };
-                self.ProvideActionIntoPossibilitySection = (QEffect rootToLifeEffect, PossibilitySection possibilitySection) =>
+                self.ProvideActionIntoPossibilitySection = (QEffect scrollThaumaturgyEffect, PossibilitySection possibilitySection) =>
                 {
-                    Creature owner = rootToLifeEffect.Owner;
+                    Creature owner = scrollThaumaturgyEffect.Owner;
                     if (possibilitySection.PossibilitySectionId == PossibilitySectionId.ItemActions && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner))
                     {
                         SubmenuPossibility? inventory = (SubmenuPossibility?)possibilitySection.Possibilities.FirstOrDefault(possibility => possibility is SubmenuPossibility submenuPossibility && submenuPossibility.Caption == "Inventory");
@@ -1138,6 +1138,84 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     }
 
                     return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Esoteric Warden base class feature
+        /// </summary>
+        /// <param name="esotericWardenFeat">The Esoteric Warden feat object</param>
+        public static void AddEsotericWardenLogic(Feat esotericWardenFeat)
+        {
+            esotericWardenFeat.WithPermanentQEffect("Esoteric Warden", delegate (QEffect self)
+            {
+                self.AfterYouTakeAction = async (QEffect afterYouTakeAction, CombatAction action) =>
+                {
+                    if (action.ActionId == ThaumaturgeActionIDs.ExploitVulnerability && action.CheckResult >= CheckResult.Success && action.ChosenTargets.ChosenCreature != null)
+                    {
+                        int esotericWardenValue = (action.CheckResult == CheckResult.Success) ? 1 : 2;
+                        Creature? target = action.ChosenTargets.ChosenCreature;
+                        if (target != null)
+                        {
+                            afterYouTakeAction.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                            {
+                                Id = ThaumaturgeQEIDs.EsotericWardenAC,
+                                Illustration = IllustrationName.GenericCombatManeuver,
+                                Name = "Esoteric Warden AC (" + target.Name + ")",
+                                Description = "+" + esotericWardenValue + " status bonus to AC against " + target.Name,
+                                Value = esotericWardenValue,
+                                Tag = action.ChosenTargets.ChosenCreature,
+                                DoNotShowUpOverhead = true
+                            });
+
+                            afterYouTakeAction.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                            {
+                                Id = ThaumaturgeQEIDs.EsotericWardenSave,
+                                Illustration = IllustrationName.GenericCombatManeuver,
+                                Name = "Esoteric Warden Saving Throw (" + target.Name + ")",
+                                Description = "+" + esotericWardenValue + " status bonus to Saving Throws against " + target.Name,
+                                Value = esotericWardenValue,
+                                Tag = action.ChosenTargets.ChosenCreature,
+                                DoNotShowUpOverhead = true
+                            });
+                        }
+                    }
+                };
+                self.BonusToDefenses = (QEffect bonusToDefenses, CombatAction? action, Defense defense) =>
+                {
+                    if (action != null)
+                    {
+                        Creature owner = bonusToDefenses.Owner;
+                        QEffect? esotericWardenACEffect = owner.FindQEffect(ThaumaturgeQEIDs.EsotericWardenAC);
+                        QEffect? esotericWardenSaveEffect = owner.FindQEffect(ThaumaturgeQEIDs.EsotericWardenSave);
+
+                        if (defense == Defense.AC && esotericWardenACEffect != null && esotericWardenACEffect.Tag != null && esotericWardenACEffect.Tag is Creature wardenACCreature && wardenACCreature == action.Owner)
+                        {
+                            return new Bonus(esotericWardenACEffect.Value, BonusType.Status, "Esoteric Warden", true);
+                        }
+
+                        if (defense.IsSavingThrow() && esotericWardenSaveEffect != null && esotericWardenSaveEffect.Tag != null && esotericWardenSaveEffect.Tag is Creature wardenSaveCreature && wardenSaveCreature == action.Owner)
+                        {
+                            return new Bonus(esotericWardenSaveEffect.Value, BonusType.Status, "Esoteric Warden", true);
+                        }
+                    }
+
+                    return null;
+                };
+                self.YouAreTargeted = async (QEffect youAreTargeted, CombatAction action) =>
+                {
+                    Creature owner = youAreTargeted.Owner;
+                    QEffect? esotericWardenACEffect = owner.FindQEffect(ThaumaturgeQEIDs.EsotericWardenAC);
+                    QEffect? esotericWardenSaveEffect = owner.FindQEffect(ThaumaturgeQEIDs.EsotericWardenSave);
+                    if (action.SavingThrow != null && esotericWardenSaveEffect != null && esotericWardenSaveEffect.Tag != null && esotericWardenSaveEffect.Tag is Creature wardenSaveCreature && wardenSaveCreature == action.Owner)
+                    {
+                        esotericWardenSaveEffect.ExpiresAt = ExpirationCondition.Immediately;
+                    }
+                    else if (esotericWardenACEffect != null && esotericWardenACEffect.Tag != null && esotericWardenACEffect.Tag is Creature wardenACCreature && wardenACCreature == action.Owner)
+                    {
+                        esotericWardenACEffect.ExpiresAt = ExpirationCondition.Immediately;
+                    }
                 };
             });
         }

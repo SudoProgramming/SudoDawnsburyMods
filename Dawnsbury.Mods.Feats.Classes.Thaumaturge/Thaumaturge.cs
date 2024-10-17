@@ -140,6 +140,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     });
                 });
 
+            TrueFeat ammunitionThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.AmmunitionThaumaturgy, 1, "You're so used to handling your implement, weapon, and esoterica in the heat of combat that adding a few bullets or arrows to the mix is no extra burden.", "You can use Bows using the hand holding your implement.", [ThaumaturgeTraits.Thaumaturge]);
+            AddAmmunitionThaumaturgyLogic(ammunitionThaumaturgyFeat);
+            yield return ammunitionThaumaturgyFeat;
+
             TrueFeat rootToLifeFeat = new TrueFeat(ThaumaturgeFeatNames.RootToLife, 1, "Marigold, spider lily, pennyroyal—many primal traditions connect flowers and plants with the boundary between life and death, and you can leverage this association to keep an ally on this side of the line.", "You place a small plant or similar symbol on an adjacent dying creature, immediately stabilizing them; the creature is no longer dying and is instead unconscious at 0 Hit Points.\n\nIf you spend 2 actions instead of 1, you empower the act further by uttering a quick folk blessing to chase away ongoing pain, adding the auditory trait to the action. When you do so, attempt flat checks to remove each source of persistent damage affecting the target; due to the particularly effective assistance, the DC is 10 instead of the usual 15.", [Trait.Manipulate, Trait.Necromancy, Trait.Primal, ThaumaturgeTraits.Thaumaturge]);
             AddRootToLifeLogic(rootToLifeFeat);
             yield return rootToLifeFeat;
@@ -1169,10 +1173,67 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         {
                             owner.AddQEffect(instructiveStrikeEffect);
                             CombatAction exploitVulnerabilityAction = ThaumaturgeUtilities.CreateExploitVulnerabilityAction(owner);
+                            exploitVulnerabilityAction.ActionCost = 0;
                             exploitVulnerabilityAction.Target = action.Target;
                             exploitVulnerabilityAction.ChosenTargets.ChosenCreature = target;
                             await exploitVulnerabilityAction.AllExecute();
                             owner.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.InstructiveStrike);
+                        }
+                    }
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Ammunition Thaumaturgy feat
+        /// </summary>
+        /// <param name="instructiveStrikeFeat">The Ammunition Thaumaturgy feat object</param>
+        public static void AddAmmunitionThaumaturgyLogic(Feat ammunitionThaumaturgyFeat)
+        {
+            ammunitionThaumaturgyFeat.WithPermanentQEffect("Ammunition Thaumaturgy", delegate (QEffect self)
+            {
+                self.StateCheck = (QEffect stateCheck) =>
+                {
+                    Creature owner = self.Owner;
+                    if (ThaumaturgeUtilities.IsCreatureWeildingImplement(owner))
+                    {
+                        foreach (Item item in owner.HeldItems)
+                        {
+                            if (item.HasTrait(Trait.OneHandPlus) && !item.HasTrait(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus) && !item.HasTrait(ThaumaturgeTraits.Implement))
+                            {
+                                item.Traits.Remove(Trait.OneHandPlus);
+                                item.Traits.Add(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (Item item in owner.HeldItems)
+                        {
+                            if (item.HasTrait(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus) && !item.HasTrait(Trait.OneHandPlus))
+                            {
+                                item.Traits.Remove(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus);
+                                item.Traits.Add(Trait.OneHandPlus);
+                            }
+                        }
+                    }
+                    foreach (Item item in owner.CarriedItems)
+                    {
+                        if (item.HasTrait(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus))
+                        {
+                            item.Traits.Remove(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus);
+                            item.Traits.Add(Trait.OneHandPlus);
+                        }
+                    }
+                    foreach (Tile tile in owner.Battle.Map.Tiles)
+                    {
+                        foreach (Item item in tile.DroppedItems)
+                        {
+                            if (item.HasTrait(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus))
+                            {
+                                item.Traits.Remove(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus);
+                                item.Traits.Add(Trait.OneHandPlus);
+                            }
                         }
                     }
                 };

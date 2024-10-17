@@ -68,6 +68,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// </summary>
         public static readonly FeatName WeaponImplement = ModManager.RegisterFeatName("Weapon Implement", "Weapon");
 
+        public static readonly FeatName AmmunitionThaumaturgy = ModManager.RegisterFeatName("Ammunition Thaumaturgy", "Ammunition Thaumaturgy");
+
         /// <summary>
         /// The Root to Life class Feat
         /// </summary>

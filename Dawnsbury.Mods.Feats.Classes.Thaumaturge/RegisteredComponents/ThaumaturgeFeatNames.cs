@@ -79,6 +79,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
 
         public static readonly FeatName TurnAwayMisfortune = ModManager.RegisterFeatName("Turn Away Misfortune", "Turn Away Misfortune");
 
+        public static readonly FeatName BreachedDefenses = ModManager.RegisterFeatName("Breached Defenses", "Breached Defenses");
+
         public static readonly FeatName ColdWand = ModManager.RegisterFeatName("Cold Wand", "Cold Wand");
 
         public static readonly FeatName ElectricityWand = ModManager.RegisterFeatName("Electricity Wand", "Electricity Wand");

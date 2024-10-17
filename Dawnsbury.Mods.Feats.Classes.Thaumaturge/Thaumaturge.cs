@@ -43,6 +43,7 @@ using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
 using Dawnsbury.Campaign.Encounters;
 using static Dawnsbury.Core.Possibilities.Usability;
 using System.Diagnostics;
+using System.Data.SqlTypes;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -146,11 +147,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddScrollThaumaturgyLogic(scrollThaumaturgyFeat);
             yield return scrollThaumaturgyFeat;
 
-            TrueFeat esotericWardenFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericWarden, 1, "When you apply antithetical material against a creature successfully, you also ward yourself against its next attacks.", "When you succeed at your check to Exploit a Vulnerability, you gain a +1 status bonus to your AC against the creature's next attack and a +1 status bonus to your next saving throw against the creature; if you critically succeed, these bonuses are +2 instead. You can gain these bonuses only once per day against a particular creature, and the benefit ends if you Exploit Vulnerability again.", [ThaumaturgeTraits.Thaumaturge]);
+            TrueFeat esotericWardenFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericWarden, 2, "When you apply antithetical material against a creature successfully, you also ward yourself against its next attacks.", "When you succeed at your check to Exploit a Vulnerability, you gain a +1 status bonus to your AC against the creature's next attack and a +1 status bonus to your next saving throw against the creature; if you critically succeed, these bonuses are +2 instead. You can gain these bonuses only once per day against a particular creature, and the benefit ends if you Exploit Vulnerability again.", [ThaumaturgeTraits.Thaumaturge]);
             AddEsotericWardenLogic(esotericWardenFeat);
             yield return esotericWardenFeat;
 
-
+            TrueFeat turnAwayMisfortuneFeat = new TrueFeat(ThaumaturgeFeatNames.TurnAwayMisfortune, 2, "You perform a superstition, such as casting salt over your shoulder to ward off bad luck.", "{b}Trigger{/b} You would attempt a roll affected by a misfortune effect.\n\nTurn Away Misfortune's fortune trait cancels out the misfortune effect, causing you to roll normally. As normal, you can apply only one fortune ability to a roll, so if you Turned Away Misfortune on an attack roll, you couldn't also use an ability like Halfling Luck to alter the roll further.", [Trait.Abjuration, Trait.Fortune, Trait.Manipulate, Trait.Occult, ThaumaturgeTraits.Thaumaturge]);
+            turnAwayMisfortuneFeat.WithActionCost(-1);
+            // HACK: This feat knowingly does nothing, since Misfortune is not in Dawnsbury Days. This should be fixed if added.
+            // This is left in as an option as a player won't know what is coming
+            yield return turnAwayMisfortuneFeat;
         }
 
         /// <summary>
@@ -1065,14 +1070,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                                     .WithActionCost(1)
                                                     .WithEffectOnSelf((Creature self) =>
                                                     {
-                                                        if (self.HeldItems[implementIndex] is Implement implement)
+                                                        if (self.HeldItems[implementIndex].HasTrait(ThaumaturgeTraits.Implement))
                                                         {
+                                                            Item implement = self.HeldItems[implementIndex];
                                                             ImplementAndHeldItem implementAndScroll = new ImplementAndHeldItem(implement, scroll);
 
                                                             self.CarriedItems.Remove(scroll);
                                                             if (matchingHeldScrollImplementEffect != null && matchingHeldScrollImplementEffect.Tag != null && matchingHeldScrollImplementEffect.Tag is ImplementAndHeldItem previousImplementAndHeldItem)
                                                             {
                                                                 Item previousScroll = previousImplementAndHeldItem.HeldItem;
+                                                                implementAndScroll.OriginalImplementName = previousImplementAndHeldItem.OriginalImplementName;
                                                                 self.CarriedItems.Add(previousScroll);
                                                                 self.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement && qe == matchingHeldScrollImplementEffect);
                                                             }
@@ -1084,7 +1091,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                                             });
 
                                                             implement.Illustration = implementAndScroll.Illustration;
-                                                            implement.Name = implement.Name + " " + scroll.Name;
+                                                            implement.Name = implementAndScroll.OriginalImplementName + " " + scroll.Name;
                                                         }
                                                     });
 

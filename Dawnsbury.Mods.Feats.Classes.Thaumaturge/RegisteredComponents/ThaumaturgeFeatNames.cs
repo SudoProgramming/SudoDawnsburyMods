@@ -1,4 +1,5 @@
-﻿using Dawnsbury.Core.CharacterBuilder.Feats;
+﻿using Dawnsbury.Core;
+using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Modding;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
@@ -68,14 +69,28 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// </summary>
         public static readonly FeatName WeaponImplement = ModManager.RegisterFeatName("Weapon Implement", "Weapon");
 
+        public static readonly FeatName AmmunitionThaumaturgy = ModManager.RegisterFeatName("Ammunition Thaumaturgy", "Ammunition Thaumaturgy");
+
         /// <summary>
         /// The Root to Life class Feat
         /// </summary>
         public static readonly FeatName RootToLife = ModManager.RegisterFeatName("Root to Life", "Root to Life {icon:Action} or {icon:TwoActions}");
 
+        public static readonly FeatName DivineDisharmony = ModManager.RegisterFeatName("Divine Disharmony", "Divine Disharmony");
+
         public static readonly FeatName ScrollThaumaturgy = ModManager.RegisterFeatName("Scroll Thaumaturgy", "Scroll Thaumaturgy");
 
         public static readonly FeatName EsotericWarden = ModManager.RegisterFeatName("Esoteric Warden", "Esoteric Warden");
+
+        public static readonly FeatName TurnAwayMisfortune = ModManager.RegisterFeatName("Turn Away Misfortune", "Turn Away Misfortune");
+
+        public static readonly FeatName BreachedDefenses = ModManager.RegisterFeatName("Breached Defenses", "Breached Defenses");
+
+        public static readonly FeatName InstructiveStrike = ModManager.RegisterFeatName("Instructive Strike", "Instructive Strike");
+
+        public static readonly FeatName LingeringPainStrike = ModManager.RegisterFeatName("Lingering Pain Strike", "Lingering Pain Strike");
+
+        public static readonly FeatName EsotericaSeller = ModManager.RegisterFeatName("Esoterica Seller", "Esoterica Seller");
 
         public static readonly FeatName ColdWand = ModManager.RegisterFeatName("Cold Wand", "Cold Wand");
 

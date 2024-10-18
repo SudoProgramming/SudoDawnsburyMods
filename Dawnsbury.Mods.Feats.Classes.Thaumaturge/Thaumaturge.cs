@@ -41,6 +41,12 @@ using Dawnsbury.Core.Animations;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions;
 using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
 using Dawnsbury.Campaign.Encounters;
+using static Dawnsbury.Core.Possibilities.Usability;
+using System.Diagnostics;
+using System.Data.SqlTypes;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using Dawnsbury.Core.Mechanics.Rules;
+using Dawnsbury.Campaign.Path;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -129,25 +135,57 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     sheet.AddFeat(implementsEmpowermentFeat, null);
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("FirstImplement", "First Implement", 1, (Feat ft) => ft.HasTrait(ThaumaturgeTraits.Implement)));
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("ThaumaturgeFeat1", "Thaumaturge feat", 1, (Feat ft) => ft.HasTrait(ThaumaturgeTraits.Thaumaturge)));
+                    sheet.SetProficiency(ThaumaturgeTraits.Thaumaturge, Proficiency.Trained);
                     sheet.AddAtLevel(3, delegate (CalculatedCharacterSheetValues values)
                     {
                         values.SetProficiency(Trait.Reflex, Proficiency.Expert);
                     });
                 });
 
+            TrueFeat ammunitionThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.AmmunitionThaumaturgy, 1, "You're so used to handling your implement, weapon, and esoterica in the heat of combat that adding a few bullets or arrows to the mix is no extra burden.", "You can use Bows using the hand holding your implement.", [ThaumaturgeTraits.Thaumaturge]);
+            AddAmmunitionThaumaturgyLogic(ammunitionThaumaturgyFeat);
+            yield return ammunitionThaumaturgyFeat;
+
+            TrueFeat divineDisharmonyFeat = new TrueFeat(ThaumaturgeFeatNames.DivineDisharmony, 1, "From your collection of religious trinkets, you pull out opposing divine objects—such as the religious symbols of two deities that are hated enemies—and combine them in a display that causes discordant clashes of divine energy that are especially distracting to the faithful.", "Roll the best check between Deception or Intimidation against the Will DC of a creature you can see within 60 feet, with the following results. If the creature has access to divine spells, you gain a +2 circumstance bonus to your skill check.\n\n{b}Critical Success{/b} The creature is flat-footed to your attacks until the end of your next turn.\n\n{b}Success{/b} The creature is flat-footed against your attacks until the end of your current turn.", [Trait.Divine, Trait.Enchantment, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge]);
+            divineDisharmonyFeat.WithActionCost(1);
+            AddDivineDisharmonyLogic(divineDisharmonyFeat);
+            yield return divineDisharmonyFeat;
+
             TrueFeat rootToLifeFeat = new TrueFeat(ThaumaturgeFeatNames.RootToLife, 1, "Marigold, spider lily, pennyroyal—many primal traditions connect flowers and plants with the boundary between life and death, and you can leverage this association to keep an ally on this side of the line.", "You place a small plant or similar symbol on an adjacent dying creature, immediately stabilizing them; the creature is no longer dying and is instead unconscious at 0 Hit Points.\n\nIf you spend 2 actions instead of 1, you empower the act further by uttering a quick folk blessing to chase away ongoing pain, adding the auditory trait to the action. When you do so, attempt flat checks to remove each source of persistent damage affecting the target; due to the particularly effective assistance, the DC is 10 instead of the usual 15.", [Trait.Manipulate, Trait.Necromancy, Trait.Primal, ThaumaturgeTraits.Thaumaturge]);
-            // TODO
+            AddRootToLifeLogic(rootToLifeFeat);
             yield return rootToLifeFeat;
 
-            TrueFeat scrollThaumaturgy = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Name", "Desc", [ThaumaturgeTraits.Thaumaturge]);
-            // TODO
-            yield return scrollThaumaturgy;
+            TrueFeat scrollThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Your multidisciplinary study of magic means you know how to activate the magic in scrolls with ease.", "You can activate scrolls of any magical tradition, using your thaumaturge class DC for the scroll's DC, rather than a particular spell DC. If a spell is on the spell list for multiple traditions, you choose which tradition to use at the time you activate the scroll. You can draw and activate scrolls with the same hand holding an implement.", [ThaumaturgeTraits.Thaumaturge]);
+            AddScrollThaumaturgyLogic(scrollThaumaturgyFeat);
+            yield return scrollThaumaturgyFeat;
 
-            TrueFeat esotericWarden = new TrueFeat(ThaumaturgeFeatNames.EsotericWarden, 1, "Name", "Desc", [ThaumaturgeTraits.Thaumaturge]);
-            // TODO
-            yield return esotericWarden;
+            TrueFeat esotericaSellerFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericaSeller, 2, "You collect interesting trinkets wherever you go.", "At the end of each encounter, if at least one Esoterica Seller character is in the party, you gain a \"Looted Esoterica\" item that's worth an amount of gold pieces equal to the combined level (levels 0 or below do not count) of all enemies you defeated in that encounter. This item has no use but you can sell it later in the shop", [ThaumaturgeTraits.Thaumaturge]);
+            AddEsotericaSellerLogic(esotericaSellerFeat);
+            yield return esotericaSellerFeat;
 
+            TrueFeat esotericWardenFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericWarden, 2, "When you apply antithetical material against a creature successfully, you also ward yourself against its next attacks.", "When you succeed at your check to Exploit a Vulnerability, you gain a +1 status bonus to your AC against the creature's next attack and a +1 status bonus to your next saving throw against the creature; if you critically succeed, these bonuses are +2 instead. You can gain these bonuses only once per day against a particular creature, and the benefit ends if you Exploit Vulnerability again.", [ThaumaturgeTraits.Thaumaturge]);
+            AddEsotericWardenLogic(esotericWardenFeat);
+            yield return esotericWardenFeat;
 
+            //TrueFeat turnAwayMisfortuneFeat = new TrueFeat(ThaumaturgeFeatNames.TurnAwayMisfortune, 2, "You perform a superstition, such as casting salt over your shoulder to ward off bad luck.", "{b}Trigger{/b} You would attempt a roll affected by a misfortune effect.\n\nTurn Away Misfortune's fortune trait cancels out the misfortune effect, causing you to roll normally. As normal, you can apply only one fortune ability to a roll, so if you Turned Away Misfortune on an attack roll, you couldn't also use an ability like Halfling Luck to alter the roll further.", [Trait.Abjuration, Trait.Fortune, Trait.Manipulate, Trait.Occult, ThaumaturgeTraits.Thaumaturge]);
+            //turnAwayMisfortuneFeat.WithActionCost(-1);
+            //// HACK: This feat knowingly does nothing, since Misfortune is not in Dawnsbury Days. This should be fixed if added.
+            //// This is left in as an option as a player won't know what is coming
+            //yield return turnAwayMisfortuneFeat;
+
+            //TrueFeat breachedDefensesFeat = new TrueFeat(ThaumaturgeFeatNames.BreachedDefenses, 4, "You can find the one weak point in a creature's scales, wards, or armor to get past its resistances", "When you succeed at Exploit Vulnerability, you learn about the highest of the creature's resistances that can be bypassed (for example, if the creature has resistance to physical damage except silver), if the creature has one. If you prefer, you can choose the following benefit instead of one of the usual two benefits from Exploit Vulnerability.\n\n{b}Breached Defenses{/b} You can choose this benefit only if you succeeded at Exploit Vulnerability and learned the creature has at least one resistance that can be bypassed. Choose one such resistance. Your unarmed and weapon Strikes bypass the chosen resistance", [ThaumaturgeTraits.Thaumaturge]);
+            //// HACK: Will only work in V3
+            //yield return breachedDefensesFeat;
+
+            TrueFeat instructiveStrikeFeat = new TrueFeat(ThaumaturgeFeatNames.InstructiveStrike, 4, "You attack your foe and analyze how it reacts.", "{b}Requirements{/b} You are holding your implement\n\nMake a Strike. On a hit, you can immediately attempt a check to Exploit Vulnerability on the target. On a critical hit, you gain a +2 circumstance bonus to that check.", [ThaumaturgeTraits.Thaumaturge]);
+            instructiveStrikeFeat.WithActionCost(1);
+            AddInstructiveStrikeLogic(instructiveStrikeFeat);
+            yield return instructiveStrikeFeat;
+
+            TrueFeat lingeringPainStrikeFeat = new TrueFeat(ThaumaturgeFeatNames.LingeringPainStrike, 4, "You attack with in such a way that your foes feel faint afterwards.", "{b}Requirements{/b} You are holding your implement\n\nMake a Strike. On a hit, the target also rolls a Fortitude save against your DC, and is sickened 1 on a failure.", [ThaumaturgeTraits.Thaumaturge]);
+            lingeringPainStrikeFeat.WithActionCost(2);
+            AddLingeringPainStrikeLogic(lingeringPainStrikeFeat);
+            yield return lingeringPainStrikeFeat;
         }
 
         /// <summary>
@@ -162,122 +200,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 {
                     if (ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner))
                     {
-                        CombatAction exploitVulnerabilityAction = new CombatAction(
-                            self.Owner,
-                            IllustrationName.GenericCombatManeuver,
-                            "Exploit Vulnerability",
-                            [Trait.Manipulate, ThaumaturgeTraits.Thaumaturge],
-                            "{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement.\nYou scour your experiences and learning to identify something that might repel your foe. You retrieve an object from your esoterica with the appropriate supernatural qualities, then use your implement to stoke the remnants of its power into a blaze. Select a creature you can see and attempt an Esoteric Lore check against a standard DC for its level, as you retrieve the right object from your esoterica and use your implement to empower it. You gain the following effects until you Exploit Vulnerabilities again.\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn.",
-                            Target.Ranged(100)
-                            .WithAdditionalConditionOnTargetCreature((attacker, defender) => attacker.HasEffect(ThaumaturgeQEIDs.UsedExploitVulnerability) ? Usability.NotUsable("Already Exploited Vulnerability this turn") : Usability.Usable))
-                        .WithActionId(ThaumaturgeActionIDs.ExploitVulnerability)
-                        .WithActiveRollSpecification(new ActiveRollSpecification(ThaumaturgeUtilities.RollEsotericLore, ThaumaturgeUtilities.CalculateEsotericLoreDC))
-                        .WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
-                        {         
-                            attacker.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
-                            {
-                                Id = ThaumaturgeQEIDs.UsedExploitVulnerability
-                            });
-                            bool skipAntithesis = false;
-                            if (result >= CheckResult.Success)
-                            {
-                                if (defender.WeaknessAndResistance.Weaknesses.Count > 0)
-                                {
-                                    List<Resistance> weaknesses = ThaumaturgeUtilities.GetHighestWeaknesses(defender);
-                                    Resistance weakness = weaknesses[0];
-                                    if (weaknesses.Count > 1)
-                                    {
-                                        ChoiceButtonOption selectedWeakness = await attacker.AskForChoiceAmongButtons(IllustrationName.GenericCombatManeuver, "Which weakness would you like to exploit against all " + defender.BaseName + "?", weaknesses.Select(weakness => weakness.DamageKind.HumanizeTitleCase2()).ToArray());
-                                        weakness = weaknesses[selectedWeakness.Index];
-                                    }
-                                    if (weakness.Value >= 2 + Math.Floor(attacker.Level / 2.0))
-                                    {
-                                        skipAntithesis = true;
-                                        foreach (Creature creature in attacker.Battle.AllCreatures.Where(creature => !creature.FriendOf(attacker) && creature.BaseName == defender.BaseName))
-                                        {
-                                            creature.AddQEffect(new QEffect(ExpirationCondition.Never)
-                                            {
-                                                Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
-                                                Illustration = IllustrationName.GenericCombatManeuver,
-                                                Name = "Exploited Vulnerability",
-                                                Description = "Exploited Weakness by " + attacker.Name + " - " + weakness.DamageKind.HumanizeTitleCase2() + " " + weakness.Value,
-                                                Tag = attacker
-                                            });
-                                        }
-                                        attacker.AddQEffect(new QEffect(ExpirationCondition.Never)
-                                        {
-                                            Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeakness,
-                                            Tag = defender,
-                                            Illustration = IllustrationName.GenericCombatManeuver,
-                                            Name = "Exploit Vulnerability",
-                                            Description = "Exploiting Weakness to all " + defender.BaseName + " - " + weakness.DamageKind.HumanizeTitleCase2() + " " + weakness.Value,
-                                            AddExtraKindedDamageOnStrike = (CombatAction action, Creature damageTarget) =>
-                                            {
-                                                if (damageTarget == defender || damageTarget.BaseName == defender.BaseName)
-                                                {
-                                                    return new KindedDamage(DiceFormula.FromText("0", "Exploit Vulnerability - Weakness " + weakness.DamageKind), weakness.DamageKind);
-                                                }
-
-                                                return null;
-                                            }
-                                        });
-                                    }
-                                }
-                            }
-                            // Add CLear Logic on Reuse
-                            if (result >= CheckResult.Failure && !skipAntithesis)
-                            {
-                                int antithesisAmount = (int)(2 + Math.Floor(attacker.Level / 2.0));
-                                defender.AddQEffect(new QEffect(ExpirationCondition.Never)
-                                {
-                                    Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
-                                    Tag = attacker,
-                                    Illustration = IllustrationName.GenericCombatManeuver,
-                                    Name = "Exploited Vulnerability",
-                                    Description = "Exploited Weakness by " + attacker.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
-                                    StateCheck = (QEffect stateCheck) =>
-                                    {
-                                        Creature owner = stateCheck.Owner;
-                                        if (owner.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget))
-                                        {
-                                            if (!owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
-                                            {
-                                                owner.WeaknessAndResistance.AddWeakness(ThaumaturgeDamageKinds.PersonalAntithesis, antithesisAmount);
-                                            }
-                                        }
-                                        else if(owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
-                                        {
-                                            owner.WeaknessAndResistance.Weaknesses.RemoveAll(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis);
-                                        }
-                                    }
-                                });
-                                attacker.AddQEffect(new QEffect(ExpirationCondition.Never)
-                                {
-                                    Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeakness,
-                                    Tag = defender,
-                                    Illustration = IllustrationName.GenericCombatManeuver,
-                                    Name = "Exploit Vulnerability",
-                                    Description = "Exploiting Weakness to " + defender.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
-                                    AddExtraKindedDamageOnStrike = (CombatAction action, Creature damageTarget) =>
-                                    {
-                                        if (damageTarget == defender)
-                                        {
-                                            return new KindedDamage(DiceFormula.FromText("0", "Exploit Vulnerability - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2()), ThaumaturgeDamageKinds.PersonalAntithesis);
-                                        }
-
-                                        return null;
-                                    }
-                                });
-                            }
-                            else if (result == CheckResult.CriticalFailure)
-                            {
-                                QEffect flatFooted = QEffect.FlatFooted("Exploit Vulnerability");
-                                flatFooted.ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn;
-                                attacker.AddQEffect(flatFooted);
-                            }
-                        });
-
-                        return new ActionPossibility(exploitVulnerabilityAction);
+                        return new ActionPossibility(ThaumaturgeUtilities.CreateExploitVulnerabilityAction(exploitVulnerabilityEffect.Owner));
                     }
 
                     return null;
@@ -892,6 +815,578 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     }
 
                     return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Root To Life feat
+        /// </summary>
+        /// <param name="rootToLifeFeat">The Root To Life feat object</param>
+        public static void AddRootToLifeLogic(Feat rootToLifeFeat)
+        {
+            rootToLifeFeat.WithPermanentQEffect("Root to Life", delegate (QEffect self)
+            {
+                self.ProvideActionIntoPossibilitySection = (QEffect rootToLifeEffect, PossibilitySection possibilitySection) =>
+                {
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
+                    {
+                        Creature owner = rootToLifeEffect.Owner;
+                        PossibilitySection rootToLifeSection = new PossibilitySection("Root to Life Possibilities");
+
+                        IllustrationName rootToLifeIllustrationName = IllustrationName.GenericCombatManeuver;
+                        List<Trait> rootToLifeTraits = [Trait.Manipulate, Trait.Necromancy, Trait.Primal, ThaumaturgeTraits.Thaumaturge];
+
+                        CombatAction oneActionRootToLifeAction = new CombatAction(self.Owner, rootToLifeIllustrationName, "Root to Life", rootToLifeTraits.ToArray(), rootToLifeFeat.RulesText, Target.AdjacentFriend()
+                            .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
+                            {
+                                if (!target.FriendOf(user) || !target.HasEffect(QEffectId.Dying))
+                                {
+                                    return Usability.CommonReasons.NotDying;
+                                }
+
+                                return Usability.Usable;
+                            }));
+                        oneActionRootToLifeAction.WithActionCost(1);
+                        oneActionRootToLifeAction.WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
+                        {
+                            QEffect? dyingEffect = defender.FindQEffect(QEffectId.Dying);
+                            if (dyingEffect != null)
+                            {
+                                dyingEffect.Value = 0;
+                            }
+                        });
+
+                        CombatAction twoActionRootToLifeAction = new CombatAction(self.Owner, rootToLifeIllustrationName, "Root to Life", rootToLifeTraits.Concat([Trait.Auditory]).ToArray(), rootToLifeFeat.RulesText, Target.AdjacentFriend()
+                            .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
+                            {
+                                if (target.QEffects.Where(qe => qe.Id == QEffectId.PersistentDamage).Count() == 0 || !target.FriendOf(user) || !target.HasEffect(QEffectId.Dying))
+                                {
+                                    return Usability.CommonReasons.NotDying;
+                                }
+
+                                return Usability.Usable;
+                            }));
+                        twoActionRootToLifeAction.WithActionCost(2);
+                        twoActionRootToLifeAction.WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
+                        {
+                            QEffect? dyingEffect = defender.FindQEffect(QEffectId.Dying);
+                            if (dyingEffect != null)
+                            {
+                                dyingEffect.Value = 0;
+                            }
+
+                            foreach (QEffect persistentDamageEffect in defender.QEffects.Where(qe => qe.Id == QEffectId.PersistentDamage))
+                            {
+                                persistentDamageEffect.RollPersistentDamageRecoveryCheck(true);
+                            }
+                        });
+
+                        ActionPossibility oneActionRootToLifeActionPossibility = new ActionPossibility(oneActionRootToLifeAction);
+                        rootToLifeSection.AddPossibility(oneActionRootToLifeActionPossibility);
+                        ActionPossibility twoActionRootToLifeActionPossibility = new ActionPossibility(twoActionRootToLifeAction);
+                        rootToLifeSection.AddPossibility(twoActionRootToLifeActionPossibility);
+
+                        SubmenuPossibility rootToLifeMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, "Root to Life");
+                        rootToLifeMenu.Subsections.Add(rootToLifeSection);
+                        return rootToLifeMenu;
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Scroll Thaumaturgy feat
+        /// </summary>
+        /// <param name="scrollThaumaturgyFeat">The Scroll Thaumaturgy feat object</param>
+        public static void AddScrollThaumaturgyLogic(Feat scrollThaumaturgyFeat)
+        {
+            scrollThaumaturgyFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
+            {
+                sheet.SpellTraditionsKnown.Add(Trait.Spell);
+                sheet.SetProficiency(Trait.Spell, Proficiency.Trained);
+            };
+            scrollThaumaturgyFeat.WithOnCreature(creature =>
+            {
+                creature.AddSpellcastingSource(SpellcastingKind.Innate, ThaumaturgeTraits.Thaumaturge, Ability.Charisma, Trait.Spell);
+            });
+            scrollThaumaturgyFeat.WithPermanentQEffect("Scroll Thaumaturgy", delegate (QEffect self)
+            {
+                self.YouBeginAction = async (QEffect youBeginAction, CombatAction action) =>
+                {
+                    foreach (QEffect scrollAndImplementEffect in youBeginAction.Owner.QEffects.Where(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement))
+                    {
+                        if (action.CastFromScroll != null && scrollAndImplementEffect != null && scrollAndImplementEffect.Tag != null && scrollAndImplementEffect.Tag is ImplementAndHeldItem implementAndHeldItem && action.CastFromScroll == implementAndHeldItem.HeldItem && implementAndHeldItem.Illustration is SideBySideIllustration sideBySideIllustration)
+                        {
+                            implementAndHeldItem.Implement.Illustration = sideBySideIllustration.Left;
+                            implementAndHeldItem.Implement.Name = implementAndHeldItem.OriginalImplementName;
+                            scrollAndImplementEffect.ExpiresAt = ExpirationCondition.EphemeralAtEndOfImmediateAction;
+                        }
+                    }
+                };
+                self.EndOfCombat = async (QEffect endOfCombat, bool didWin) =>
+                {
+                    if (didWin)
+                    {
+                        Creature owner = endOfCombat.Owner;
+                        foreach (QEffect scrollAndImplementEffect in owner.QEffects.Where(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement))
+                        {
+                            if (scrollAndImplementEffect != null && scrollAndImplementEffect.Tag != null && scrollAndImplementEffect.Tag is ImplementAndHeldItem implementAndHeldItem)
+                            {
+                                owner.CarriedItems.Add(implementAndHeldItem.HeldItem);
+                                owner.HeldItems.RemoveAll(item => item == implementAndHeldItem.Implement);
+                                owner.CarriedItems.RemoveAll(item => item == implementAndHeldItem.Implement);
+                            }
+                        }
+                    }
+                };
+                self.ProvideActionIntoPossibilitySection = (QEffect scrollThaumaturgyEffect, PossibilitySection possibilitySection) =>
+                {
+                    Creature owner = scrollThaumaturgyEffect.Owner;
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.ItemActions && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner))
+                    {
+                        SubmenuPossibility? inventory = (SubmenuPossibility?)possibilitySection.Possibilities.FirstOrDefault(possibility => possibility is SubmenuPossibility submenuPossibility && submenuPossibility.Caption == "Inventory");
+                        if (inventory != null)
+                        {
+                            PossibilitySection? drawOrStowPossibilitySection = inventory.Subsections.FirstOrDefault(possibility => possibility.Name == "Draw or stow items");
+                            if (drawOrStowPossibilitySection != null)
+                            {
+                                List<int> implementIndexes = new List<int>();
+                                for (int i = 0; i < owner.HeldItems.Count; i++)
+                                {
+                                    Item? heldItem = owner.HeldItems[i];
+                                    if (heldItem != null && heldItem.HasTrait(ThaumaturgeTraits.Implement))
+                                    {
+                                        implementIndexes.Add(i);
+                                    }
+                                }
+
+                                foreach (int implementIndex in implementIndexes)
+                                {
+                                    if (implementIndex >= 0 && implementIndex < drawOrStowPossibilitySection.Possibilities.Count)
+                                    {
+                                        Possibility possibility = drawOrStowPossibilitySection.Possibilities[implementIndex];
+                                        if (possibility is SubmenuPossibility itemSubMenu)
+                                        {
+
+                                            string drawOrReplace = "Draw";
+                                            QEffect? matchingHeldScrollImplementEffect = owner.QEffects.FirstOrDefault(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement && qe.Tag != null && qe.Tag is ImplementAndHeldItem implementAndHeldItem && implementAndHeldItem.Implement == owner.HeldItems[implementIndex]);
+                                            if (matchingHeldScrollImplementEffect != null)
+                                            {
+                                                drawOrReplace = "Replace";
+                                            }
+
+                                            PossibilitySection drawScrollSection = new PossibilitySection(drawOrReplace + " scroll");
+                                            foreach (Item scroll in owner.CarriedItems.Where(item => item.HasTrait(Trait.Scroll)))
+                                            {
+                                                CombatAction drawScrollImplementAction = new CombatAction(owner, scroll.Illustration, drawOrReplace + " " + scroll.Name, [Trait.Manipulate], drawOrReplace + " a scroll into the same hand you are holding this implement in.\n----\n" + scroll.Description, Target.Self())
+                                                    .WithActionCost(1)
+                                                    .WithEffectOnSelf((Creature self) =>
+                                                    {
+                                                        if (self.HeldItems[implementIndex].HasTrait(ThaumaturgeTraits.Implement))
+                                                        {
+                                                            Item implement = self.HeldItems[implementIndex];
+                                                            ImplementAndHeldItem implementAndScroll = new ImplementAndHeldItem(implement, scroll);
+
+                                                            self.CarriedItems.Remove(scroll);
+                                                            if (matchingHeldScrollImplementEffect != null && matchingHeldScrollImplementEffect.Tag != null && matchingHeldScrollImplementEffect.Tag is ImplementAndHeldItem previousImplementAndHeldItem)
+                                                            {
+                                                                Item previousScroll = previousImplementAndHeldItem.HeldItem;
+                                                                implementAndScroll.OriginalImplementName = previousImplementAndHeldItem.OriginalImplementName;
+                                                                self.CarriedItems.Add(previousScroll);
+                                                                self.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement && qe == matchingHeldScrollImplementEffect);
+                                                            }
+
+                                                            self.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                                            {
+                                                                Id = ThaumaturgeQEIDs.HeldScrollAndImplement,
+                                                                Tag = implementAndScroll
+                                                            });
+
+                                                            implement.Illustration = implementAndScroll.Illustration;
+                                                            implement.Name = implementAndScroll.OriginalImplementName + " " + scroll.Name;
+                                                        }
+                                                    });
+
+                                                Possibility drawScrollPossibility = new ActionPossibility(drawScrollImplementAction);
+                                                drawScrollSection.AddPossibility(drawScrollPossibility);
+                                            }
+
+                                            itemSubMenu.Subsections.Add(drawScrollSection);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        foreach (QEffect heldItemAndImplementEffect in owner.QEffects.Where(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement))
+                        {
+                            if (heldItemAndImplementEffect != null && heldItemAndImplementEffect.Tag != null && heldItemAndImplementEffect.Tag is ImplementAndHeldItem scrollAndImplement)
+                            {
+                                Item scroll = scrollAndImplement.HeldItem;
+                                ScrollProperties scrollProperties = scroll.ScrollProperties;
+                                if (scrollProperties != null)
+                                {
+                                    if (scrollProperties.Spell.CombatActionSpell.Owner != owner)
+                                    {
+                                        scroll.ScrollProperties.Spell = scroll.ScrollProperties.Spell.Duplicate(owner, scroll.ScrollProperties.Spell.SpellLevel, true);
+                                        CombatAction itemSpell = scroll.ScrollProperties.Spell.CombatActionSpell;
+                                        itemSpell.CastFromScroll = scroll;
+                                        if (owner.Spellcasting != null)
+                                            itemSpell.SpellcastingSource = owner.Spellcasting.Sources.FirstOrDefault<SpellcastingSource>((Func<SpellcastingSource, bool>)(source => itemSpell.Traits.Contains(source.SpellcastingTradition)));
+                                        CharacterSheet persistentCharacterSheet2 = itemSpell.Owner.PersistentCharacterSheet;
+                                        if (persistentCharacterSheet2 != null && !persistentCharacterSheet2.CanUse(scroll) && owner.HasEffect(QEffectId.TrickMagicItem) && itemSpell.ActionCost != 3 && owner.Spellcasting != null)
+                                        {
+                                            CommonSpellEffects.IncreaseActionCostByOne(itemSpell);
+                                            itemSpell.Description += "\n\n{b}Uses Trick Magic Item.{/b} The spell costs 1 more action that normal, and you must succeed at a skill check to activate it.";
+                                            itemSpell.SpellcastingSource = owner.Spellcasting.GetSourceByOrigin(Trait.UsesTrickMagicItem);
+                                            itemSpell.Traits.Add(Trait.UsesTrickMagicItem);
+                                        }
+                                        if (itemSpell.SpellcastingSource == null)
+                                            itemSpell.SpellcastingSource = SpellcastingSource.EmptySource;
+                                    }
+
+                                    Possibility spellPossibility = Possibilities.CreateSpellPossibility(scroll.ScrollProperties.Spell.CombatActionSpell);
+                                    spellPossibility.Illustration = scroll.Illustration;
+                                    spellPossibility.Caption = scroll.Name;
+                                    spellPossibility.PossibilitySize = PossibilitySize.Full;
+                                    spellPossibility.PossibilityGroup = "Use item";
+                                    possibilitySection.AddPossibility(spellPossibility);
+                                }
+                            }
+                        }
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Esoteric Warden base class feature
+        /// </summary>
+        /// <param name="esotericWardenFeat">The Esoteric Warden feat object</param>
+        public static void AddEsotericWardenLogic(Feat esotericWardenFeat)
+        {
+            esotericWardenFeat.WithPermanentQEffect("Esoteric Warden", delegate (QEffect self)
+            {
+                self.AfterYouTakeAction = async (QEffect afterYouTakeAction, CombatAction action) =>
+                {
+                    if (action.ActionId == ThaumaturgeActionIDs.ExploitVulnerability && action.CheckResult >= CheckResult.Success && action.ChosenTargets.ChosenCreature != null)
+                    {
+                        int esotericWardenValue = (action.CheckResult == CheckResult.Success) ? 1 : 2;
+                        Creature? target = action.ChosenTargets.ChosenCreature;
+                        if (target != null)
+                        {
+                            afterYouTakeAction.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                            {
+                                Id = ThaumaturgeQEIDs.EsotericWardenAC,
+                                Illustration = IllustrationName.GenericCombatManeuver,
+                                Name = "Esoteric Warden AC (" + target.Name + ")",
+                                Description = "+" + esotericWardenValue + " status bonus to AC against " + target.Name,
+                                Value = esotericWardenValue,
+                                Tag = action.ChosenTargets.ChosenCreature,
+                                DoNotShowUpOverhead = true
+                            });
+
+                            afterYouTakeAction.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                            {
+                                Id = ThaumaturgeQEIDs.EsotericWardenSave,
+                                Illustration = IllustrationName.GenericCombatManeuver,
+                                Name = "Esoteric Warden Saving Throw (" + target.Name + ")",
+                                Description = "+" + esotericWardenValue + " status bonus to Saving Throws against " + target.Name,
+                                Value = esotericWardenValue,
+                                Tag = action.ChosenTargets.ChosenCreature,
+                                DoNotShowUpOverhead = true
+                            });
+                        }
+                    }
+                };
+                self.BonusToDefenses = (QEffect bonusToDefenses, CombatAction? action, Defense defense) =>
+                {
+                    if (action != null)
+                    {
+                        Creature owner = bonusToDefenses.Owner;
+                        QEffect? esotericWardenACEffect = owner.FindQEffect(ThaumaturgeQEIDs.EsotericWardenAC);
+                        QEffect? esotericWardenSaveEffect = owner.FindQEffect(ThaumaturgeQEIDs.EsotericWardenSave);
+
+                        if (defense == Defense.AC && esotericWardenACEffect != null && esotericWardenACEffect.Tag != null && esotericWardenACEffect.Tag is Creature wardenACCreature && wardenACCreature == action.Owner)
+                        {
+                            return new Bonus(esotericWardenACEffect.Value, BonusType.Status, "Esoteric Warden", true);
+                        }
+
+                        if (defense.IsSavingThrow() && esotericWardenSaveEffect != null && esotericWardenSaveEffect.Tag != null && esotericWardenSaveEffect.Tag is Creature wardenSaveCreature && wardenSaveCreature == action.Owner)
+                        {
+                            return new Bonus(esotericWardenSaveEffect.Value, BonusType.Status, "Esoteric Warden", true);
+                        }
+                    }
+
+                    return null;
+                };
+                self.YouAreTargeted = async (QEffect youAreTargeted, CombatAction action) =>
+                {
+                    Creature owner = youAreTargeted.Owner;
+                    QEffect? esotericWardenACEffect = owner.FindQEffect(ThaumaturgeQEIDs.EsotericWardenAC);
+                    QEffect? esotericWardenSaveEffect = owner.FindQEffect(ThaumaturgeQEIDs.EsotericWardenSave);
+                    if (action.SavingThrow != null && esotericWardenSaveEffect != null && esotericWardenSaveEffect.Tag != null && esotericWardenSaveEffect.Tag is Creature wardenSaveCreature && wardenSaveCreature == action.Owner)
+                    {
+                        esotericWardenSaveEffect.ExpiresAt = ExpirationCondition.Immediately;
+                    }
+                    else if (esotericWardenACEffect != null && esotericWardenACEffect.Tag != null && esotericWardenACEffect.Tag is Creature wardenACCreature && wardenACCreature == action.Owner)
+                    {
+                        esotericWardenACEffect.ExpiresAt = ExpirationCondition.Immediately;
+                    }
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Instructive Strike feat
+        /// </summary>
+        /// <param name="instructiveStrikeFeat">The Instructive Strike feat object</param>
+        public static void AddInstructiveStrikeLogic(Feat instructiveStrikeFeat)
+        {
+            instructiveStrikeFeat.WithPermanentQEffect("Instructive Strike", delegate (QEffect self)
+            {
+                self.ProvideStrikeModifier = (Item item) =>
+                {
+                    Creature owner = self.Owner;
+                    if (item.WeaponProperties != null)
+                    {
+                        CombatAction instructiveStrike = owner.CreateStrike(item);
+                        ((CreatureTarget)instructiveStrike.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                        {
+                            if (!ThaumaturgeUtilities.IsCreatureWeildingImplement(attacker))
+                            {
+                                return Usability.NotUsable("Not weilding Implement.");
+                            }
+
+                            return Usability.Usable;
+                        });
+                        instructiveStrike.Name = "Instructive Strike";
+                        instructiveStrike.ActionId = ThaumaturgeActionIDs.InstructiveStrike;
+                        return instructiveStrike;
+                    }
+
+                    return null;
+                };
+
+                self.AfterYouTakeAction = async (QEffect afterYouTakeAction, CombatAction action) =>
+                {
+                    Creature owner = self.Owner;
+                    if (action.ActionId == ThaumaturgeActionIDs.InstructiveStrike && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner) && action.CheckResult >= CheckResult.Success)
+                    {
+                        QEffect instructiveStrikeEffect = new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
+                        {
+                            Id = ThaumaturgeQEIDs.InstructiveStrike,
+                            Value = (action.CheckResult == CheckResult.Success ? 1 : 2)
+                        };
+                        Creature? target = action.ChosenTargets.ChosenCreature;
+                        if (target != null)
+                        {
+                            owner.AddQEffect(instructiveStrikeEffect);
+                            CombatAction exploitVulnerabilityAction = ThaumaturgeUtilities.CreateExploitVulnerabilityAction(owner);
+                            exploitVulnerabilityAction.ActionCost = 0;
+                            exploitVulnerabilityAction.Target = action.Target;
+                            exploitVulnerabilityAction.ChosenTargets.ChosenCreature = target;
+                            await exploitVulnerabilityAction.AllExecute();
+                            owner.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.InstructiveStrike);
+                        }
+                    }
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Ammunition Thaumaturgy feat
+        /// </summary>
+        /// <param name="instructiveStrikeFeat">The Ammunition Thaumaturgy feat object</param>
+        public static void AddAmmunitionThaumaturgyLogic(Feat ammunitionThaumaturgyFeat)
+        {
+            ammunitionThaumaturgyFeat.WithPermanentQEffect("Ammunition Thaumaturgy", delegate (QEffect self)
+            {
+                self.StateCheck = (QEffect stateCheck) =>
+                {
+                    Creature owner = self.Owner;
+                    if (ThaumaturgeUtilities.IsCreatureWeildingImplement(owner))
+                    {
+                        foreach (Item item in owner.HeldItems)
+                        {
+                            if (item.HasTrait(Trait.OneHandPlus) && !item.HasTrait(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus) && !item.HasTrait(ThaumaturgeTraits.Implement))
+                            {
+                                item.Traits.Remove(Trait.OneHandPlus);
+                                item.Traits.Add(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        foreach (Item item in owner.HeldItems)
+                        {
+                            if (item.HasTrait(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus) && !item.HasTrait(Trait.OneHandPlus))
+                            {
+                                item.Traits.Remove(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus);
+                                item.Traits.Add(Trait.OneHandPlus);
+                            }
+                        }
+                    }
+                    foreach (Item item in owner.CarriedItems)
+                    {
+                        if (item.HasTrait(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus))
+                        {
+                            item.Traits.Remove(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus);
+                            item.Traits.Add(Trait.OneHandPlus);
+                        }
+                    }
+                    foreach (Tile tile in owner.Battle.Map.Tiles)
+                    {
+                        foreach (Item item in tile.DroppedItems)
+                        {
+                            if (item.HasTrait(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus))
+                            {
+                                item.Traits.Remove(ThaumaturgeTraits.TemporaryIgnoreOneHandPlus);
+                                item.Traits.Add(Trait.OneHandPlus);
+                            }
+                        }
+                    }
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Divine Disharmony feat
+        /// </summary>
+        /// <param name="divineDisharmonyFeat">The Divine Disharmony feat object</param>
+        public static void AddDivineDisharmonyLogic(Feat divineDisharmonyFeat)
+        {
+            divineDisharmonyFeat.WithPermanentQEffect("Divine Disharmony", delegate (QEffect self)
+            {
+                self.ProvideMainAction = (QEffect provideMainAction) =>
+                {
+                    Creature owner = provideMainAction.Owner;
+                    PossibilitySection divineDisharmonySection = new PossibilitySection("Divine Disharmony Possibilities");
+
+                    CombatAction divineDisharmonyAction = new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Divine Disharmony", [Trait.Divine, Trait.Enchantment, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge], divineDisharmonyFeat.RulesText,Target.RangedCreature(12));
+                    divineDisharmonyAction.WithActionCost(1);
+                    divineDisharmonyAction.WithActionId(ThaumaturgeActionIDs.DivineDisharmony);
+                    divineDisharmonyAction.WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Deception, Skill.Intimidation), Checks.DefenseDC(Defense.Will)));
+                    divineDisharmonyAction.WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
+                    {
+                        if (result >= CheckResult.Success)
+                        {
+                            QEffect flatFooted = QEffect.FlatFooted("Divine Disharmony");
+                            flatFooted.Owner = defender;
+                            flatFooted.ExpiresAt = ExpirationCondition.ExpiresAtEndOfYourTurn;
+                            if (result == CheckResult.CriticalSuccess)
+                            {
+                                flatFooted.CannotExpireThisTurn = true;
+                            }
+
+                            defender.AddQEffect(flatFooted);
+                        }
+                    });
+
+                    return new ActionPossibility(divineDisharmonyAction);
+                };
+                self.BonusToSkillChecks = (Skill skill, CombatAction action, Creature? target) =>
+                {
+                    if (action.ActionId == ThaumaturgeActionIDs.DivineDisharmony && target != null && target.Spellcasting != null && target.Spellcasting.PrimarySpellcastingSource.SpellcastingTradition == Trait.Divine)
+                    {
+                        return new Bonus(2, BonusType.Circumstance, "Divine Disharmony", true);
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Lingering Pain Strike feat
+        /// </summary>
+        /// <param name="lingeringPainStrikeFeat">The Lingering Pain Strike feat object</param>
+        public static void AddLingeringPainStrikeLogic(Feat lingeringPainStrikeFeat)
+        {
+            lingeringPainStrikeFeat.WithPermanentQEffect("Lingering Pain Strike", delegate (QEffect self)
+            {
+                self.ProvideStrikeModifier = (Item item) =>
+                {
+                    if (item.WeaponProperties != null)
+                    {
+                        CombatAction lingeringPainStrikeStrike = self.Owner.CreateStrike(item);
+                        lingeringPainStrikeStrike.WithActionCost(2);
+                        lingeringPainStrikeStrike.Traits.Add(Trait.Mental);
+                        lingeringPainStrikeStrike.Traits.Add(Trait.Fear);
+                        lingeringPainStrikeStrike.Traits.Add(Trait.Emotion);
+                        lingeringPainStrikeStrike.Traits.Add(Trait.Basic);
+                        lingeringPainStrikeStrike.Illustration = (Illustration)new SideBySideIllustration(lingeringPainStrikeStrike.Illustration, (Illustration)IllustrationName.Sickened);
+                        lingeringPainStrikeStrike.Name = "Lingering Pain Strike";
+                        lingeringPainStrikeStrike.StrikeModifiers.OnEachTarget += (Func<Creature, Creature, CheckResult, Task>)(async (attacker, defender, checkResult) =>
+                        {
+                            if (checkResult >= CheckResult.Success)
+                            {
+                                ActiveRollSpecification activeRollSpecification = new ActiveRollSpecification(Checks.SavingThrow(Defense.Fortitude), Checks.FlatDC(ThaumaturgeUtilities.CalculateClassDC(attacker, ThaumaturgeTraits.Thaumaturge)));
+                                int classDC = ThaumaturgeUtilities.CalculateClassDC(attacker, ThaumaturgeTraits.Thaumaturge);
+                                CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(defender, lingeringPainStrikeStrike, Defense.Fortitude, creature => classDC);
+                                if (savingThrowResult <= CheckResult.Failure)
+                                {
+                                    defender.AddQEffect(QEffect.Sickened(1, classDC));
+                                }
+                            }
+
+                        });
+
+                        return lingeringPainStrikeStrike;
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Esoterica Seller feat
+        /// </summary>
+        /// <param name="esotericaSellerFeat">The Esoterica Seller feat object</param>
+        public static void AddEsotericaSellerLogic(Feat esotericaSellerFeat)
+        {
+            esotericaSellerFeat.WithPermanentQEffect("Esoterica Seller", delegate (QEffect self)
+            {
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    int totalWorth = 0;
+                    foreach(Creature creature in startOfCombat.Owner.Battle.AllCreatures.Where(enemy => !startOfCombat.Owner.FriendOfAndNotSelf(enemy)))
+                    {
+                        totalWorth += Math.Max(creature.Level, 0);
+                    }
+
+                    self.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                    {
+                        Id = ThaumaturgeQEIDs.EsotericSeller,
+                        Value = totalWorth
+                    });
+                };
+                self.EndOfCombat = async (QEffect endOfCombat, bool didWin) =>
+                {
+                    if (didWin)
+                    {
+                        Creature owner = endOfCombat.Owner;
+                        QEffect? esotericSeller = owner.FindQEffect(ThaumaturgeQEIDs.EsotericSeller);
+                        if (esotericSeller != null && esotericSeller.Value > 0)
+                        {
+                            Item lootedEsoteric = Items.CreateNew(ThaumaturgeItemNames.LootedEsoterica);
+                            lootedEsoteric.Price = esotericSeller.Value;
+                            if (owner.PersistentCharacterSheet != null)
+                            {
+                                owner.PersistentCharacterSheet.CampaignInventory.AddAtEndOfBackpack(lootedEsoteric);
+                                if (CampaignState.Instance != null)
+                                {
+                                    CampaignState.Instance.CommonLoot.Add(lootedEsoteric);
+                                }
+                            }
+                        }
+                    }
                 };
             });
         }

@@ -115,6 +115,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             {
                 if (!(self is MirrorClone))
                 {
+                    await self.ChooseWhichVersionIsReal(pairedCreature.Occupies);
                     PairedCreature.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.MirrorTracking);
                     self.Battle.RemoveCreatureFromGame(pairedCreature);
                     self.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.MirrorTracking);

@@ -108,7 +108,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions
 
         public static void HandleQEffect(this Creature self, QEffect effect, Creature pairedCreature)
         {
-            if (!self.HasEffect(effect))
+            List<QEffect> selfEffects = self.QEffects.ToList();
+            List<QEffect> pairedEffects = pairedCreature.QEffects.ToList();
+            if (!self.HasEffect(effect) && 
+                !(effect.Id == QEffectId.FlankedBy) && 
+                !(effect.Name == "Bless") &&
+                !(effect.Name == "Bane") &&
+                !(effect.Name == "March of the Tsunami") &&
+                !(effect.Name == "Angelic Halo") &&
+                !(effect.Name != null && effect.Name.Contains("Circle of Protection")) &&
+                !(effect.Name == "Dirge of Doom") &&
+                !(effect.Name != null && effect.Name.Contains("Frightful Presence")) &&
+                (effect.Source != null && effect.Source.BaseName != "The Golden Candelabra"))
             {
                 self.AddQEffect(effect);
             }

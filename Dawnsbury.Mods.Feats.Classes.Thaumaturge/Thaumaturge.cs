@@ -530,12 +530,37 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     MirrorTrackingEffect? mirrorTracking = owner.FindQEffect(ThaumaturgeQEIDs.MirrorTracking) as MirrorTrackingEffect;
                     if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions && mirrorTracking != null)
                     {
+                        if (!owner.Battle.AllCreatures.Contains(mirrorTracking.PairedCreature))
+                        {
+                            return null;
+                        }
+
                         Creature pairedCreature = mirrorTracking.PairedCreature;
                         return new ActionPossibility(new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Swap to Clone", [], "Swaps to the clone, in which you can continue your turn.", Target.Self())
                             .WithActionCost(0)
                             .WithEffectOnSelf(async (Creature self) =>
                             {
                                 self.SwapPositions(pairedCreature);
+
+                                // Logic for Grabbed, Grappled, and Restrained
+                                foreach (QEffect qEffect in self.QEffects.Where(qe => qe.Id == QEffectId.Grabbed || qe.Id == QEffectId.Grappled || qe.Id == QEffectId.Restrained))
+                                {
+                                    qEffect.Owner = pairedCreature;
+                                    pairedCreature.AddQEffect(qEffect);
+                                }
+                                foreach (QEffect qEffect in pairedCreature.QEffects.Where(qe => qe.Id == QEffectId.Grabbed || qe.Id == QEffectId.Grappled || qe.Id == QEffectId.Restrained))
+                                {
+                                    qEffect.Owner = self;
+                                    self.AddQEffect(qEffect);
+                                }
+                                foreach (Creature enemy in self.Battle.AllCreatures.Where(creature => !creature.FriendOfAndNotSelf(self)))
+                                {
+                                    List<QEffect> qEffectsToChange = enemy.QEffects.Where(qe => (qe.Source == self || qe.Source == pairedCreature) && (qe.Id == QEffectId.Grabbed || qe.Id == QEffectId.Grappled || qe.Id == QEffectId.Restrained)).ToList();
+                                    foreach (QEffect qEffect in qEffectsToChange)
+                                    {
+                                        qEffect.Source = (qEffect.Source == self) ? pairedCreature : self;
+                                    }
+                                }
                             }));
                     }
 

@@ -397,3 +397,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /Dawnsbury.Mods.Items.Firearms/FirearmsAssets
+/Dawnsbury.Mods.Feats.Classes.Thaumaturge/ThaumaturgeAssets

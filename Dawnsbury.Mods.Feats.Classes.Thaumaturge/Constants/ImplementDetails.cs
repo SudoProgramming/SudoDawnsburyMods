@@ -24,11 +24,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Constants
 
         public static readonly string ChaliceInitiateBenefitFlavorText = "Chalice implements are vessels that fill with liquid, associating them with healing, nourishment, and life. Your chalice might be a traditional cup or goblet, but it could also be a small amphora, a polished gourd, or even a hollowed-out skull. Chalice implements are associated with the astrological signs of the mother and the newlyweds, as well as the sea dragon.";
 
-        public static readonly string ChaliceInitiateBenefitRulesText = "{b}Frequency{/b} once per round\n{b}Requirements{/b} You are holding your chalice implement.\n\nYou drink from the liquid that slowly collects in your chalice or administer it to an adjacent ally. The drinker chooses whether to take a small sip or to drain the contents.\n\n" + ChaliceInitiateBenefitSipText + "\n\n" + ChaliceInitiateBenefitDrainText;
-
         public static readonly string ChaliceInitiateBenefitSipText = "{b}Sip{/b} A sip grants the drinker an amount of temporary Hit Points equal to 2 + half your level.";
 
         public static readonly string ChaliceInitiateBenefitDrainText = "{b}Drain{/b} {i}(healing, positive){/i} Drinking deep instead heals the drinker 3 Hit Points for each level you have. The chalice can not be drained again this encounter.";
+
+        public static readonly string ChaliceInitiateBenefitRulesText = "{b}Frequency{/b} once per round\n{b}Requirements{/b} You are holding your chalice implement.\n\nYou drink from the liquid that slowly collects in your chalice or administer it to an adjacent ally. The drinker chooses whether to take a small sip or to drain the contents.\n\n" + ChaliceInitiateBenefitSipText + "\n\n" + ChaliceInitiateBenefitDrainText;
 
         public static readonly string LanternInitiateBenefitName = string.Empty;
 

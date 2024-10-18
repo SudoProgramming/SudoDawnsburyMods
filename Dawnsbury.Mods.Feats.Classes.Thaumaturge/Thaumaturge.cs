@@ -47,6 +47,7 @@ using System.Data.SqlTypes;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Dawnsbury.Core.Mechanics.Rules;
 using Dawnsbury.Campaign.Path;
+using System.Reflection.Emit;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -120,8 +121,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 [Trait.Perception, Trait.Fortitude, Trait.Will],
                 3,
                 "{b}1. Esoteric Lore{/b} You become trained in a special lore skill that can used to Exploit Vulnerability. This is a charisma-based skill. {i}(You add your Charisma modifier to checks using this skill.){/i}\n\n" +
-                "{b}2. Exploit Vulnerability {icon:Action}{/b}\n{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement\n\nSelect a creature you can see and attempt an Esoteric Lore check against a standard DC for its level. You gain the following effects until you Exploit Vulnerabilities again.\n\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn.\n\n\n\n" +
-                "{b}3. First Implement{/b} Choose an implement. {i}{Will appear in an open hand at the start of combat, if no open hands it will be in your bag or on the ground. The weapon implement is the only exception.){/i}\n\n" +
+                "{b}2. Exploit Vulnerability {icon:Action}{/b}\n{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement\n\nSelect a creature you can see and attempt an Esoteric Lore check against a standard DC for its level. You gain the following effects until you Exploit Vulnerabilities again.\n\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn.\n\n" +
+                "{b}3. First Implement{/b} Choose an implement.\n\n" +
                 "{b}4. Implement's Empowerment{/b} When you Strike, you can trace mystic patterns with an implement you're holding to empower the Strike, causing it to deal 2 additional damage per weapon damage die. Channeling the power requires full use of your hands. You don't gain the benefit of implement's empowerment if you are holding anything in either hand other than a single one-handed weapon or other implements and you must be holding at least one implement to gain the benefit.\n\n" +
                 "{b}5. Thaumaturge Feat{/b}\n\n" +
                 "{b}At Higher Levels:{/b}\n" +
@@ -155,11 +156,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddRootToLifeLogic(rootToLifeFeat);
             yield return rootToLifeFeat;
 
-            TrueFeat scrollThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Your multidisciplinary study of magic means you know how to activate the magic in scrolls with ease.", "You can activate scrolls of any magical tradition, using your thaumaturge class DC for the scroll's DC, rather than a particular spell DC. If a spell is on the spell list for multiple traditions, you choose which tradition to use at the time you activate the scroll. You can draw and activate scrolls with the same hand holding an implement.", [ThaumaturgeTraits.Thaumaturge]);
+            TrueFeat scrollThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Your multidisciplinary study of magic means you know how to activate the magic in scrolls with ease.", "You can activate scrolls of any magical tradition, using your thaumaturge class DC for the scroll's DC, rather than a particular spell DC. You can draw and activate scrolls with the same hand holding an implement.", [ThaumaturgeTraits.Thaumaturge]);
             AddScrollThaumaturgyLogic(scrollThaumaturgyFeat);
             yield return scrollThaumaturgyFeat;
 
-            TrueFeat esotericaSellerFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericaSeller, 2, "You collect interesting trinkets wherever you go.", "At the end of each encounter, if at least one Esoterica Seller character is in the party, you gain a \"Looted Esoterica\" item that's worth an amount of gold pieces equal to the combined level (levels 0 or below do not count) of all enemies you defeated in that encounter. This item has no use but you can sell it later in the shop", [ThaumaturgeTraits.Thaumaturge]);
+            TrueFeat esotericaSellerFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericaSeller, 2, "You collect interesting trinkets wherever you go.", "At the end of each encounter, if at least one Esoterica Seller character is in the party, you gain a \"Looted Esoterica\" item that's worth an amount of gold pieces equal to the combined level (levels 0 or below do not count) of all enemies you defeated in that encounter. This item has no use but you can sell it later in the shop", [ThaumaturgeTraits.Thaumaturge, Trait.Homebrew]);
             AddEsotericaSellerLogic(esotericaSellerFeat);
             yield return esotericaSellerFeat;
 
@@ -182,7 +183,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddInstructiveStrikeLogic(instructiveStrikeFeat);
             yield return instructiveStrikeFeat;
 
-            TrueFeat lingeringPainStrikeFeat = new TrueFeat(ThaumaturgeFeatNames.LingeringPainStrike, 4, "You attack with in such a way that your foes feel faint afterwards.", "{b}Requirements{/b} You are holding your implement\n\nMake a Strike. On a hit, the target also rolls a Fortitude save against your DC, and is sickened 1 on a failure.", [ThaumaturgeTraits.Thaumaturge]);
+            TrueFeat lingeringPainStrikeFeat = new TrueFeat(ThaumaturgeFeatNames.LingeringPainStrike, 4, "You attack with in such a way that your foes feel faint afterwards.", "{b}Requirements{/b} You are holding your implement\n\nMake a Strike. On a hit, the target also rolls a Fortitude save against your DC, and is sickened 1 on a failure.", [ThaumaturgeTraits.Thaumaturge, Trait.Homebrew]);
             lingeringPainStrikeFeat.WithActionCost(2);
             AddLingeringPainStrikeLogic(lingeringPainStrikeFeat);
             yield return lingeringPainStrikeFeat;
@@ -637,7 +638,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             {
                 ThaumaturgeUtilities.EnsureCorrectImplements(sheet);
                 sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Extra Skill", "Tome Extra Skill", 1, (feat => feat is SkillSelectionFeat)));
-                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Extra Expert Skill", "Tome Extra Expert Skill", 3, (feat => feat is SkillIncreaseFeat)));
+                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Extra Expert Skill", "Tome Extra Expert Skill", 3, (feat =>
+                {
+                    return sheet.AllFeats.Any((secondFeat => secondFeat is SkillSelectionFeat secondSkillSelectionFeat && feat is SkillIncreaseFeat skillIncrease && skillIncrease.Skill == secondSkillSelectionFeat.Skill));
+                })));
             };
         }
 

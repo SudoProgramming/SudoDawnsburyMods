@@ -68,6 +68,21 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                     bool skipAntithesis = false;
                     if (result >= CheckResult.Success)
                     {
+                        // Clear all old Exploit Vulnerabilities
+                        QEffect? oldExploitVulnerability = attacker.FindQEffect(ThaumaturgeQEIDs.ExploitVulnerabilityWeakness);
+                        if (oldExploitVulnerability != null)
+                        {
+                            oldExploitVulnerability.ExpiresAt = ExpirationCondition.Immediately;
+                            foreach (Creature creature in attacker.Battle.AllCreatures)
+                            {
+                                QEffect? oldTarget = creature.FindQEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget);
+                                if (oldTarget != null && oldTarget.Tag != null && oldTarget.Tag == attacker)
+                                {
+                                    oldTarget.ExpiresAt = ExpirationCondition.Immediately;
+                                }
+                            }
+                        }
+
                         if (defender.WeaknessAndResistance.Weaknesses.Count(resistance => resistance.DamageKind != ThaumaturgeDamageKinds.PersonalAntithesis) > 0)
                         {
                             List<Resistance> weaknesses = ThaumaturgeUtilities.GetHighestWeaknesses(defender);

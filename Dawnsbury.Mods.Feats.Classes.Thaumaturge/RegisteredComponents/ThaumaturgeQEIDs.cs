@@ -24,11 +24,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         public static readonly QEffectId ExploitVulnerabilityTarget = ModManager.RegisterEnumMember<QEffectId>("Exploit Vulnerability - Weakness Target QEID");
 
         /// <summary>
-        /// The Exploit Vulnerability - Weakness persistent QEffect ID 
-        /// </summary>
-        public static readonly QEffectId ExploitVulnerabilityAntithesis = ModManager.RegisterEnumMember<QEffectId>("Exploit Vulnerability - Antithesis QEID");
-
-        /// <summary>
         /// The Used Exploit Vulnerability persistent QEffect ID 
         /// </summary>
         public static readonly QEffectId UsedExploitVulnerability = ModManager.RegisterEnumMember<QEffectId>("Exploit Vulnerability Used This Turn QEID");

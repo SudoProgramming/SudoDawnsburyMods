@@ -15,7 +15,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
     /// <summary>
     /// A static class containing all QEffect IDs used for Thaumaturge
     /// </summary>
-    public static class ImplementItemNames
+    public static class ThaumaturgeItemNames
     {
         /// <summary>
         /// The Amulet Implement Item
@@ -61,5 +61,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Amulet Implement Item
         /// </summary>
         public static readonly ItemName Weapon = ModManager.RegisterNewItemIntoTheShop("Weapon Implement", itemName => new Implement(itemName, IllustrationName.GenericCombatManeuver, "Weapon", "{b}" + ImplementDetails.WeaponInitiateBenefitName + "{/b} {icon:Reaction}\n\n" + ImplementDetails.WeaponInitiateBenefitRulesText));
+
+        /// <summary>
+        /// The Amulet Implement Item
+        /// </summary>
+        public static readonly ItemName LootedEsoterica = ModManager.RegisterNewItemIntoTheShop("Looted Esoterica", itemName => new Item(itemName, IllustrationName.GenericCombatManeuver, "Looted Esoterica", 0, 0, [Trait.DoNotAddToShop]));
     }
 }

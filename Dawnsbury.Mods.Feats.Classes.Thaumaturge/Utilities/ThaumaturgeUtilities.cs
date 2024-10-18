@@ -234,23 +234,23 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             switch (implementID)
             {
                 case ImplementIDs.Amulet:
-                    return (Implement)Items.CreateNew(ImplementItemNames.Amulet);
+                    return (Implement)Items.CreateNew(ThaumaturgeItemNames.Amulet);
                 case ImplementIDs.Bell:
-                    return (Implement)Items.CreateNew(ImplementItemNames.Bell);
+                    return (Implement)Items.CreateNew(ThaumaturgeItemNames.Bell);
                 case ImplementIDs.Chalice:
-                    return (Implement)Items.CreateNew(ImplementItemNames.Chalice);
+                    return (Implement)Items.CreateNew(ThaumaturgeItemNames.Chalice);
                 case ImplementIDs.Lantern:
-                    return (Implement)Items.CreateNew(ImplementItemNames.Lantern);
+                    return (Implement)Items.CreateNew(ThaumaturgeItemNames.Lantern);
                 case ImplementIDs.Mirror:
-                    return (Implement)Items.CreateNew(ImplementItemNames.Mirror);
+                    return (Implement)Items.CreateNew(ThaumaturgeItemNames.Mirror);
                 case ImplementIDs.Regalia:
-                    return (Implement)Items.CreateNew(ImplementItemNames.Regalia);
+                    return (Implement)Items.CreateNew(ThaumaturgeItemNames.Regalia);
                 case ImplementIDs.Tome:
-                    return (Implement)Items.CreateNew(ImplementItemNames.Tome);
+                    return (Implement)Items.CreateNew(ThaumaturgeItemNames.Tome);
                 case ImplementIDs.Wand:
-                    return (Implement)Items.CreateNew(ImplementItemNames.Wand);
+                    return (Implement)Items.CreateNew(ThaumaturgeItemNames.Wand);
                 case ImplementIDs.Weapon:
-                    return (Implement)Items.CreateNew(ImplementItemNames.Weapon);
+                    return (Implement)Items.CreateNew(ThaumaturgeItemNames.Weapon);
                 default:
                     throw new InvalidOperationException("Implement ID is not supported: " + implementID);
             }
@@ -261,23 +261,23 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             switch (implementID)
             {
                 case ImplementIDs.Amulet:
-                    return ImplementItemNames.Amulet;
+                    return ThaumaturgeItemNames.Amulet;
                 case ImplementIDs.Bell:
-                    return ImplementItemNames.Bell;
+                    return ThaumaturgeItemNames.Bell;
                 case ImplementIDs.Chalice:
-                    return ImplementItemNames.Chalice;
+                    return ThaumaturgeItemNames.Chalice;
                 case ImplementIDs.Lantern:
-                    return ImplementItemNames.Lantern;
+                    return ThaumaturgeItemNames.Lantern;
                 case ImplementIDs.Mirror:
-                    return ImplementItemNames.Mirror;
+                    return ThaumaturgeItemNames.Mirror;
                 case ImplementIDs.Regalia:
-                    return ImplementItemNames.Regalia;
+                    return ThaumaturgeItemNames.Regalia;
                 case ImplementIDs.Tome:
-                    return ImplementItemNames.Tome;
+                    return ThaumaturgeItemNames.Tome;
                 case ImplementIDs.Wand:
-                    return ImplementItemNames.Wand;
+                    return ThaumaturgeItemNames.Wand;
                 case ImplementIDs.Weapon:
-                    return ImplementItemNames.Weapon;
+                    return ThaumaturgeItemNames.Weapon;
                 default:
                     throw new InvalidOperationException("Implement ID is not supported: " + implementID);
             }

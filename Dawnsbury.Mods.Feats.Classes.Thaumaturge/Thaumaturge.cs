@@ -46,6 +46,7 @@ using System.Diagnostics;
 using System.Data.SqlTypes;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Dawnsbury.Core.Mechanics.Rules;
+using Dawnsbury.Campaign.Path;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -157,6 +158,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             TrueFeat scrollThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Your multidisciplinary study of magic means you know how to activate the magic in scrolls with ease.", "You can activate scrolls of any magical tradition, using your thaumaturge class DC for the scroll's DC, rather than a particular spell DC. If a spell is on the spell list for multiple traditions, you choose which tradition to use at the time you activate the scroll. You can draw and activate scrolls with the same hand holding an implement.", [ThaumaturgeTraits.Thaumaturge]);
             AddScrollThaumaturgyLogic(scrollThaumaturgyFeat);
             yield return scrollThaumaturgyFeat;
+
+            TrueFeat esotericaSellerFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericaSeller, 2, "You collect interesting trinkets wherever you go.", "At the end of each encounter, if at least one Esoterica Seller character is in the party, you gain a \"Looted Esoterica\" item that's worth an amount of gold pieces equal to the combined level (levels 0 or below do not count) of all enemies you defeated in that encounter. This item has no use but you can sell it later in the shop", [ThaumaturgeTraits.Thaumaturge]);
+            AddEsotericaSellerLogic(esotericaSellerFeat);
+            yield return esotericaSellerFeat;
 
             TrueFeat esotericWardenFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericWarden, 2, "When you apply antithetical material against a creature successfully, you also ward yourself against its next attacks.", "When you succeed at your check to Exploit a Vulnerability, you gain a +1 status bonus to your AC against the creature's next attack and a +1 status bonus to your next saving throw against the creature; if you critically succeed, these bonuses are +2 instead. You can gain these bonuses only once per day against a particular creature, and the benefit ends if you Exploit Vulnerability again.", [ThaumaturgeTraits.Thaumaturge]);
             AddEsotericWardenLogic(esotericWardenFeat);
@@ -1336,6 +1341,52 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     }
 
                     return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Esoterica Seller feat
+        /// </summary>
+        /// <param name="esotericaSellerFeat">The Esoterica Seller feat object</param>
+        public static void AddEsotericaSellerLogic(Feat esotericaSellerFeat)
+        {
+            esotericaSellerFeat.WithPermanentQEffect("Esoterica Seller", delegate (QEffect self)
+            {
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    int totalWorth = 0;
+                    foreach(Creature creature in startOfCombat.Owner.Battle.AllCreatures.Where(enemy => !startOfCombat.Owner.FriendOfAndNotSelf(enemy)))
+                    {
+                        totalWorth += Math.Max(creature.Level, 0);
+                    }
+
+                    self.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                    {
+                        Id = ThaumaturgeQEIDs.EsotericSeller,
+                        Value = totalWorth
+                    });
+                };
+                self.EndOfCombat = async (QEffect endOfCombat, bool didWin) =>
+                {
+                    if (didWin)
+                    {
+                        Creature owner = endOfCombat.Owner;
+                        QEffect? esotericSeller = owner.FindQEffect(ThaumaturgeQEIDs.EsotericSeller);
+                        if (esotericSeller != null && esotericSeller.Value > 0)
+                        {
+                            Item lootedEsoteric = Items.CreateNew(ThaumaturgeItemNames.LootedEsoterica);
+                            lootedEsoteric.Price = esotericSeller.Value;
+                            if (owner.PersistentCharacterSheet != null)
+                            {
+                                owner.PersistentCharacterSheet.CampaignInventory.AddAtEndOfBackpack(lootedEsoteric);
+                                if (CampaignState.Instance != null)
+                                {
+                                    CampaignState.Instance.CommonLoot.Add(lootedEsoteric);
+                                }
+                            }
+                        }
+                    }
                 };
             });
         }

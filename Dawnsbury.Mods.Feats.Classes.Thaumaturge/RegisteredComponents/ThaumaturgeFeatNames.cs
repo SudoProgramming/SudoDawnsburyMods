@@ -90,6 +90,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
 
         public static readonly FeatName LingeringPainStrike = ModManager.RegisterFeatName("Lingering Pain Strike", "Lingering Pain Strike");
 
+        public static readonly FeatName EsotericaSeller = ModManager.RegisterFeatName("Esoterica Seller", "Esoterica Seller");
+
         public static readonly FeatName ColdWand = ModManager.RegisterFeatName("Cold Wand", "Cold Wand");
 
         public static readonly FeatName ElectricityWand = ModManager.RegisterFeatName("Electricity Wand", "Electricity Wand");

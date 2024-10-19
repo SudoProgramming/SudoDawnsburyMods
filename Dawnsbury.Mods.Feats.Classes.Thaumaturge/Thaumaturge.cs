@@ -143,7 +143,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddScrollThaumaturgyLogic(scrollThaumaturgyFeat);
             yield return scrollThaumaturgyFeat;
 
-            TrueFeat esotericaSellerFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericaSeller, 2, "You collect interesting trinkets wherever you go.", "At the end of each encounter, if at least one Esoterica Seller character is in the party, you gain a \"Looted Esoterica\" item that's worth an amount of gold pieces equal to the combined level (levels 0 or below do not count) of all enemies you defeated in that encounter. This item has no use but you can sell it later in the shop", [ThaumaturgeTraits.Thaumaturge, Trait.Homebrew]);
+            TrueFeat esotericaSellerFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericaSeller, 2, "You collect interesting trinkets wherever you go.", "At the end of each encounter you gain a \"Looted Esoterica\" item that's worth an amount of gold pieces equal to the combined level (levels 0 or below do not count) of all enemies you defeated in that encounter. This item has no use but you can sell it later in the shop", [ThaumaturgeTraits.Thaumaturge, Trait.Homebrew]);
             AddEsotericaSellerLogic(esotericaSellerFeat);
             yield return esotericaSellerFeat;
 

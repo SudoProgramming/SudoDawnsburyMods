@@ -2,15 +2,12 @@
 using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Enumerations;
-using Dawnsbury.Core.Mechanics.Targeting;
-using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Tiles;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities

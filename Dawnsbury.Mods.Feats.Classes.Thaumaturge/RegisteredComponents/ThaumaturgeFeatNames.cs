@@ -1,5 +1,4 @@
-﻿using Dawnsbury.Core;
-using Dawnsbury.Core.CharacterBuilder.Feats;
+﻿using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Modding;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents

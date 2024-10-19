@@ -1,34 +1,31 @@
-﻿using Dawnsbury.Campaign.Encounters;
+﻿using Dawnsbury.Auxiliary;
 using Dawnsbury.Core;
 using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Core.CombatActions;
+using Dawnsbury.Core.Coroutines.Options;
 using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Creatures.Parts;
+using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Core;
+using Dawnsbury.Core.Mechanics.Damage;
 using Dawnsbury.Core.Mechanics.Enumerations;
-using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Mechanics.Targeting;
+using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Mechanics.Treasure;
+using Dawnsbury.Core.Possibilities;
+using Dawnsbury.Core.Roller;
 using Dawnsbury.Core.Tiles;
+using Dawnsbury.Display;
 using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Display.Text;
+using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Constants;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Enums;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Dawnsbury.Display;
-using Dawnsbury.Auxiliary;
-using Microsoft.Xna.Framework;
-using Dawnsbury.Core.Mechanics;
-using Dawnsbury.Core.Roller;
-using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Constants;
-using Dawnsbury.Core.Coroutines.Options;
-using Dawnsbury.Core.Mechanics.Damage;
-using Dawnsbury.Core.Possibilities;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 {
@@ -51,9 +48,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
         {
             CombatAction exploitVulnerabilityAction = new CombatAction(
                 owner,
-                IllustrationName.GenericCombatManeuver,
+                ThaumaturgeModdedIllustrations.ExploitVulnerability,
                 "Exploit Vulnerability",
-                [Trait.Manipulate, ThaumaturgeTraits.Thaumaturge],
+                [Trait.Manipulate, Trait.Basic, ThaumaturgeTraits.Thaumaturge],
                 "{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement.\nYou scour your experiences and learning to identify something that might repel your foe. You retrieve an object from your esoterica with the appropriate supernatural qualities, then use your implement to stoke the remnants of its power into a blaze. Select a creature you can see and attempt an Esoteric Lore check against a standard DC for its level, as you retrieve the right object from your esoterica and use your implement to empower it. You gain the following effects until you Exploit Vulnerabilities again.\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn.",
                 Target.Ranged(100)
                 .WithAdditionalConditionOnTargetCreature((attacker, defender) => attacker.HasEffect(ThaumaturgeQEIDs.UsedExploitVulnerability) ? Usability.NotUsable("Already Exploited Vulnerability this turn") : Usability.Usable))
@@ -89,7 +86,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                             Resistance weakness = weaknesses[0];
                             if (weaknesses.Count > 1)
                             {
-                                ChoiceButtonOption selectedWeakness = await attacker.AskForChoiceAmongButtons(IllustrationName.GenericCombatManeuver, "Which weakness would you like to exploit against all " + defender.BaseName + "?", weaknesses.Select(weakness => weakness.DamageKind.HumanizeTitleCase2()).ToArray());
+                                ChoiceButtonOption selectedWeakness = await attacker.AskForChoiceAmongButtons(ThaumaturgeModdedIllustrations.ExploitVulnerability, "Which weakness would you like to exploit against all " + defender.BaseName + "?", weaknesses.Select(weakness => weakness.DamageKind.HumanizeTitleCase2()).ToArray());
                                 weakness = weaknesses[selectedWeakness.Index];
                             }
                             if (weakness.Value >= 2 + Math.Floor(attacker.Level / 2.0))
@@ -100,7 +97,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                                     creature.AddQEffect(new QEffect(ExpirationCondition.Never)
                                     {
                                         Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
-                                        Illustration = IllustrationName.GenericCombatManeuver,
+                                        Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
                                         Name = "Exploited Vulnerability",
                                         Description = "Exploited Weakness by " + attacker.Name + " - " + weakness.DamageKind.HumanizeTitleCase2() + " " + weakness.Value,
                                         Tag = attacker
@@ -110,7 +107,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                                 {
                                     Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeakness,
                                     Tag = defender,
-                                    Illustration = IllustrationName.GenericCombatManeuver,
+                                    Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
                                     Name = "Exploit Vulnerability",
                                     Description = "Exploiting Weakness to all " + defender.BaseName + " - " + weakness.DamageKind.HumanizeTitleCase2() + " " + weakness.Value,
                                     AddExtraKindedDamageOnStrike = (CombatAction action, Creature damageTarget) =>
@@ -134,7 +131,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                         {
                             Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
                             Tag = attacker,
-                            Illustration = IllustrationName.GenericCombatManeuver,
+                            Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
                             Name = "Exploited Vulnerability",
                             Description = "Exploited Weakness by " + attacker.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
                             StateCheck = (QEffect stateCheck) =>
@@ -157,7 +154,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                             {
                                 Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeakness,
                                 Tag = defender,
-                                Illustration = IllustrationName.GenericCombatManeuver,
+                                Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
                                 Name = "Exploit Vulnerability",
                                 Description = "Exploiting Weakness to " + defender.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
                                 AddExtraKindedDamageOnStrike = (CombatAction action, Creature damageTarget) =>
@@ -244,7 +241,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             }
         }
 
-        public static Implement CreateImplement(ImplementIDs implementID)
+        public static Implement CreateImplement(ImplementIDs implementID, CalculatedCharacterSheetValues sheet)
         {
             switch (implementID)
             {
@@ -265,13 +262,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                 case ImplementIDs.Wand:
                     return (Implement)Items.CreateNew(ThaumaturgeItemNames.Wand);
                 case ImplementIDs.Weapon:
-                    return (Implement)Items.CreateNew(ThaumaturgeItemNames.Weapon);
                 default:
                     throw new InvalidOperationException("Implement ID is not supported: " + implementID);
             }
         }
 
-        public static ItemName GetImplementBaseItemName(ImplementIDs implementID)
+        public static ItemName GetImplementBaseItemName(ImplementIDs implementID, CalculatedCharacterSheetValues sheet)
         {
             switch (implementID)
             {
@@ -292,7 +288,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                 case ImplementIDs.Wand:
                     return ThaumaturgeItemNames.Wand;
                 case ImplementIDs.Weapon:
-                    return ThaumaturgeItemNames.Weapon;
                 default:
                     throw new InvalidOperationException("Implement ID is not supported: " + implementID);
             }
@@ -300,13 +295,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 
         public static void EnsureCorrectImplements(CalculatedCharacterSheetValues character)
         {
-            ImplementIDs[] implementIDs = [ImplementIDs.Amulet, ImplementIDs.Bell, ImplementIDs.Chalice, ImplementIDs.Lantern, ImplementIDs.Mirror, ImplementIDs.Regalia, ImplementIDs.Tome, ImplementIDs.Wand, ImplementIDs.Weapon];
+            ImplementIDs[] implementIDs = [ImplementIDs.Amulet, ImplementIDs.Bell, ImplementIDs.Chalice, ImplementIDs.Lantern, ImplementIDs.Mirror, ImplementIDs.Regalia, ImplementIDs.Tome, ImplementIDs.Wand];
             List<ImplementIDs> implementsToAdd = new List<ImplementIDs>();
             List<ImplementIDs> implementsToRemove = new List<ImplementIDs>();
 
             foreach (ImplementIDs implementID in implementIDs)
             {
                 FeatName featName = LookupImplementFeatName(implementID);
+                List<FeatName> feats = character.AllFeatNames.ToList();
+                List<string> humanized = feats.Select(feat => feat.HumanizeTitleCase2()).ToList();
                 if (character.HasFeat(featName))
                 {
                     implementsToAdd.Add(implementID);
@@ -321,7 +318,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             {
                 if (implementID != ImplementIDs.Weapon)
                 {
-                    RemoveImplement(character, GetImplementBaseItemName(implementID));
+                    RemoveImplement(character, GetImplementBaseItemName(implementID, character));
                 }
             }
 
@@ -329,7 +326,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             {
                 if (implementID != ImplementIDs.Weapon)
                 {
-                    AddImplement(character, CreateImplement(implementID));
+                    AddImplement(character, CreateImplement(implementID, character));
                 }
             }
         }

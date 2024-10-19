@@ -1,10 +1,5 @@
 ﻿using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Modding;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
 {

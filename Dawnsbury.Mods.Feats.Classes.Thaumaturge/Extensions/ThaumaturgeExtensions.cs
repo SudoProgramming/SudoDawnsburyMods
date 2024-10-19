@@ -1,5 +1,4 @@
-﻿using Dawnsbury.Core;
-using Dawnsbury.Core.CombatActions;
+﻿using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Core.Coroutines.Options;
 using Dawnsbury.Core.Coroutines.Requests;
 using Dawnsbury.Core.Creatures;
@@ -11,11 +10,9 @@ using Dawnsbury.Core.Tiles;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions
@@ -112,13 +109,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions
             List<QEffect> pairedEffects = pairedCreature.QEffects.ToList();
             if (!self.HasEffect(effect) && 
                 !(effect.Id == QEffectId.FlankedBy) && 
-                !(effect.Name == "Bless") &&
-                !(effect.Name == "Bane") &&
-                !(effect.Name == "March of the Tsunami") &&
-                !(effect.Name == "Angelic Halo") &&
-                !(effect.Name != null && effect.Name.Contains("Circle of Protection")) &&
-                !(effect.Name == "Dirge of Doom") &&
-                !(effect.Name != null && effect.Name.Contains("Frightful Presence")) &&
                 (effect.Source != null && effect.Source.BaseName != "The Golden Candelabra"))
             {
                 self.AddQEffect(effect);
@@ -208,7 +198,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions
             {
                 IsMainTurn = false,
                 IsStandardMovementRequest = false,
-                TopBarIcon = IllustrationName.GenericCombatManeuver,
+                TopBarIcon = ThaumaturgeModdedIllustrations.Mirror,
                 TopBarText = messageString
 
             })).ChosenOption;

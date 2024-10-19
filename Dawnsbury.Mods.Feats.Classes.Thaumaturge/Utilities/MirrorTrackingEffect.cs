@@ -8,6 +8,7 @@ using Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
@@ -72,6 +73,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                     await this.Owner.ChooseWhichVersionIsReal(CloneDeathTile);
                     CloneDeathTile = null;
                     this.Owner.Battle.RemoveCreatureFromGame(PairedCreature);
+                }
+            };
+            AfterYouTakeAction = async (QEffect afterYouTakeAction, CombatAction action) =>
+            {
+                if (action.HasTrait(Trait.Move))
+                {
+                    OnMove?.Invoke(this.Owner);
                 }
             };
             YouAcquireQEffect = (QEffect youAcquireEffect, QEffect acquiredEffect) =>

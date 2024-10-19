@@ -999,7 +999,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                             PossibilitySection drawScrollSection = new PossibilitySection(drawOrReplace + " scroll");
                                             foreach (Item scroll in owner.CarriedItems.Where(item => item.HasTrait(Trait.Scroll)))
                                             {
-                                                CombatAction drawScrollImplementAction = new CombatAction(owner, scroll.Illustration, drawOrReplace + " " + scroll.Name, [Trait.Manipulate], drawOrReplace + " a scroll into the same hand you are holding this implement in.\n----\n" + scroll.Description, Target.Self())
+                                                CombatAction drawScrollImplementAction = new CombatAction(owner, scroll.Illustration, drawOrReplace + " " + scroll.Name, [Trait.Manipulate, Trait.Basic], drawOrReplace + " a scroll into the same hand you are holding this implement in.\n----\n" + scroll.Description, Target.Self())
                                                     .WithActionCost(1)
                                                     .WithEffectOnSelf((Creature self) =>
                                                     {

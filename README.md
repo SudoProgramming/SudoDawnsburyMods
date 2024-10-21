@@ -151,6 +151,31 @@ This module adds the Ratfolk ancestry from Player Core 2. The following are all 
 # Ancestry Paragon
 This mod adds the Ancestry Paragon Variation rules. You will get an additional Ancestry feat at level 1 and another at every odd level. Read more [here.](https://2e.aonprd.com/Rules.aspx?ID=1336)
 
+# Gunslinger
+This module adds the [Thaumaturge class](https://2e.aonprd.com/Classes.aspx?ID=22). A detailed list is below:
+
+### Class Features and Progression
+- Level 1 - Thaumaturge Base Features
+- Level 1 - Esoteric Lore
+    - RAW Difference: Only used for Exploit Vulnerability
+- Level 1 - Exploit Vulnerability
+- Level 1 - First Implement
+- Level 1 - Implement's Empowerment
+- Level 3 - Expert in Esoteric Lore and Reflex Saves
+
+### Implements
+- [Amulet](https://2e.aonprd.com/Implements.aspx?ID=1)
+- [Bell](https://2e.aonprd.com/Implements.aspx?ID=2)
+- [Chalice](https://2e.aonprd.com/Implements.aspx?ID=3)
+- [Lantern](https://2e.aonprd.com/Implements.aspx?ID=4)
+- [Mirror](https://2e.aonprd.com/Implements.aspx?ID=5)
+- [Regalia](https://2e.aonprd.com/Implements.aspx?ID=6)
+    - RAW Difference: No Follow the Expert in Dawnsbury Days
+- [Tome](https://2e.aonprd.com/Implements.aspx?ID=7)
+    - RAW Difference: +1 to only Exploit Vulnerability
+- [Wand](https://2e.aonprd.com/Implements.aspx?ID=8)
+- [Weapon](https://2e.aonprd.com/Implements.aspx?ID=9)
+
 # SudoProgramming's Modding Plans
 - [X] Update Barbarian to match the Remastered rules
 - [X] Add the Firearm items and traits

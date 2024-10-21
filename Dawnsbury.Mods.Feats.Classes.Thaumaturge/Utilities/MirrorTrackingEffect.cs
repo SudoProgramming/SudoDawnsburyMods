@@ -77,6 +77,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             };
             AfterYouTakeAction = async (QEffect afterYouTakeAction, CombatAction action) =>
             {
+                if (action.ActionCost == -1)
+                {
+                    PairedCreature.Actions.UseUpReaction();
+                }
                 if (action.HasTrait(Trait.Move))
                 {
                     OnMove?.Invoke(this.Owner);

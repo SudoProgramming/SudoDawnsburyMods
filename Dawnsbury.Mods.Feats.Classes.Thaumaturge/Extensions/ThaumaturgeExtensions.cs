@@ -254,14 +254,17 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions
                 MirrorTrackingEffect? cloneTracking = pairedCreature.FindQEffect(ThaumaturgeQEIDs.MirrorTracking) as MirrorTrackingEffect;
                 if (cloneTracking != null && mirrorTracking != null)
                 {
-                    Tile temp = cloneTile;
-                    Tile ownerTile = self.Occupies;
+                    Vector2 pairedCreaturePosition = new Vector2(cloneTile.X, cloneTile.Y);
+                    Vector2 ownerPosition = new Vector2(self.Occupies.X, self.Occupies.Y);
+                    cloneTile.PrimaryOccupant = null;
+                    Tile ownerTile = self.Battle.Map.Tiles[(int)ownerPosition.X, (int)ownerPosition.Y];
+                    ownerTile.PrimaryOccupant = null;
                     pairedCreature.TranslateTo(ownerTile);
-                    pairedCreature.AnimationData.ActualPosition = new Vector2(ownerTile.X, ownerTile.Y);
+                    pairedCreature.AnimationData.ActualPosition = ownerPosition;
                     cloneTracking.LastLocation = ownerTile;
-                    self.TranslateTo(temp);
-                    self.AnimationData.ActualPosition = new Vector2(temp.X, temp.Y);
-                    mirrorTracking.LastLocation = temp;
+                    self.TranslateTo(self.Battle.Map.Tiles[(int)pairedCreaturePosition.X, (int)pairedCreaturePosition.Y]);
+                    self.AnimationData.ActualPosition = pairedCreaturePosition;
+                    mirrorTracking.LastLocation = self.Battle.Map.Tiles[(int)pairedCreaturePosition.X, (int)pairedCreaturePosition.Y];
 
                     return true;
                 }

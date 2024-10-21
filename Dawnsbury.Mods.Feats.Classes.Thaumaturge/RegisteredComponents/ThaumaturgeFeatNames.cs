@@ -75,26 +75,59 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// </summary>
         public static readonly FeatName RootToLife = ModManager.RegisterFeatName("Root to Life", "Root to Life {icon:Action} or {icon:TwoActions}");
 
+        /// <summary>
+        /// The Divine Disharmony class Feat
+        /// </summary>
         public static readonly FeatName DivineDisharmony = ModManager.RegisterFeatName("Divine Disharmony", "Divine Disharmony");
 
+        /// <summary>
+        /// The Scroll Thaumaturgy class Feat
+        /// </summary>
         public static readonly FeatName ScrollThaumaturgy = ModManager.RegisterFeatName("Scroll Thaumaturgy", "Scroll Thaumaturgy");
 
+        /// <summary>
+        /// The Esoteric Warden class Feat
+        /// </summary>
         public static readonly FeatName EsotericWarden = ModManager.RegisterFeatName("Esoteric Warden", "Esoteric Warden");
 
+        /// <summary>
+        /// The Turn Away Misfortune class Feat
+        /// </summary>
         public static readonly FeatName TurnAwayMisfortune = ModManager.RegisterFeatName("Turn Away Misfortune", "Turn Away Misfortune");
 
+        /// <summary>
+        /// The Breached Defenses class Feat
+        /// </summary>
         public static readonly FeatName BreachedDefenses = ModManager.RegisterFeatName("Breached Defenses", "Breached Defenses");
 
+        /// <summary>
+        /// The Instructive Strike class Feat
+        /// </summary>
         public static readonly FeatName InstructiveStrike = ModManager.RegisterFeatName("Instructive Strike", "Instructive Strike");
 
+        /// <summary>
+        /// The Lingering Pain Strike class Feat
+        /// </summary>
         public static readonly FeatName LingeringPainStrike = ModManager.RegisterFeatName("Lingering Pain Strike", "Lingering Pain Strike");
 
+        /// <summary>
+        /// The Esoterica Seller class Feat
+        /// </summary>
         public static readonly FeatName EsotericaSeller = ModManager.RegisterFeatName("Esoterica Seller", "Esoterica Seller");
 
-        public static readonly FeatName ColdWand = ModManager.RegisterFeatName("Cold Wand", "Cold Wand");
-
+        /// <summary>
+        /// The Electricity selection for the Wand Implement
+        /// </summary>
         public static readonly FeatName ElectricityWand = ModManager.RegisterFeatName("Electricity Wand", "Electricity Wand");
 
+        /// <summary>
+        /// The Fire selection for the Wand Implement
+        /// </summary>
         public static readonly FeatName FireWand = ModManager.RegisterFeatName("Fire Wand", "Fire Wand");
+
+        /// <summary>
+        /// The Cold selection for the Wand Implement
+        /// </summary>
+        public static readonly FeatName ColdWand = ModManager.RegisterFeatName("Cold Wand", "Cold Wand");
     }
 }

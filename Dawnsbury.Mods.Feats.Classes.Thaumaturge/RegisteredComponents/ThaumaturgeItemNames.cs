@@ -6,7 +6,7 @@ using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Constants;
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
 {
     /// <summary>
-    /// A static class containing all QEffect IDs used for Thaumaturge
+    /// A static class containing all Item Names used for Thaumaturge
     /// </summary>
     public static class ThaumaturgeItemNames
     {
@@ -51,7 +51,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         public static readonly ItemName Wand = ModManager.RegisterNewItemIntoTheShop("Wand", itemName => new Implement(itemName, ThaumaturgeModdedIllustrations.Wand, "Wand", "{b}" + ImplementDetails.WandInitiateBenefitName + "{/b} {icon:TwoActions}\n\n" + ImplementDetails.WandInitiateBenefitRulesText));
 
         /// <summary>
-        /// The Amulet Implement Item
+        /// The Looted Esoterica Item
         /// </summary>
         public static readonly ItemName LootedEsoterica = ModManager.RegisterNewItemIntoTheShop("Looted Esoterica", itemName => new Item(itemName, ThaumaturgeModdedIllustrations.LootedEsoterica, "Looted Esoterica", 0, 0, [Trait.DoNotAddToShop]));
     }

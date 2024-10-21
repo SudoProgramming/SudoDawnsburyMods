@@ -55,44 +55,52 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddImplementsEmpowermentLogic(implementsEmpowermentFeat);
             yield return implementsEmpowermentFeat;
 
+            // Creates and adds the sub feats for the Wand Implement
             yield return new Feat(ThaumaturgeFeatNames.ColdWand, "Cold Wand", "Your wand is attuned to Cold.", [], null);
-
             yield return new Feat(ThaumaturgeFeatNames.ElectricityWand, "Electricity Wand", "Your wand is attuned to Electricity.", [], null);
-
             yield return new Feat(ThaumaturgeFeatNames.FireWand, "Fire Wand", "Your wand is attuned to Fire.", [], null);
 
+            // Creates and adds the logic for the Amulet Implement sub-class feature
             Feat amuletImplementFeat = new Feat(ThaumaturgeFeatNames.AmuletImplement, ImplementDetails.AmuletInitiateBenefitFlavorText, "You gain the " + ImplementDetails.AmuletInitiateBenefitName + " reaction.\n\n{b}" + ImplementDetails.AmuletInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.AmuletInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddAmuletImplementLogic(amuletImplementFeat);
             yield return amuletImplementFeat;
 
+            // Creates and adds the logic for the Bell Implement sub-class feature
             Feat bellImplementFeat = new Feat(ThaumaturgeFeatNames.BellImplement, ImplementDetails.BellInitiateBenefitFlavorText, "You gain the " + ImplementDetails.BellInitiateBenefitName + " reaction.\n\n{b}" + ImplementDetails.BellInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.BellInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddBellImplementLogic(bellImplementFeat);
             yield return bellImplementFeat;
 
+            // Creates and adds the logic for the Chalice Implement sub-class feature
             Feat chaliceImplementFeat = new Feat(ThaumaturgeFeatNames.ChaliceImplement, ImplementDetails.ChaliceInitiateBenefitFlavorText, "You gain the " + ImplementDetails.ChaliceInitiateBenefitName + " action.\n\n{b}" + ImplementDetails.ChaliceInitiateBenefitName + "{/b} {icon:Action}\n" + ImplementDetails.ChaliceInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddChaliceImplementLogic(chaliceImplementFeat);
             yield return chaliceImplementFeat;
 
+            // Creates and adds the logic for the Lantern Implement sub-class feature
             Feat lanternImplementFeat = new Feat(ThaumaturgeFeatNames.LanternImplement, ImplementDetails.LanternInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.LanternInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddLanternImplementLogic(lanternImplementFeat);
             yield return lanternImplementFeat;
 
+            // Creates and adds the logic for the Mirror Implement sub-class feature
             Feat mirrorImplementFeat = new Feat(ThaumaturgeFeatNames.MirrorImplement, ImplementDetails.MirrorInitiateBenefitFlavorText, "You gain the " + ImplementDetails.MirrorInitiateBenefitName + " action.\n\n{b}" + ImplementDetails.MirrorInitiateBenefitName + "{/b} {icon:Action}\n" + ImplementDetails.MirrorInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddMirrorImplementLogic(mirrorImplementFeat);
             yield return mirrorImplementFeat;
 
+            // Creates and adds the logic for the Regalia Implement sub-class feature
             Feat regaliaImplementFeat = new Feat(ThaumaturgeFeatNames.RegaliaImplement, ImplementDetails.RegaliaInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.RegaliaInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddRegaliaImplementLogic(regaliaImplementFeat);
             yield return regaliaImplementFeat;
 
+            // Creates and adds the logic for the Tome Implement sub-class feature
             Feat tomeImplementFeat = new Feat(ThaumaturgeFeatNames.TomeImplement, ImplementDetails.TomeInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.TomeInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddTomeImplementLogic(tomeImplementFeat);
             yield return tomeImplementFeat;
 
+            // Creates and adds the logic for the Wand Implement sub-class feature
             Feat wandImplementFeat = new Feat(ThaumaturgeFeatNames.WandImplement, ImplementDetails.WandInitiateBenefitFlavorText, "You gain the " + ImplementDetails.WandInitiateBenefitName + " activity.\n\n{b}" + ImplementDetails.WandInitiateBenefitName + "{/b} {icon:TwoActions}\n" + ImplementDetails.WandInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddWandImplementLogic(wandImplementFeat);
             yield return wandImplementFeat;
 
+            // Creates and adds the logic for the Weapon Implement sub-class feature
             Feat weaponImplementFeat = new Feat(ThaumaturgeFeatNames.WeaponImplement, ImplementDetails.WeaponInitiateBenefitFlavorText, "You gain the " + ImplementDetails.WeaponInitiateBenefitName + " reaction.\n\n{b}NOTE: The Weapon Implement will be applied to your first One-Handed weapon at the start of each encounter.{/b}\n\n{b}" + ImplementDetails.WeaponInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.WeaponInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddWeaponImplementLogic(weaponImplementFeat);
             yield return weaponImplementFeat;
@@ -125,28 +133,34 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         values.SetProficiency(Trait.Reflex, Proficiency.Expert);
                     });
                 });
-
+            
+            // Creates and adds the logic for the Ammunition Thaumaturgy feat
             TrueFeat ammunitionThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.AmmunitionThaumaturgy, 1, "You're so used to handling your implement, weapon, and esoterica in the heat of combat that adding a few bullets or arrows to the mix is no extra burden.", "You can use Bows using the hand holding your implement.", [ThaumaturgeTraits.Thaumaturge]);
             AddAmmunitionThaumaturgyLogic(ammunitionThaumaturgyFeat);
             yield return ammunitionThaumaturgyFeat;
 
+            // Creates and adds the logic for the Divine Disharmony feat
             TrueFeat divineDisharmonyFeat = new TrueFeat(ThaumaturgeFeatNames.DivineDisharmony, 1, "From your collection of religious trinkets, you pull out opposing divine objects—such as the religious symbols of two deities that are hated enemies—and combine them in a display that causes discordant clashes of divine energy that are especially distracting to the faithful.", "Roll the best check between Deception or Intimidation against the Will DC of a creature you can see within 60 feet, with the following results. If the creature has access to divine spells, you gain a +2 circumstance bonus to your skill check.\n\n{b}Critical Success{/b} The creature is flat-footed to your attacks until the end of your next turn.\n\n{b}Success{/b} The creature is flat-footed against your attacks until the end of your current turn.", [Trait.Divine, Trait.Enchantment, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge]);
             divineDisharmonyFeat.WithActionCost(1);
             AddDivineDisharmonyLogic(divineDisharmonyFeat);
             yield return divineDisharmonyFeat;
 
+            // Creates and adds the logic for the Root to Life feat
             TrueFeat rootToLifeFeat = new TrueFeat(ThaumaturgeFeatNames.RootToLife, 1, "Marigold, spider lily, pennyroyal—many primal traditions connect flowers and plants with the boundary between life and death, and you can leverage this association to keep an ally on this side of the line.", "You place a small plant or similar symbol on an adjacent dying creature, immediately stabilizing them; the creature is no longer dying and is instead unconscious at 0 Hit Points.\n\nIf you spend 2 actions instead of 1, you empower the act further by uttering a quick folk blessing to chase away ongoing pain, adding the auditory trait to the action. When you do so, attempt flat checks to remove each source of persistent damage affecting the target; due to the particularly effective assistance, the DC is 10 instead of the usual 15.", [Trait.Manipulate, Trait.Necromancy, Trait.Primal, ThaumaturgeTraits.Thaumaturge]);
             AddRootToLifeLogic(rootToLifeFeat);
             yield return rootToLifeFeat;
 
+            // Creates and adds the logic for the Scroll Thaumaturgy feat
             TrueFeat scrollThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Your multidisciplinary study of magic means you know how to activate the magic in scrolls with ease.", "You can activate scrolls of any magical tradition, using your thaumaturge class DC for the scroll's DC, rather than a particular spell DC. You can draw and activate scrolls with the same hand holding an implement.", [ThaumaturgeTraits.Thaumaturge]);
             AddScrollThaumaturgyLogic(scrollThaumaturgyFeat);
             yield return scrollThaumaturgyFeat;
 
+            // Creates and adds the logic for the Esoterica Seller feat
             TrueFeat esotericaSellerFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericaSeller, 2, "You collect interesting trinkets wherever you go.", "At the end of each encounter you gain a \"Looted Esoterica\" item that's worth an amount of gold pieces equal to the combined level (levels 0 or below do not count) of all enemies you defeated in that encounter. This item has no use but you can sell it later in the shop", [ThaumaturgeTraits.Thaumaturge, Trait.Homebrew]);
             AddEsotericaSellerLogic(esotericaSellerFeat);
             yield return esotericaSellerFeat;
 
+            // Creates and adds the logic for the Esoteric Warden feat
             TrueFeat esotericWardenFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericWarden, 2, "When you apply antithetical material against a creature successfully, you also ward yourself against its next attacks.", "When you succeed at your check to Exploit a Vulnerability, you gain a +1 status bonus to your AC against the creature's next attack and a +1 status bonus to your next saving throw against the creature; if you critically succeed, these bonuses are +2 instead. You can gain these bonuses only once per day against a particular creature, and the benefit ends if you Exploit Vulnerability again.", [ThaumaturgeTraits.Thaumaturge]);
             AddEsotericWardenLogic(esotericWardenFeat);
             yield return esotericWardenFeat;
@@ -199,6 +213,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddAmuletImplementLogic(Feat amuletImplementFeat)
         {
             AddImplementEnsureLogic(amuletImplementFeat);
+
+            // Adds the reaction prompt to all allies
             amuletImplementFeat.WithPermanentQEffect(ImplementDetails.AmuletInitiateBenefitName + " - Resistance to damage equal to 2 + your level", delegate (QEffect self)
             {
                 self.StartOfCombat = async (QEffect startOfCombat) =>
@@ -235,6 +251,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddBellImplementLogic(Feat bellImplementFeat)
         {
             AddImplementEnsureLogic(bellImplementFeat);
+
+            // Adds the bell reaction
             bellImplementFeat.WithPermanentQEffect(ImplementDetails.BellInitiateBenefitName + " - Target saves or gains an effect", delegate (QEffect self)
             {
                 self.StartOfCombat = async (QEffect startOfCombat) =>

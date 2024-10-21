@@ -71,6 +71,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                                 oldTarget.ExpiresAt = ExpirationCondition.Immediately;
                             }
                         }
+
+                        List<QEffect> oldWardenEffects = attacker.QEffects.Where(qe => qe.Id == ThaumaturgeQEIDs.EsotericWardenAC || qe.Id == ThaumaturgeQEIDs.EsotericWardenSave).ToList();
+                        foreach (QEffect oldWardenEffect in oldWardenEffects)
+                        {
+                            oldWardenEffect.ExpiresAt = ExpirationCondition.Immediately;
+                        }
                     }
                     attacker.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
                     {

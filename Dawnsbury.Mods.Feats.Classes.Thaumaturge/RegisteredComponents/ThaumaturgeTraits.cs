@@ -23,8 +23,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// </summary>
         public static readonly Trait Implement = ModManager.RegisterTrait("Implement", new TraitProperties("Implement", true));
 
+        /// <summary>
+        /// The Mirror Clone Immunity trait
+        /// </summary>
         public static readonly Trait MirrorCloneImmunity = ModManager.RegisterTrait("Mirror Clone Immunity", new TraitProperties("Mirror Clone Immunity", false));
 
+        /// <summary>
+        /// The Temporary Ignore One Hand Plus trait
+        /// </summary>
         public static readonly Trait TemporaryIgnoreOneHandPlus = ModManager.RegisterTrait("Temporary Ignore One Hand Plus", new TraitProperties("Temporary Ignore One Hand Plus", false));
     }
 }

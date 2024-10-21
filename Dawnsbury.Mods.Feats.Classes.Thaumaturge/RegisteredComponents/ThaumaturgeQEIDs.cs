@@ -43,20 +43,44 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// </summary>
         public static readonly QEffectId ImplementInventoryTracker = ModManager.RegisterEnumMember<QEffectId>("Implement Inventory Tracker QEID");
 
+        /// <summary>
+        /// The Mirror Immunity persistent QEffect ID
+        /// </summary>
         public static readonly QEffectId MirrorImmunity = ModManager.RegisterEnumMember<QEffectId>("Mirror Immunity QEID");
 
+        /// <summary>
+        /// The Drainged Mirror Implement persistent QEffect ID
+        /// </summary>
         public static readonly QEffectId DraingedMirrorImplement = ModManager.RegisterEnumMember<QEffectId>("Drainged Mirror Implement QEID");
 
+        /// <summary>
+        /// The Boosted Wand Used persistent QEffect ID
+        /// </summary>
         public static readonly QEffectId BoostedWandUsed = ModManager.RegisterEnumMember<QEffectId>("Boosted Wand Used QEID");
 
+        /// <summary>
+        /// The Held Scroll And Implement persistent QEffect ID
+        /// </summary>
         public static readonly QEffectId HeldScrollAndImplement = ModManager.RegisterEnumMember<QEffectId>("Held Scroll And Implement QEID");
 
+        /// <summary>
+        /// The Esoteric Warden AC persistent QEffect ID
+        /// </summary>
         public static readonly QEffectId EsotericWardenAC = ModManager.RegisterEnumMember<QEffectId>("Esoteric Warden AC QEID");
 
+        /// <summary>
+        /// The Esoteric Warden Save persistent QEffect ID
+        /// </summary>
         public static readonly QEffectId EsotericWardenSave = ModManager.RegisterEnumMember<QEffectId>("Esoteric Warden Save QEID");
 
+        /// <summary>
+        /// The Instructive Strike persistent QEffect ID
+        /// </summary>
         public static readonly QEffectId InstructiveStrike = ModManager.RegisterEnumMember<QEffectId>("Instructive Strike QEID");
 
+        /// <summary>
+        /// The Esoteric Seller persistent QEffect ID
+        /// </summary>
         public static readonly QEffectId EsotericSeller = ModManager.RegisterEnumMember<QEffectId>("Esoteric Seller QEID");
     }
 }

@@ -3,6 +3,9 @@ using Dawnsbury.Modding;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
 {
+    /// <summary>
+    /// A static class containing all Action IDs used for the Thaumaturge
+    /// </summary>
     public class ThaumaturgeActionIDs
     {
         /// <summary>

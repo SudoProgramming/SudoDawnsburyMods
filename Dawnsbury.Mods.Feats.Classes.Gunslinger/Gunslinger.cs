@@ -485,7 +485,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                                 Tile? tile = map.AllTiles.FirstOrDefault(tile => tile.PrimaryOccupant == defender);
                                                 foreach (Creature creature in tile.Neighbours.Creatures)
                                                 {
-                                                    creature.DealDirectDamage(null, DiceFormula.FromText("1"), creature, CheckResult.Success, damageKind);
+                                                    CommonSpellEffects.DealDirectDamage(null, DiceFormula.FromText("1"), creature, CheckResult.Success, damageKind);
                                                 }
 
                                                 return new KindedDamage(DiceFormula.FromText("1", "Coated Munitions (" + damageString + ")"), damageKind);

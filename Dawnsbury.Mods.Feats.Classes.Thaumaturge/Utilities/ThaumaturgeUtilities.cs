@@ -340,32 +340,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
         {
             // Add Implement to Sheet
             int[] levels = character.Sheet.InventoriesByLevel.Keys.ToArray();
+            Inventory campaignInventory = character.Sheet.CampaignInventory;
+            AddImplementIntoInventory(campaignInventory, implement);
+
             foreach (int level in levels)
             {
                 Inventory inventory = character.Sheet.InventoriesByLevel[level];
-                Inventory campaignInventory = character.Sheet.CampaignInventory;
-                if ((inventory.LeftHand == null || inventory.LeftHand.BaseItemName != implement.BaseItemName) && (inventory.RightHand == null || inventory.RightHand.BaseItemName != implement.BaseItemName) && !inventory.Backpack.Any(item => item != null && item.BaseItemName == implement.BaseItemName) && !campaignInventory.Backpack.Any(item => item != null && item.BaseItemName == implement.BaseItemName))
-                {
-                    if (inventory.RightHand == null)
-                    {
-                        inventory.RightHand = implement;
-                    }
-                    else if (inventory.LeftHand == null)
-                    {
-                        inventory.LeftHand = implement;
-                    }
-                    else
-                    {
-                        if (inventory.CanBackpackFit(implement, 0))
-                        {
-                            inventory.AddAtEndOfBackpack(implement);
-                        }
-                        else
-                        {
-                            campaignInventory.AddAtEndOfBackpack(implement);
-                        }
-                    }
-                }
+                AddImplementIntoInventory(inventory, implement);
             }
         }
 
@@ -458,6 +439,28 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                     }
                 }
             }));
+        }
+
+        private static void AddImplementIntoInventory(Inventory inventory, Item implement)
+        {
+            if ((inventory.LeftHand == null || inventory.LeftHand.BaseItemName != implement.BaseItemName) && (inventory.RightHand == null || inventory.RightHand.BaseItemName != implement.BaseItemName) && !inventory.Backpack.Any(item => item != null && item.BaseItemName == implement.BaseItemName))
+            {
+                if (inventory.RightHand == null)
+                {
+                    inventory.RightHand = implement;
+                }
+                else if (inventory.LeftHand == null)
+                {
+                    inventory.LeftHand = implement;
+                }
+                else
+                {
+                    if (inventory.CanBackpackFit(implement, 0))
+                    {
+                        inventory.AddAtEndOfBackpack(implement);
+                    }
+                }
+            }
         }
 
         public static List<Resistance> GetHighestWeaknesses(Creature creature)

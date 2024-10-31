@@ -375,7 +375,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 {
                                     Name = "Chalice is Drained"
                                 });
-                                targets.ChosenCreature.Heal("" + (3 * user.Level), drainAction);
+                                await targets.ChosenCreature.HealAsync("" + (3 * user.Level), drainAction);
                             }
                         });
 
@@ -726,7 +726,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 DamageEvent wandDamageEvent = new DamageEvent(action, defender, result, [wandDamage], result == CheckResult.CriticalFailure, result == CheckResult.Success);
                                 if (result <= CheckResult.Success)
                                 {
-                                    await attacker.DealDirectDamage(wandDamageEvent);
+                                    await CommonSpellEffects.DealDirectDamage(wandDamageEvent);
                                 }
                             }
                         });
@@ -756,7 +756,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 DamageEvent wandDamageEvent = new DamageEvent(action, defender, result, [wandDamage], result == CheckResult.CriticalFailure, result == CheckResult.Success);
                                 if (result <= CheckResult.Success)
                                 {
-                                    await attacker.DealDirectDamage(wandDamageEvent);
+                                    await CommonSpellEffects.DealDirectDamage(wandDamageEvent);
                                 }
 
                                 DiceFormula boostedRoll = DiceFormula.FromText("1d4", "Boosted Fling Magic");

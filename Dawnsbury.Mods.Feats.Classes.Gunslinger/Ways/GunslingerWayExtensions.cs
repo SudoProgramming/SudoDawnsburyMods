@@ -256,9 +256,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                     {
                         FirearmUtilities.DischargeItem(action.Item);
                     }
-                    if (action.Name == "Raconteur's Reload (Diversion)")
+                };
+                self.YouBeginAction = async (QEffect reloadItem, CombatAction action) =>
+                {
+                    if (action.Name == "Raconteur's Reload (Diversion)" && action.Item != null)
                     {
-                        FirearmUtilities.AwaitReloadItem(dischargeItem.Owner, action.Item);
+                        FirearmUtilities.AwaitReloadItem(reloadItem.Owner, action.Item);
                     }
                 };
             });

@@ -99,6 +99,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
             // Level 1 Class Feats
             TrueFeat coatedMunitionsFeat = new TrueFeat(GunslingerFeatNames.CoatedMunitions, 1, "You coat your munitions with mysterious alchemical mixed liquids you keep in small vials.", "{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nUntil the end of your turn, your next attack deals an addtional 1 persistent damage and 1 spalsh damage of your choice between acid, cold, electricity, fire or poison.", [GunslingerTraits.Gunslinger, Trait.Homebrew], null);
+            coatedMunitionsFeat.WithActionCost(1);
             AddCoatedMunitionsLogic(coatedMunitionsFeat);
             yield return coatedMunitionsFeat;
 
@@ -113,7 +114,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             yield return crossbowCrackShotFeat;
 
             // Creates and adds the logic for the Hit the Dirt class feat
-            TrueFeat hitTheDirtFeat = new TrueFeat(GunslingerFeatNames.HitTheDirt, 1, "You fling yourself out of harm's way.", "You Leap. Your movement gives you a +2 circumstance bonus to AC against the triggering attack. Regardless of whether or not the triggering attack hits, you land prone after completing your Leap.", [GunslingerTraits.Gunslinger]).WithActionCost(-2);
+            TrueFeat hitTheDirtFeat = new TrueFeat(GunslingerFeatNames.HitTheDirt, 1, "You fling yourself out of harm's way.", "{b}Trigger{/b} A creature you can see attempts a ranged Strike against you.\n\nYou Leap. Your movement gives you a +2 circumstance bonus to AC against the triggering attack. Regardless of whether or not the triggering attack hits, you land prone after completing your Leap.", [GunslingerTraits.Gunslinger]).WithActionCost(-2);
             AddHitTheDirtLogic(hitTheDirtFeat);
             yield return hitTheDirtFeat;
 
@@ -129,7 +130,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             yield return defensiveAramentsFeat;
 
             // Creates and adds the logic for the Fake Out class feat
-            TrueFeat fakeOutFeat = new TrueFeat(GunslingerFeatNames.FakeOut, 2, "With a skilled flourish of your weapon, you force an enemy to acknowledge you as a threat.", "{b}Trigger{/b} An ally is about to use an action that requires an attack roll, targeting a creature within your weapon's first range increment.\n\n{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nMake an attack roll to Aid the triggering attack. If you dealt damage to that enemy since the start of your last turn, you gain a +1 circumstance bonus to this roll.\n\n{i}Aid{/i}\n\n{b}Critical Success{/b} Your ally a +2 circumstance bonus\n{b}Success{/b} Your ally a +1 circumstance bonus\n{b}Critical Failure{/b} Your ally a -1 circumstance penalty\n", [GunslingerTraits.Gunslinger, Trait.Visual]).WithActionCost(-2);
+            TrueFeat fakeOutFeat = new TrueFeat(GunslingerFeatNames.FakeOut, 2, "With a skilled flourish of your weapon, you force an enemy to acknowledge you as a threat.", "{b}Trigger{/b} An ally is about to use an attack action, targeting a creature within your weapon's first range increment.\n\n{b}Requirements{/b} You're wielding a loaded firearm or crossbow.\n\nMake an attack roll to Aid the triggering attack. If you dealt damage to that enemy since the start of your last turn, you gain a +1 circumstance bonus to this roll.\n\n{i}Aid{/i}\n\n{b}Critical Success{/b} Your ally a +2 circumstance bonus\n{b}Success{/b} Your ally a +1 circumstance bonus\n{b}Critical Failure{/b} Your ally a -1 circumstance penalty\n", [GunslingerTraits.Gunslinger, Trait.Visual]).WithActionCost(-2);
             AddFakeOutLogic(fakeOutFeat);
             yield return fakeOutFeat;
 
@@ -228,6 +229,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
                         // Creatres the Cover Fire action for the item with the logic for each chosen target
                         CombatAction coverFireAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.TakeCover), "Cover Fire", [Trait.Basic, Trait.IsHostile, Trait.Attack], coverFireFeat.RulesText, basicStrike.Target);
+                        // HACK: Hotfix for null ref StrikeRules error
+                        coverFireAction.StrikeModifiers = basicStrike.StrikeModifiers;
                         coverFireAction.WithActionCost(1);
                         coverFireAction.Item = item;
                         coverFireAction.WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
@@ -975,9 +978,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             switch (result)
                             {
                                 case CheckResult.CriticalSuccess:
-                                    defender.AddQEffect(new QEffect(ExpirationCondition.CountsDownAtEndOfYourTurn)
+                                    defender.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfSourcesTurn)
                                     {
-                                        Value = 2,
+                                        Name = "Pistol Twirl",
+                                        Source = attacker,
+                                        CannotExpireThisTurn = true,
+                                        Illustration = item.Illustration,
+                                        Description = "Falt-footed against " + attacker.Name + "'s next melee or ranged attack",
                                         YouAreTargeted = async (QEffect targeted, CombatAction action) =>
                                         {
                                             if (action.Owner != null && action.Owner == attacker && (action.HasTrait(Trait.Melee) || action.HasTrait(Trait.Ranged)))
@@ -990,8 +997,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     });
                                     break;
                                 case CheckResult.Success:
-                                    defender.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfAnyTurn)
+                                    defender.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfSourcesTurn)
                                     {
+                                        Name = "Pistol Twirl",
+                                        Source = attacker,
+                                        Illustration = item.Illustration,
+                                        Description = "Falt-footed against " + attacker.Name + "'s next melee or ranged attack",
                                         YouAreTargeted = async (QEffect targeted, CombatAction action) =>
                                         {
                                             if (action.Owner != null && action.Owner == attacker && (action.HasTrait(Trait.Melee) || action.HasTrait(Trait.Ranged)))
@@ -1051,6 +1062,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                 // Creates the strike and reloads and misfires the weapon if the attack misses
                                 CombatAction basicStrike = riskyReloadEffect.Owner.CreateStrike(heldItem);
                                 CombatAction riskyReloadAction = new CombatAction(riskyReloadEffect.Owner, new SideBySideIllustration(heldItem.Illustration, IllustrationName.TrueStrike), "Risky Reload", [Trait.Flourish, Trait.Basic], riskyReloadFeat.RulesText, basicStrike.Target).WithActionCost(1).WithItem(heldItem);
+                                // HACK: Hotfix for null ref StrikeRules error
+                                riskyReloadAction.StrikeModifiers = basicStrike.StrikeModifiers;
                                 riskyReloadAction.WithEffectOnEachTarget(async delegate (CombatAction riskyReload, Creature attacker, Creature defender, CheckResult result)
                                 {
                                     if (heldItem.HasTrait(FirearmTraits.DoubleBarrel))
@@ -1320,7 +1333,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                 {
                                     // Prompts the user to use the reaction for this effect
                                     string fakeOutTargetTextAddition = (creaturesAttacked.Contains(defender)) ? " (+1 circumstance bonus to this)" : string.Empty;
-                                    if (await creature.Battle.AskToUseReaction(ally, "Make an attack roll to Aid the triggering attack." + fakeOutTargetTextAddition))
+                                    if (action.HasTrait(Trait.Attack) && await creature.Battle.AskToUseReaction(ally, "Make an attack roll to Aid the triggering attack." + fakeOutTargetTextAddition))
                                     {
                                         // Builds the strike for the aid strike
                                         CombatAction aidStrike = new CombatAction(ally, new SimpleIllustration(IllustrationName.None), "Aid Strike (" + mainWeapon.Name + ")", [], "{b}Critical Success{/b} Your ally gains a +2 circumstance bonus to the triggering action.\n\n\"{b}Success{/b} Your ally gains a +1 circumstance bonus to the triggering action.\n\n\"{b}Critical Failure{/b} Your ally gains a -1 circumstance penalty to the triggering action.\n\n", Target.Ranged(mainWeapon.WeaponProperties.MaximumRange));

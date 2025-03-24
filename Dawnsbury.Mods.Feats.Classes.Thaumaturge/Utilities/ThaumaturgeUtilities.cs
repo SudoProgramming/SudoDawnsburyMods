@@ -246,7 +246,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             }
         }
 
-        public static Implement CreateImplement(ImplementIDs implementID, CalculatedCharacterSheetValues sheet)
+        public static Implement CreateImplement(ImplementIDs implementID)
         {
             switch (implementID)
             {
@@ -272,7 +272,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             }
         }
 
-        public static ItemName GetImplementBaseItemName(ImplementIDs implementID, CalculatedCharacterSheetValues sheet)
+        public static ItemName GetImplementBaseItemName(ImplementIDs implementID)
         {
             switch (implementID)
             {
@@ -323,7 +323,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             {
                 if (implementID != ImplementIDs.Weapon)
                 {
-                    RemoveImplement(character, GetImplementBaseItemName(implementID, character));
+                    RemoveImplement(character, GetImplementBaseItemName(implementID));
                 }
             }
 
@@ -331,7 +331,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             {
                 if (implementID != ImplementIDs.Weapon)
                 {
-                    AddImplement(character, CreateImplement(implementID, character));
+                    AddImplement(character, CreateImplement(implementID));
                 }
             }
         }
@@ -350,41 +350,17 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             }
         }
 
-        private static void RemoveImplement(CalculatedCharacterSheetValues character, ItemName implementItemName)
+        private static void RemoveImplement(CalculatedCharacterSheetValues character, ItemName implementName)
         {
-            // Remove Implements from Sheet
+            // Remove Implement to Sheet
             int[] levels = character.Sheet.InventoriesByLevel.Keys.ToArray();
+            Inventory campaignInventory = character.Sheet.CampaignInventory;
+            RemoveImplementFromInventory(campaignInventory, implementName);
+
             foreach (int level in levels)
             {
                 Inventory inventory = character.Sheet.InventoriesByLevel[level];
-                Inventory campaignInventory = character.Sheet.CampaignInventory;
-                Item?[] backpackMatchingImplements = inventory.Backpack.Where(item => item != null && item.BaseItemName == implementItemName).ToArray();
-                Item?[] campaignMatchingImplements = campaignInventory.Backpack.Where(item => item != null && item.BaseItemName == implementItemName).ToArray();
-                if ((inventory.LeftHand != null && inventory.LeftHand.BaseItemName == implementItemName) || (inventory.RightHand != null && inventory.RightHand.BaseItemName == implementItemName) || backpackMatchingImplements.Length > 0 || campaignMatchingImplements.Length > 0)
-                {
-                    if (inventory.RightHand != null && inventory.RightHand.BaseItemName == implementItemName)
-                    {
-                        inventory.RightHand = null;
-                    }
-                    if (inventory.LeftHand != null && inventory.LeftHand.BaseItemName == implementItemName)
-                    {
-                        inventory.LeftHand = null;
-                    }
-                    foreach (Item? implement in backpackMatchingImplements)
-                    {
-                        if (implement != null)
-                        {
-                            inventory.Backpack.Remove(implement);
-                        }
-                    }
-                    foreach (Item? implement in campaignMatchingImplements)
-                    {
-                        if (implement != null)
-                        {
-                            campaignInventory.Backpack.Remove(implement);
-                        }
-                    }
-                }
+                RemoveImplementFromInventory(inventory, implementName);
             }
         }
 
@@ -460,6 +436,22 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                         inventory.AddAtEndOfBackpack(implement);
                     }
                 }
+            }
+        }
+
+        private static void RemoveImplementFromInventory(Inventory inventory, ItemName implementName)
+        {
+            if (inventory.RightHand?.BaseItemName == implementName)
+            {
+                inventory.RightHand = null;
+            }
+            else if (inventory.LeftHand?.BaseItemName == implementName)
+            {
+                inventory.LeftHand = null;
+            }
+            else
+            {
+                inventory.Backpack.RemoveAll(item => item != null && item.BaseItemName == implementName);
             }
         }
 

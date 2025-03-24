@@ -271,7 +271,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                     QEffect exploitEffect = action.Owner.QEffects.First(qe => qe.Id == ThaumaturgeQEIDs.ExploitVulnerabilityTarget);
                                     if (exploitEffect.Tag != null && exploitEffect.Tag is Creature thaumaturge && thaumaturge == owner && owner.Actions.CanTakeReaction() && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner) && owner.DistanceTo(action.Owner) <= 6 && await owner.AskToUseReaction("Use " + ImplementDetails.BellInitiateBenefitName + ": " + (actionIsSpell ? " Target makes Fortitude save or becomes stupefied?" : " Target makes Will save or becomes your choice of enfeebled or clumsy?")))
                                     {
-                                        CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(action.Owner, new CombatAction(owner, ThaumaturgeModdedIllustrations.Bell, ImplementDetails.BellInitiateBenefitName, [Trait.Auditory, Trait.Emotion, Trait.Enchantment, Trait.Magical, Trait.Manipulate, Trait.Mental, ThaumaturgeTraits.Thaumaturge], ImplementDetails.BellInitiateBenefitRulesText, Target.Touch()), actionIsSpell ? Defense.Fortitude : Defense.Will, creature => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge));
+                                        CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(action.Owner, new CombatAction(owner, ThaumaturgeModdedIllustrations.Bell, ImplementDetails.BellInitiateBenefitName, [Trait.Auditory, Trait.Emotion, Trait.Enchantment, Trait.Magical, Trait.Manipulate, Trait.Mental, ThaumaturgeTraits.Thaumaturge], ImplementDetails.BellInitiateBenefitRulesText, Target.Touch()), actionIsSpell ? Defense.Fortitude : Defense.Will, (creature) => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge));
                                         if (savingThrowResult <= CheckResult.Failure)
                                         {
                                             if (actionIsSpell)
@@ -314,7 +314,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 {
                     if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
                     {
-                        PossibilitySection chaliceSection = new PossibilitySection("Calice Possibilities");
+                        PossibilitySection chaliceSection = new PossibilitySection("Chalice Possibilities");
 
                         Illustration chaliceIllustrationName = ThaumaturgeModdedIllustrations.Chalice;
                         List<Trait> chaliceTraits = [Trait.Magical, Trait.Manipulate, Trait.Necromancy, Trait.Basic, ThaumaturgeTraits.Thaumaturge];
@@ -384,7 +384,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         ActionPossibility drainActionPossibility = new ActionPossibility(drainAction);
                         chaliceSection.AddPossibility(drainActionPossibility);
 
-                        SubmenuPossibility chaliceMenu = new SubmenuPossibility(ThaumaturgeModdedIllustrations.Bell, ImplementDetails.ChaliceInitiateBenefitName);
+                        SubmenuPossibility chaliceMenu = new SubmenuPossibility(ThaumaturgeModdedIllustrations.Chalice, ImplementDetails.ChaliceInitiateBenefitName);
                         chaliceMenu.Subsections.Add(chaliceSection);
                         return chaliceMenu;
                     }
@@ -1368,7 +1368,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             {
                                 ActiveRollSpecification activeRollSpecification = new ActiveRollSpecification(Checks.SavingThrow(Defense.Fortitude), Checks.FlatDC(ThaumaturgeUtilities.CalculateClassDC(attacker, ThaumaturgeTraits.Thaumaturge)));
                                 int classDC = ThaumaturgeUtilities.CalculateClassDC(attacker, ThaumaturgeTraits.Thaumaturge);
-                                CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(defender, lingeringPainStrikeStrike, Defense.Fortitude, creature => classDC);
+                                CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(defender, lingeringPainStrikeStrike, Defense.Fortitude, (creature) => classDC);
                                 if (savingThrowResult <= CheckResult.Failure)
                                 {
                                     defender.AddQEffect(QEffect.Sickened(1, classDC));
@@ -1434,6 +1434,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         private static void AddImplementEnsureLogic(Feat implementFeat)
         {
             implementFeat.WithOnSheet((character) =>
+            {
+                ThaumaturgeUtilities.EnsureCorrectImplements(character);
+            });
+            implementFeat.WithOnCreature((character, creature) =>
             {
                 ThaumaturgeUtilities.EnsureCorrectImplements(character);
             });

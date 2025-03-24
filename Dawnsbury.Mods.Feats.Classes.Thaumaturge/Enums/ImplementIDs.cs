@@ -1,7 +1,7 @@
 ﻿namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Enums
 {
     /// <summary>
-    /// The Gunslinger Ways
+    /// The Implement IDs
     /// </summary>
     public enum ImplementIDs
     {

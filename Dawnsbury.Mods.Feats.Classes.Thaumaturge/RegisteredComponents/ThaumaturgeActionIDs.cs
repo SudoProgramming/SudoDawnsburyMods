@@ -1,13 +1,11 @@
 ﻿using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Modding;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
 {
+    /// <summary>
+    /// A static class containing all Action IDs used for the Thaumaturge
+    /// </summary>
     public class ThaumaturgeActionIDs
     {
         /// <summary>

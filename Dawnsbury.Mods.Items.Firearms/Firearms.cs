@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dawnsbury.Mods.Items.Firearms.Utilities;
+using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
 
 namespace Dawnsbury.Mods.Items.Firearms
 {
@@ -273,7 +274,19 @@ namespace Dawnsbury.Mods.Items.Firearms
         /// </summary>
         public static void PatchItems()
         {
-            // Add traits
+            ModManager.RegisterActionOnEachItem((Item itemToChange) =>
+            {
+                if (itemToChange.HasTrait(Trait.Crossbow) || itemToChange.HasTrait(Trait.HandCrossbow) || itemToChange.HasTrait(Trait.HeavyCrossbow))
+                {
+                    itemToChange.Traits.Add(FirearmTraits.SimpleCrossbow);
+                }
+                else if (itemToChange.HasTrait(Trait.RepeatingHandCrossbow))
+                {
+                    itemToChange.Traits.Add(FirearmTraits.AdvancedCrossbow);
+                }
+
+                return itemToChange;
+            });
         }
 
         /// <summary>
@@ -607,7 +620,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                                             Creature? potentalSplashTarget = tileToScatterTo.PrimaryOccupant;
                                             if (potentalSplashTarget != null && potentalSplashTarget is Creature splashTarget && splashTarget != targetCreature)
                                             {
-                                                await splashTarget.DealDirectDamage(null, DiceFormula.FromText(item.WeaponProperties.DamageDieCount.ToString()), splashTarget, CheckResult.Success, bestDamageToTarget);
+                                                await CommonSpellEffects.DealDirectDamage(null, DiceFormula.FromText(item.WeaponProperties.DamageDieCount.ToString()), splashTarget, CheckResult.Success, bestDamageToTarget);
                                             }
                                         }
                                     }

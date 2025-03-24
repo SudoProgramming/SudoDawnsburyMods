@@ -1,52 +1,36 @@
-﻿using Dawnsbury.Core.CharacterBuilder.AbilityScores;
+﻿using Dawnsbury.Audio;
+using Dawnsbury.Auxiliary;
+using Dawnsbury.Campaign.Path;
+using Dawnsbury.Core;
 using Dawnsbury.Core.CharacterBuilder;
+using Dawnsbury.Core.CharacterBuilder.AbilityScores;
 using Dawnsbury.Core.CharacterBuilder.Feats;
+using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
 using Dawnsbury.Core.CharacterBuilder.Selections.Options;
+using Dawnsbury.Core.CombatActions;
+using Dawnsbury.Core.Coroutines.Options;
+using Dawnsbury.Core.Creatures;
+using Dawnsbury.Core.Creatures.Parts;
+using Dawnsbury.Core.Mechanics;
+using Dawnsbury.Core.Mechanics.Core;
+using Dawnsbury.Core.Mechanics.Damage;
 using Dawnsbury.Core.Mechanics.Enumerations;
+using Dawnsbury.Core.Mechanics.Targeting;
+using Dawnsbury.Core.Mechanics.Targeting.Targets;
+using Dawnsbury.Core.Mechanics.Treasure;
+using Dawnsbury.Core.Possibilities;
+using Dawnsbury.Core.Roller;
+using Dawnsbury.Core.Tiles;
+using Dawnsbury.Display;
+using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Constants;
+using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents;
+using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Dawnsbury.Core.Mechanics;
-using Dawnsbury.Core.CombatActions;
-using Dawnsbury.Core.Creatures;
-using Dawnsbury.Core.Mechanics.Core;
-using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities;
-using Dawnsbury.Core.Mechanics.Treasure;
-using Dawnsbury.Core.Possibilities;
-using Dawnsbury.Core;
-using Dawnsbury.Core.Mechanics.Targeting;
-using static Dawnsbury.Core.Mechanics.Core.CalculatedNumber;
-using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Enums;
-using Dawnsbury.Core.Mechanics.Damage;
-using Dawnsbury.Core.Roller;
-using Dawnsbury.Core.Creatures.Parts;
-using Dawnsbury.Display;
-using Dawnsbury.Core.Coroutines.Options;
-using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
-using static System.Collections.Specialized.BitVector32;
-using Dawnsbury.Core.Tiles;
-using Dawnsbury.Modding;
-using Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb;
-using System.Reflection;
-using Dawnsbury.Core.Mechanics.Targeting.Targets;
-using Microsoft.Xna.Framework;
-using Dawnsbury.Auxiliary;
-using Dawnsbury.Audio;
-using Dawnsbury.Display.Illustrations;
-using Dawnsbury.Core.Animations;
-using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions;
-using Dawnsbury.Core.Mechanics.Targeting.TargetingRequirements;
-using Dawnsbury.Campaign.Encounters;
-using static Dawnsbury.Core.Possibilities.Usability;
-using System.Diagnostics;
-using System.Data.SqlTypes;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using Dawnsbury.Core.Mechanics.Rules;
-using Dawnsbury.Campaign.Path;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -71,44 +55,52 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddImplementsEmpowermentLogic(implementsEmpowermentFeat);
             yield return implementsEmpowermentFeat;
 
+            // Creates and adds the sub feats for the Wand Implement
             yield return new Feat(ThaumaturgeFeatNames.ColdWand, "Cold Wand", "Your wand is attuned to Cold.", [], null);
-
             yield return new Feat(ThaumaturgeFeatNames.ElectricityWand, "Electricity Wand", "Your wand is attuned to Electricity.", [], null);
-
             yield return new Feat(ThaumaturgeFeatNames.FireWand, "Fire Wand", "Your wand is attuned to Fire.", [], null);
 
+            // Creates and adds the logic for the Amulet Implement sub-class feature
             Feat amuletImplementFeat = new Feat(ThaumaturgeFeatNames.AmuletImplement, ImplementDetails.AmuletInitiateBenefitFlavorText, "You gain the " + ImplementDetails.AmuletInitiateBenefitName + " reaction.\n\n{b}" + ImplementDetails.AmuletInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.AmuletInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddAmuletImplementLogic(amuletImplementFeat);
             yield return amuletImplementFeat;
 
+            // Creates and adds the logic for the Bell Implement sub-class feature
             Feat bellImplementFeat = new Feat(ThaumaturgeFeatNames.BellImplement, ImplementDetails.BellInitiateBenefitFlavorText, "You gain the " + ImplementDetails.BellInitiateBenefitName + " reaction.\n\n{b}" + ImplementDetails.BellInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.BellInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddBellImplementLogic(bellImplementFeat);
             yield return bellImplementFeat;
 
+            // Creates and adds the logic for the Chalice Implement sub-class feature
             Feat chaliceImplementFeat = new Feat(ThaumaturgeFeatNames.ChaliceImplement, ImplementDetails.ChaliceInitiateBenefitFlavorText, "You gain the " + ImplementDetails.ChaliceInitiateBenefitName + " action.\n\n{b}" + ImplementDetails.ChaliceInitiateBenefitName + "{/b} {icon:Action}\n" + ImplementDetails.ChaliceInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddChaliceImplementLogic(chaliceImplementFeat);
             yield return chaliceImplementFeat;
 
+            // Creates and adds the logic for the Lantern Implement sub-class feature
             Feat lanternImplementFeat = new Feat(ThaumaturgeFeatNames.LanternImplement, ImplementDetails.LanternInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.LanternInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddLanternImplementLogic(lanternImplementFeat);
             yield return lanternImplementFeat;
 
+            // Creates and adds the logic for the Mirror Implement sub-class feature
             Feat mirrorImplementFeat = new Feat(ThaumaturgeFeatNames.MirrorImplement, ImplementDetails.MirrorInitiateBenefitFlavorText, "You gain the " + ImplementDetails.MirrorInitiateBenefitName + " action.\n\n{b}" + ImplementDetails.MirrorInitiateBenefitName + "{/b} {icon:Action}\n" + ImplementDetails.MirrorInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddMirrorImplementLogic(mirrorImplementFeat);
             yield return mirrorImplementFeat;
 
+            // Creates and adds the logic for the Regalia Implement sub-class feature
             Feat regaliaImplementFeat = new Feat(ThaumaturgeFeatNames.RegaliaImplement, ImplementDetails.RegaliaInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.RegaliaInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddRegaliaImplementLogic(regaliaImplementFeat);
             yield return regaliaImplementFeat;
 
+            // Creates and adds the logic for the Tome Implement sub-class feature
             Feat tomeImplementFeat = new Feat(ThaumaturgeFeatNames.TomeImplement, ImplementDetails.TomeInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.TomeInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddTomeImplementLogic(tomeImplementFeat);
             yield return tomeImplementFeat;
 
+            // Creates and adds the logic for the Wand Implement sub-class feature
             Feat wandImplementFeat = new Feat(ThaumaturgeFeatNames.WandImplement, ImplementDetails.WandInitiateBenefitFlavorText, "You gain the " + ImplementDetails.WandInitiateBenefitName + " activity.\n\n{b}" + ImplementDetails.WandInitiateBenefitName + "{/b} {icon:TwoActions}\n" + ImplementDetails.WandInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddWandImplementLogic(wandImplementFeat);
             yield return wandImplementFeat;
 
+            // Creates and adds the logic for the Weapon Implement sub-class feature
             Feat weaponImplementFeat = new Feat(ThaumaturgeFeatNames.WeaponImplement, ImplementDetails.WeaponInitiateBenefitFlavorText, "You gain the " + ImplementDetails.WeaponInitiateBenefitName + " reaction.\n\n{b}NOTE: The Weapon Implement will be applied to your first One-Handed weapon at the start of each encounter.{/b}\n\n{b}" + ImplementDetails.WeaponInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.WeaponInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddWeaponImplementLogic(weaponImplementFeat);
             yield return weaponImplementFeat;
@@ -116,12 +108,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             //// Creates the class selection feat for the Thaumaturge
             yield return new ClassSelectionFeat(ThaumaturgeFeatNames.ThaumaturgeClass, "The world is full of the unexplainable: ancient magic, dead gods, and even stranger things. In response, you've scavenged the best parts of every magical tradition and built up a collection of esoterica—a broken holy relic here, a sprig of mistletoe there—that you can use to best any creature by exploiting their weaknesses and vulnerabilities. The mystic implement you carry is both badge and weapon, its symbolic weight helping you bargain with and subdue the supernatural. Every path to power has its restrictions and costs, but you turn them all to your advantage. You're a thaumaturge, and you work wonders.",
                 ThaumaturgeTraits.Thaumaturge, new EnforcedAbilityBoost(Ability.Charisma), 8,
-                [Trait.Reflex, Trait.Simple, Trait.Martial, Trait.LightArmor, Trait.MediumArmor],
+                [Trait.Reflex, Trait.Simple, Trait.Martial, Trait.LightArmor, Trait.MediumArmor, Trait.Unarmed, Trait.UnarmoredDefense],
                 [Trait.Perception, Trait.Fortitude, Trait.Will],
                 3,
                 "{b}1. Esoteric Lore{/b} You become trained in a special lore skill that can used to Exploit Vulnerability. This is a charisma-based skill. {i}(You add your Charisma modifier to checks using this skill.){/i}\n\n" +
-                "{b}2. Exploit Vulnerability {icon:Action}{/b}\n{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement\n\nSelect a creature you can see and attempt an Esoteric Lore check against a standard DC for its level. You gain the following effects until you Exploit Vulnerabilities again.\n\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn.\n\n\n\n" +
-                "{b}3. First Implement{/b} Choose an implement. {i}{Will appear in an open hand at the start of combat, if no open hands it will be in your bag or on the ground. The weapon implement is the only exception.){/i}\n\n" +
+                "{b}2. Exploit Vulnerability {icon:Action}{/b}\n{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement\n\nSelect a creature you can see and attempt an Esoteric Lore check against a standard DC for its level. You gain the following effects until you Exploit Vulnerabilities again.\n\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn.\n\n" +
+                "{b}3. First Implement{/b} Choose an implement.\n\n" +
                 "{b}4. Implement's Empowerment{/b} When you Strike, you can trace mystic patterns with an implement you're holding to empower the Strike, causing it to deal 2 additional damage per weapon damage die. Channeling the power requires full use of your hands. You don't gain the benefit of implement's empowerment if you are holding anything in either hand other than a single one-handed weapon or other implements and you must be holding at least one implement to gain the benefit.\n\n" +
                 "{b}5. Thaumaturge Feat{/b}\n\n" +
                 "{b}At Higher Levels:{/b}\n" +
@@ -141,28 +133,34 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         values.SetProficiency(Trait.Reflex, Proficiency.Expert);
                     });
                 });
-
+            
+            // Creates and adds the logic for the Ammunition Thaumaturgy feat
             TrueFeat ammunitionThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.AmmunitionThaumaturgy, 1, "You're so used to handling your implement, weapon, and esoterica in the heat of combat that adding a few bullets or arrows to the mix is no extra burden.", "You can use Bows using the hand holding your implement.", [ThaumaturgeTraits.Thaumaturge]);
             AddAmmunitionThaumaturgyLogic(ammunitionThaumaturgyFeat);
             yield return ammunitionThaumaturgyFeat;
 
+            // Creates and adds the logic for the Divine Disharmony feat
             TrueFeat divineDisharmonyFeat = new TrueFeat(ThaumaturgeFeatNames.DivineDisharmony, 1, "From your collection of religious trinkets, you pull out opposing divine objects—such as the religious symbols of two deities that are hated enemies—and combine them in a display that causes discordant clashes of divine energy that are especially distracting to the faithful.", "Roll the best check between Deception or Intimidation against the Will DC of a creature you can see within 60 feet, with the following results. If the creature has access to divine spells, you gain a +2 circumstance bonus to your skill check.\n\n{b}Critical Success{/b} The creature is flat-footed to your attacks until the end of your next turn.\n\n{b}Success{/b} The creature is flat-footed against your attacks until the end of your current turn.", [Trait.Divine, Trait.Enchantment, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge]);
             divineDisharmonyFeat.WithActionCost(1);
             AddDivineDisharmonyLogic(divineDisharmonyFeat);
             yield return divineDisharmonyFeat;
 
+            // Creates and adds the logic for the Root to Life feat
             TrueFeat rootToLifeFeat = new TrueFeat(ThaumaturgeFeatNames.RootToLife, 1, "Marigold, spider lily, pennyroyal—many primal traditions connect flowers and plants with the boundary between life and death, and you can leverage this association to keep an ally on this side of the line.", "You place a small plant or similar symbol on an adjacent dying creature, immediately stabilizing them; the creature is no longer dying and is instead unconscious at 0 Hit Points.\n\nIf you spend 2 actions instead of 1, you empower the act further by uttering a quick folk blessing to chase away ongoing pain, adding the auditory trait to the action. When you do so, attempt flat checks to remove each source of persistent damage affecting the target; due to the particularly effective assistance, the DC is 10 instead of the usual 15.", [Trait.Manipulate, Trait.Necromancy, Trait.Primal, ThaumaturgeTraits.Thaumaturge]);
             AddRootToLifeLogic(rootToLifeFeat);
             yield return rootToLifeFeat;
 
-            TrueFeat scrollThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Your multidisciplinary study of magic means you know how to activate the magic in scrolls with ease.", "You can activate scrolls of any magical tradition, using your thaumaturge class DC for the scroll's DC, rather than a particular spell DC. If a spell is on the spell list for multiple traditions, you choose which tradition to use at the time you activate the scroll. You can draw and activate scrolls with the same hand holding an implement.", [ThaumaturgeTraits.Thaumaturge]);
+            // Creates and adds the logic for the Scroll Thaumaturgy feat
+            TrueFeat scrollThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Your multidisciplinary study of magic means you know how to activate the magic in scrolls with ease.", "You can activate scrolls of any magical tradition, using your thaumaturge class DC for the scroll's DC, rather than a particular spell DC. You can draw and activate scrolls with the same hand holding an implement.", [ThaumaturgeTraits.Thaumaturge]);
             AddScrollThaumaturgyLogic(scrollThaumaturgyFeat);
             yield return scrollThaumaturgyFeat;
 
-            TrueFeat esotericaSellerFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericaSeller, 2, "You collect interesting trinkets wherever you go.", "At the end of each encounter, if at least one Esoterica Seller character is in the party, you gain a \"Looted Esoterica\" item that's worth an amount of gold pieces equal to the combined level (levels 0 or below do not count) of all enemies you defeated in that encounter. This item has no use but you can sell it later in the shop", [ThaumaturgeTraits.Thaumaturge]);
+            // Creates and adds the logic for the Esoterica Seller feat
+            TrueFeat esotericaSellerFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericaSeller, 2, "You collect interesting trinkets wherever you go.", "At the end of each encounter you gain a \"Looted Esoterica\" item that's worth an amount of gold pieces equal to the combined level (levels 0 or below do not count) of all enemies you defeated in that encounter. This item has no use but you can sell it later in the shop", [ThaumaturgeTraits.Thaumaturge, Trait.Homebrew]);
             AddEsotericaSellerLogic(esotericaSellerFeat);
             yield return esotericaSellerFeat;
 
+            // Creates and adds the logic for the Esoteric Warden feat
             TrueFeat esotericWardenFeat = new TrueFeat(ThaumaturgeFeatNames.EsotericWarden, 2, "When you apply antithetical material against a creature successfully, you also ward yourself against its next attacks.", "When you succeed at your check to Exploit a Vulnerability, you gain a +1 status bonus to your AC against the creature's next attack and a +1 status bonus to your next saving throw against the creature; if you critically succeed, these bonuses are +2 instead. You can gain these bonuses only once per day against a particular creature, and the benefit ends if you Exploit Vulnerability again.", [ThaumaturgeTraits.Thaumaturge]);
             AddEsotericWardenLogic(esotericWardenFeat);
             yield return esotericWardenFeat;
@@ -182,7 +180,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddInstructiveStrikeLogic(instructiveStrikeFeat);
             yield return instructiveStrikeFeat;
 
-            TrueFeat lingeringPainStrikeFeat = new TrueFeat(ThaumaturgeFeatNames.LingeringPainStrike, 4, "You attack with in such a way that your foes feel faint afterwards.", "{b}Requirements{/b} You are holding your implement\n\nMake a Strike. On a hit, the target also rolls a Fortitude save against your DC, and is sickened 1 on a failure.", [ThaumaturgeTraits.Thaumaturge]);
+            TrueFeat lingeringPainStrikeFeat = new TrueFeat(ThaumaturgeFeatNames.LingeringPainStrike, 4, "You attack with in such a way that your foes feel faint afterwards.", "{b}Requirements{/b} You are holding your implement\n\nMake a Strike. On a hit, the target also rolls a Fortitude save against your DC, and is sickened 1 on a failure.", [ThaumaturgeTraits.Thaumaturge, Trait.Homebrew]);
             lingeringPainStrikeFeat.WithActionCost(2);
             AddLingeringPainStrikeLogic(lingeringPainStrikeFeat);
             yield return lingeringPainStrikeFeat;
@@ -215,7 +213,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddAmuletImplementLogic(Feat amuletImplementFeat)
         {
             AddImplementEnsureLogic(amuletImplementFeat);
-            amuletImplementFeat.WithPermanentQEffect(ImplementDetails.AmuletInitiateBenefitName, delegate (QEffect self)
+
+            // Adds the reaction prompt to all allies
+            amuletImplementFeat.WithPermanentQEffect(ImplementDetails.AmuletInitiateBenefitName + " - Resistance to damage equal to 2 + your level", delegate (QEffect self)
             {
                 self.StartOfCombat = async (QEffect startOfCombat) =>
                 {
@@ -251,7 +251,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddBellImplementLogic(Feat bellImplementFeat)
         {
             AddImplementEnsureLogic(bellImplementFeat);
-            bellImplementFeat.WithPermanentQEffect(ImplementDetails.BellInitiateBenefitName, delegate (QEffect self)
+
+            // Adds the bell reaction
+            bellImplementFeat.WithPermanentQEffect(ImplementDetails.BellInitiateBenefitName + " - Target saves or gains an effect", delegate (QEffect self)
             {
                 self.StartOfCombat = async (QEffect startOfCombat) =>
                 {
@@ -269,7 +271,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                     QEffect exploitEffect = action.Owner.QEffects.First(qe => qe.Id == ThaumaturgeQEIDs.ExploitVulnerabilityTarget);
                                     if (exploitEffect.Tag != null && exploitEffect.Tag is Creature thaumaturge && thaumaturge == owner && owner.Actions.CanTakeReaction() && ThaumaturgeUtilities.IsCreatureWeildingImplement(owner) && owner.DistanceTo(action.Owner) <= 6 && await owner.AskToUseReaction("Use " + ImplementDetails.BellInitiateBenefitName + ": " + (actionIsSpell ? " Target makes Fortitude save or becomes stupefied?" : " Target makes Will save or becomes your choice of enfeebled or clumsy?")))
                                     {
-                                        CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(action.Owner, new CombatAction(owner, IllustrationName.GenericCombatManeuver, ImplementDetails.BellInitiateBenefitName, [Trait.Auditory, Trait.Emotion, Trait.Enchantment, Trait.Magical, Trait.Manipulate, Trait.Mental, ThaumaturgeTraits.Thaumaturge], ImplementDetails.BellInitiateBenefitRulesText, Target.Touch()), actionIsSpell ? Defense.Fortitude : Defense.Will, creature => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge));
+                                        CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(action.Owner, new CombatAction(owner, ThaumaturgeModdedIllustrations.Bell, ImplementDetails.BellInitiateBenefitName, [Trait.Auditory, Trait.Emotion, Trait.Enchantment, Trait.Magical, Trait.Manipulate, Trait.Mental, ThaumaturgeTraits.Thaumaturge], ImplementDetails.BellInitiateBenefitRulesText, Target.Touch()), actionIsSpell ? Defense.Fortitude : Defense.Will, (creature) => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge));
                                         if (savingThrowResult <= CheckResult.Failure)
                                         {
                                             if (actionIsSpell)
@@ -282,7 +284,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                             else
                                             {
                                                 int debuffLevel = savingThrowResult == CheckResult.CriticalFailure ? 2 : 1;
-                                                ChoiceButtonOption userResponse = await owner.AskForChoiceAmongButtons(IllustrationName.GenericCombatManeuver, "Add Enfeebled " + debuffLevel + " or Clumsy " + debuffLevel + " to " + action.Owner.Name, ["Enfeebled " + debuffLevel, "Clumsy " + debuffLevel]);
+                                                ChoiceButtonOption userResponse = await owner.AskForChoiceAmongButtons(ThaumaturgeModdedIllustrations.Bell, "Add Enfeebled " + debuffLevel + " or Clumsy " + debuffLevel + " to " + action.Owner.Name, ["Enfeebled " + debuffLevel, "Clumsy " + debuffLevel]);
                                                 QEffect debuff = (userResponse.Index == 0) ? QEffect.Enfeebled(debuffLevel) : QEffect.Clumsy(debuffLevel);
                                                 debuff.Source = owner;
                                                 debuff.ExpiresAt = ExpirationCondition.ExpiresAtStartOfSourcesTurn;
@@ -306,16 +308,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddChaliceImplementLogic(Feat chaliceImplementFeat)
         {
             AddImplementEnsureLogic(chaliceImplementFeat);
-            chaliceImplementFeat.WithPermanentQEffect(ImplementDetails.ChaliceInitiateBenefitName, delegate (QEffect self)
+            chaliceImplementFeat.WithPermanentQEffect(ImplementDetails.ChaliceInitiateBenefitName + " - Sip to gain Temp HP and Drain to Heal", delegate (QEffect self)
             {
                 self.ProvideActionIntoPossibilitySection = (QEffect chaliceImplementEffect, PossibilitySection possibilitySection) =>
                 {
                     if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
                     {
-                        PossibilitySection chaliceSection = new PossibilitySection("Calice Possibilities");
+                        PossibilitySection chaliceSection = new PossibilitySection("Chalice Possibilities");
 
-                        IllustrationName chaliceIllustrationName = IllustrationName.GenericCombatManeuver;
-                        List<Trait> chaliceTraits = [Trait.Magical, Trait.Manipulate, Trait.Necromancy, ThaumaturgeTraits.Thaumaturge];
+                        Illustration chaliceIllustrationName = ThaumaturgeModdedIllustrations.Chalice;
+                        List<Trait> chaliceTraits = [Trait.Magical, Trait.Manipulate, Trait.Necromancy, Trait.Basic, ThaumaturgeTraits.Thaumaturge];
 
                         CombatAction sipAction = new CombatAction(self.Owner, chaliceIllustrationName, "Sip", chaliceTraits.ToArray(), ImplementDetails.ChaliceInitiateBenefitSipText, Target.AdjacentCreatureOrSelf()
                             .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
@@ -373,7 +375,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 {
                                     Name = "Chalice is Drained"
                                 });
-                                targets.ChosenCreature.Heal("" + (3 * user.Level), drainAction);
+                                await targets.ChosenCreature.HealAsync("" + (3 * user.Level), drainAction);
                             }
                         });
 
@@ -382,7 +384,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         ActionPossibility drainActionPossibility = new ActionPossibility(drainAction);
                         chaliceSection.AddPossibility(drainActionPossibility);
 
-                        SubmenuPossibility chaliceMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, ImplementDetails.ChaliceInitiateBenefitName);
+                        SubmenuPossibility chaliceMenu = new SubmenuPossibility(ThaumaturgeModdedIllustrations.Chalice, ImplementDetails.ChaliceInitiateBenefitName);
                         chaliceMenu.Subsections.Add(chaliceSection);
                         return chaliceMenu;
                     }
@@ -399,7 +401,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddLanternImplementLogic(Feat lanternImplementFeat)
         {
             AddImplementEnsureLogic(lanternImplementFeat);
-            lanternImplementFeat.WithPermanentQEffect("Lantern Initiate Benefit", delegate (QEffect self)
+            lanternImplementFeat.WithPermanentQEffect("Lantern Initiate Benefit" + " - Passive improved seeking", delegate (QEffect self)
             {
                 self.BonusToAttackRolls = (QEffect bonusToSeek, CombatAction action, Creature? creature) =>
                 {
@@ -465,7 +467,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddMirrorImplementLogic(Feat mirrorImplementFeat)
         {
             AddImplementEnsureLogic(mirrorImplementFeat);
-            mirrorImplementFeat.WithPermanentQEffect(ImplementDetails.MirrorInitiateBenefitName, delegate (QEffect self)
+            mirrorImplementFeat.WithPermanentQEffect(ImplementDetails.MirrorInitiateBenefitName + " - Make an illusory image of yourself", delegate (QEffect self)
             {
                 self.ProvideMainAction = (QEffect mirrorsReflectionEffect) =>
                 {
@@ -475,7 +477,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         return null;
                     }
 
-                    return new ActionPossibility(new CombatAction(owner, IllustrationName.GenericCombatManeuver, ImplementDetails.MirrorInitiateBenefitName, [Trait.Illusion, Trait.Magical, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge], ImplementDetails.MirrorInitiateBenefitRulesText, Target.Tile((creature, tile) => tile.LooksFreeTo(creature) && creature.Occupies != null && creature.DistanceTo(tile) <= 3, (creature, tile) => (float)int.MinValue))
+                    return new ActionPossibility(new CombatAction(owner, ThaumaturgeModdedIllustrations.Mirror, ImplementDetails.MirrorInitiateBenefitName, [Trait.Illusion, Trait.Magical, Trait.Manipulate, Trait.Basic, ThaumaturgeTraits.Thaumaturge], ImplementDetails.MirrorInitiateBenefitRulesText, Target.Tile((creature, tile) => tile.LooksFreeTo(creature) && creature.Occupies != null && creature.DistanceTo(tile) <= 3, (creature, tile) => (float)int.MinValue))
                         .WithActionCost(1)
                         .WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
                         {
@@ -530,12 +532,37 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     MirrorTrackingEffect? mirrorTracking = owner.FindQEffect(ThaumaturgeQEIDs.MirrorTracking) as MirrorTrackingEffect;
                     if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions && mirrorTracking != null)
                     {
+                        if (!owner.Battle.AllCreatures.Contains(mirrorTracking.PairedCreature))
+                        {
+                            return null;
+                        }
+
                         Creature pairedCreature = mirrorTracking.PairedCreature;
-                        return new ActionPossibility(new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Swap to Clone", [], "Swaps to the clone, in which you can continue your turn.", Target.Self())
+                        return new ActionPossibility(new CombatAction(owner, ThaumaturgeModdedIllustrations.Mirror, "Swap to Clone", [Trait.Basic, ThaumaturgeTraits.Thaumaturge], "Swaps to the clone, in which you can continue your turn.", Target.Self())
                             .WithActionCost(0)
                             .WithEffectOnSelf(async (Creature self) =>
                             {
                                 self.SwapPositions(pairedCreature);
+
+                                // Logic for Grabbed, Grappled, and Restrained
+                                foreach (QEffect qEffect in self.QEffects.Where(qe => qe.Id == QEffectId.Grabbed || qe.Id == QEffectId.Grappled || qe.Id == QEffectId.Restrained))
+                                {
+                                    qEffect.Owner = pairedCreature;
+                                    pairedCreature.AddQEffect(qEffect);
+                                }
+                                foreach (QEffect qEffect in pairedCreature.QEffects.Where(qe => qe.Id == QEffectId.Grabbed || qe.Id == QEffectId.Grappled || qe.Id == QEffectId.Restrained))
+                                {
+                                    qEffect.Owner = self;
+                                    self.AddQEffect(qEffect);
+                                }
+                                foreach (Creature enemy in self.Battle.AllCreatures.Where(creature => !creature.FriendOfAndNotSelf(self)))
+                                {
+                                    List<QEffect> qEffectsToChange = enemy.QEffects.Where(qe => (qe.Source == self || qe.Source == pairedCreature) && (qe.Id == QEffectId.Grabbed || qe.Id == QEffectId.Grappled || qe.Id == QEffectId.Restrained)).ToList();
+                                    foreach (QEffect qEffect in qEffectsToChange)
+                                    {
+                                        qEffect.Source = (qEffect.Source == self) ? pairedCreature : self;
+                                    }
+                                }
                             }));
                     }
 
@@ -551,7 +578,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddRegaliaImplementLogic(Feat regaliaImplementFeat)
         {
             AddImplementEnsureLogic(regaliaImplementFeat);
-            regaliaImplementFeat.WithPermanentQEffect(ImplementDetails.RegaliaInitiateBenefitName, delegate (QEffect self)
+            regaliaImplementFeat.WithPermanentQEffect(ImplementDetails.RegaliaInitiateBenefitName + " - Passively ward of fear", delegate (QEffect self)
             {
                 self.StartOfCombat = async (QEffect startOfCombat) =>
                 {
@@ -612,8 +639,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             {
                 ThaumaturgeUtilities.EnsureCorrectImplements(sheet);
                 sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Extra Skill", "Tome Extra Skill", 1, (feat => feat is SkillSelectionFeat)));
-                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Extra Expert Skill", "Tome Extra Expert Skill", 3, (feat => feat is SkillIncreaseFeat)));
+                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Extra Expert Skill", "Tome Extra Expert Skill", 3, (feat =>
+                {
+                    return sheet.AllFeats.Any((secondFeat => secondFeat is SkillSelectionFeat secondSkillSelectionFeat && feat is SkillIncreaseFeat skillIncrease && skillIncrease.Skill == secondSkillSelectionFeat.Skill));
+                })));
             };
+            tomeImplementFeat.WithPermanentQEffect(ImplementDetails.TomeInitiateBenefitName + " - Improved Exploit Vulnerability and extra skills", delegate (QEffect self) {
+
+            });
         }
 
         /// <summary>
@@ -624,11 +657,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         {
             wandImplementFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
             {
-                ThaumaturgeUtilities.EnsureCorrectImplements(sheet);
                 List<FeatName> wandFeatNames = new List<FeatName>() { ThaumaturgeFeatNames.ColdWand, ThaumaturgeFeatNames.ElectricityWand, ThaumaturgeFeatNames.FireWand } ;
                 sheet.AddSelectionOption(new SingleFeatSelectionOption("Thaumaturge Wand Type", "Wand", 1, feat => wandFeatNames.Contains(feat.FeatName)));
+                ThaumaturgeUtilities.EnsureCorrectImplements(sheet);
             };
-            wandImplementFeat.WithPermanentQEffect(ImplementDetails.WandInitiateBenefitName, delegate (QEffect self)
+            wandImplementFeat.WithPermanentQEffect(ImplementDetails.WandInitiateBenefitName + " - Flind magic with your wand", delegate (QEffect self)
             {
                 self.ProvideActionIntoPossibilitySection = (QEffect wandImplementEffect, PossibilitySection possibilitySection) =>
                 {
@@ -637,6 +670,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         Creature owner = wandImplementEffect.Owner;
                         DamageKind? wandDamageKind = null;
                         Trait? wandTraitForType = null;
+                        Illustration wandIllustration = ThaumaturgeModdedIllustrations.Wand;
                         IllustrationName? projectileIllustration = null;
                         SfxName? wandSfx = null;
                         if (owner.HasFeat(ThaumaturgeFeatNames.ColdWand))
@@ -644,6 +678,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             wandDamageKind = DamageKind.Cold;
                             wandTraitForType = Trait.Cold;
                             wandSfx = SfxName.RayOfFrost;
+                            wandIllustration = ThaumaturgeModdedIllustrations.WandCold;
                             projectileIllustration = IllustrationName.RayOfFrost;
                         }
                         else if (owner.HasFeat(ThaumaturgeFeatNames.ElectricityWand))
@@ -651,6 +686,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             wandDamageKind = DamageKind.Electricity;
                             wandTraitForType = Trait.Electricity;
                             wandSfx = SfxName.ElectricArc;
+                            wandIllustration = ThaumaturgeModdedIllustrations.WandElectricity;
                             projectileIllustration = IllustrationName.ElectricArc;
                         }
                         else if (owner.HasFeat(ThaumaturgeFeatNames.FireWand)) 
@@ -658,19 +694,19 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             wandDamageKind = DamageKind.Fire;
                             wandTraitForType = Trait.Fire;
                             wandSfx = SfxName.FireRay;
+                            wandIllustration = ThaumaturgeModdedIllustrations.WandFire;
                             projectileIllustration = IllustrationName.FireRay;
                         }
 
                         PossibilitySection wandSection = new PossibilitySection("Wand Possibilities");
 
-                        IllustrationName wandIllustrationName = IllustrationName.GenericCombatManeuver;
-                        List<Trait> wandTraits = [Trait.Concentrate, Trait.Evocation, Trait.Magical, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge];
+                        List<Trait> wandTraits = [Trait.Concentrate, Trait.Evocation, Trait.Magical, Trait.Manipulate, Trait.Basic, ThaumaturgeTraits.Thaumaturge];
                         if (wandTraitForType != null)
                         {
                             wandTraits.Add((Trait)wandTraitForType);
                         }
 
-                        CombatAction flingMagicAction = new CombatAction(self.Owner, wandIllustrationName, "Fling Magic", wandTraits.ToArray(), ImplementDetails.WandInitiateBenefitRulesText, Target.RangedCreature(12)
+                        CombatAction flingMagicAction = new CombatAction(self.Owner, wandIllustration, "Fling Magic", wandTraits.ToArray(), ImplementDetails.WandInitiateBenefitRulesText, Target.RangedCreature(12)
                             .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
                             {
                                 if (!ThaumaturgeUtilities.IsCreatureWeildingImplement(self.Owner))
@@ -690,12 +726,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 DamageEvent wandDamageEvent = new DamageEvent(action, defender, result, [wandDamage], result == CheckResult.CriticalFailure, result == CheckResult.Success);
                                 if (result <= CheckResult.Success)
                                 {
-                                    await attacker.DealDirectDamage(wandDamageEvent);
+                                    await CommonSpellEffects.DealDirectDamage(wandDamageEvent);
                                 }
                             }
                         });
 
-                        CombatAction boostedFlingMagicAction = new CombatAction(self.Owner, wandIllustrationName, "Boosted Fling Magic", wandTraits.ToArray(), ImplementDetails.WandInitiateBenefitRulesText, Target.RangedCreature(12)
+                        CombatAction boostedFlingMagicAction = new CombatAction(self.Owner, wandIllustration, "Boosted Fling Magic", wandTraits.ToArray(), ImplementDetails.WandInitiateBenefitRulesText, Target.RangedCreature(12)
                             .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
                             {
                                 if (owner.HasEffect(ThaumaturgeQEIDs.BoostedWandUsed))
@@ -720,7 +756,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 DamageEvent wandDamageEvent = new DamageEvent(action, defender, result, [wandDamage], result == CheckResult.CriticalFailure, result == CheckResult.Success);
                                 if (result <= CheckResult.Success)
                                 {
-                                    await attacker.DealDirectDamage(wandDamageEvent);
+                                    await CommonSpellEffects.DealDirectDamage(wandDamageEvent);
                                 }
 
                                 DiceFormula boostedRoll = DiceFormula.FromText("1d4", "Boosted Fling Magic");
@@ -751,7 +787,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         ActionPossibility boostedFlingMagicPossibility = new ActionPossibility(boostedFlingMagicAction);
                         wandSection.AddPossibility(boostedFlingMagicPossibility);
 
-                        SubmenuPossibility wandMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, ImplementDetails.WandInitiateBenefitName);
+                        SubmenuPossibility wandMenu = new SubmenuPossibility(wandIllustration, ImplementDetails.WandInitiateBenefitName);
                         wandMenu.Subsections.Add(wandSection);
                         return wandMenu;
                     }
@@ -768,7 +804,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         public static void AddWeaponImplementLogic(Feat weaponImplementFeat)
         {
             AddImplementEnsureLogic(weaponImplementFeat);
-            weaponImplementFeat.WithPermanentQEffect(ImplementDetails.WeaponInitiateBenefitName, delegate (QEffect self)
+            weaponImplementFeat.WithPermanentQEffect(ImplementDetails.WeaponInitiateBenefitName + " - Reactively Strike with your One-Hand weapon", delegate (QEffect self)
             {
                 self.StartOfCombat = async (QEffect startOfCombat) =>
                 {
@@ -825,7 +861,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="rootToLifeFeat">The Root To Life feat object</param>
         public static void AddRootToLifeLogic(Feat rootToLifeFeat)
         {
-            rootToLifeFeat.WithPermanentQEffect("Root to Life", delegate (QEffect self)
+            rootToLifeFeat.WithPermanentQEffect("Heal those that are dying", delegate (QEffect self)
             {
                 self.ProvideActionIntoPossibilitySection = (QEffect rootToLifeEffect, PossibilitySection possibilitySection) =>
                 {
@@ -834,8 +870,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         Creature owner = rootToLifeEffect.Owner;
                         PossibilitySection rootToLifeSection = new PossibilitySection("Root to Life Possibilities");
 
-                        IllustrationName rootToLifeIllustrationName = IllustrationName.GenericCombatManeuver;
-                        List<Trait> rootToLifeTraits = [Trait.Manipulate, Trait.Necromancy, Trait.Primal, ThaumaturgeTraits.Thaumaturge];
+                        IllustrationName rootToLifeIllustrationName = IllustrationName.Tree1;
+                        List<Trait> rootToLifeTraits = [Trait.Manipulate, Trait.Necromancy, Trait.Primal, Trait.Basic, ThaumaturgeTraits.Thaumaturge];
 
                         CombatAction oneActionRootToLifeAction = new CombatAction(self.Owner, rootToLifeIllustrationName, "Root to Life", rootToLifeTraits.ToArray(), rootToLifeFeat.RulesText, Target.AdjacentFriend()
                             .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
@@ -887,7 +923,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         ActionPossibility twoActionRootToLifeActionPossibility = new ActionPossibility(twoActionRootToLifeAction);
                         rootToLifeSection.AddPossibility(twoActionRootToLifeActionPossibility);
 
-                        SubmenuPossibility rootToLifeMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, "Root to Life");
+                        SubmenuPossibility rootToLifeMenu = new SubmenuPossibility(rootToLifeIllustrationName, "Root to Life");
                         rootToLifeMenu.Subsections.Add(rootToLifeSection);
                         return rootToLifeMenu;
                     }
@@ -912,7 +948,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             {
                 creature.AddSpellcastingSource(SpellcastingKind.Innate, ThaumaturgeTraits.Thaumaturge, Ability.Charisma, Trait.Spell);
             });
-            scrollThaumaturgyFeat.WithPermanentQEffect("Scroll Thaumaturgy", delegate (QEffect self)
+            scrollThaumaturgyFeat.WithPermanentQEffect("Cast and hold scrolls with your Implement hand", delegate (QEffect self)
             {
                 self.YouBeginAction = async (QEffect youBeginAction, CombatAction action) =>
                 {
@@ -981,7 +1017,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                             PossibilitySection drawScrollSection = new PossibilitySection(drawOrReplace + " scroll");
                                             foreach (Item scroll in owner.CarriedItems.Where(item => item.HasTrait(Trait.Scroll)))
                                             {
-                                                CombatAction drawScrollImplementAction = new CombatAction(owner, scroll.Illustration, drawOrReplace + " " + scroll.Name, [Trait.Manipulate], drawOrReplace + " a scroll into the same hand you are holding this implement in.\n----\n" + scroll.Description, Target.Self())
+                                                CombatAction drawScrollImplementAction = new CombatAction(owner, scroll.Illustration, drawOrReplace + " " + scroll.Name, [Trait.Manipulate, Trait.Basic], drawOrReplace + " a scroll into the same hand you are holding this implement in.\n----\n" + scroll.Description, Target.Self())
                                                     .WithActionCost(1)
                                                     .WithEffectOnSelf((Creature self) =>
                                                     {
@@ -1070,7 +1106,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="esotericWardenFeat">The Esoteric Warden feat object</param>
         public static void AddEsotericWardenLogic(Feat esotericWardenFeat)
         {
-            esotericWardenFeat.WithPermanentQEffect("Esoteric Warden", delegate (QEffect self)
+            esotericWardenFeat.WithPermanentQEffect("Increase defenses after exploiting a vulnerability", delegate (QEffect self)
             {
                 self.AfterYouTakeAction = async (QEffect afterYouTakeAction, CombatAction action) =>
                 {
@@ -1083,7 +1119,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             afterYouTakeAction.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
                             {
                                 Id = ThaumaturgeQEIDs.EsotericWardenAC,
-                                Illustration = IllustrationName.GenericCombatManeuver,
+                                Illustration = ThaumaturgeModdedIllustrations.EsotericWarden,
                                 Name = "Esoteric Warden AC (" + target.Name + ")",
                                 Description = "+" + esotericWardenValue + " status bonus to AC against " + target.Name,
                                 Value = esotericWardenValue,
@@ -1094,7 +1130,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             afterYouTakeAction.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
                             {
                                 Id = ThaumaturgeQEIDs.EsotericWardenSave,
-                                Illustration = IllustrationName.GenericCombatManeuver,
+                                Illustration = ThaumaturgeModdedIllustrations.EsotericWarden,
                                 Name = "Esoteric Warden Saving Throw (" + target.Name + ")",
                                 Description = "+" + esotericWardenValue + " status bonus to Saving Throws against " + target.Name,
                                 Value = esotericWardenValue,
@@ -1148,7 +1184,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="instructiveStrikeFeat">The Instructive Strike feat object</param>
         public static void AddInstructiveStrikeLogic(Feat instructiveStrikeFeat)
         {
-            instructiveStrikeFeat.WithPermanentQEffect("Instructive Strike", delegate (QEffect self)
+            instructiveStrikeFeat.WithPermanentQEffect("Strike and Exploit Vulnerability", delegate (QEffect self)
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
@@ -1166,6 +1202,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             return Usability.Usable;
                         });
                         instructiveStrike.Name = "Instructive Strike";
+                        if (!instructiveStrike.HasTrait(Trait.Basic))
+                        {
+                            instructiveStrike.Traits.Add(Trait.Basic);
+                        }
                         instructiveStrike.ActionId = ThaumaturgeActionIDs.InstructiveStrike;
                         return instructiveStrike;
                     }
@@ -1205,7 +1245,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="instructiveStrikeFeat">The Ammunition Thaumaturgy feat object</param>
         public static void AddAmmunitionThaumaturgyLogic(Feat ammunitionThaumaturgyFeat)
         {
-            ammunitionThaumaturgyFeat.WithPermanentQEffect("Ammunition Thaumaturgy", delegate (QEffect self)
+            ammunitionThaumaturgyFeat.WithPermanentQEffect("Use bows freely with your Implement hand", delegate (QEffect self)
             {
                 self.StateCheck = (QEffect stateCheck) =>
                 {
@@ -1261,14 +1301,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="divineDisharmonyFeat">The Divine Disharmony feat object</param>
         public static void AddDivineDisharmonyLogic(Feat divineDisharmonyFeat)
         {
-            divineDisharmonyFeat.WithPermanentQEffect("Divine Disharmony", delegate (QEffect self)
+            divineDisharmonyFeat.WithPermanentQEffect("Make enemies flat-footed with you Divine knowledge", delegate (QEffect self)
             {
                 self.ProvideMainAction = (QEffect provideMainAction) =>
                 {
                     Creature owner = provideMainAction.Owner;
                     PossibilitySection divineDisharmonySection = new PossibilitySection("Divine Disharmony Possibilities");
 
-                    CombatAction divineDisharmonyAction = new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Divine Disharmony", [Trait.Divine, Trait.Enchantment, Trait.Manipulate, ThaumaturgeTraits.Thaumaturge], divineDisharmonyFeat.RulesText,Target.RangedCreature(12));
+                    CombatAction divineDisharmonyAction = new CombatAction(owner, ThaumaturgeModdedIllustrations.DivineDisharmony, "Divine Disharmony", [Trait.Divine, Trait.Enchantment, Trait.Manipulate, Trait.Basic, ThaumaturgeTraits.Thaumaturge], divineDisharmonyFeat.RulesText,Target.RangedCreature(12));
                     divineDisharmonyAction.WithActionCost(1);
                     divineDisharmonyAction.WithActionId(ThaumaturgeActionIDs.DivineDisharmony);
                     divineDisharmonyAction.WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Deception, Skill.Intimidation), Checks.DefenseDC(Defense.Will)));
@@ -1308,7 +1348,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="lingeringPainStrikeFeat">The Lingering Pain Strike feat object</param>
         public static void AddLingeringPainStrikeLogic(Feat lingeringPainStrikeFeat)
         {
-            lingeringPainStrikeFeat.WithPermanentQEffect("Lingering Pain Strike", delegate (QEffect self)
+            lingeringPainStrikeFeat.WithPermanentQEffect("Strike and potentially sicken", delegate (QEffect self)
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
@@ -1322,13 +1362,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         lingeringPainStrikeStrike.Traits.Add(Trait.Basic);
                         lingeringPainStrikeStrike.Illustration = (Illustration)new SideBySideIllustration(lingeringPainStrikeStrike.Illustration, (Illustration)IllustrationName.Sickened);
                         lingeringPainStrikeStrike.Name = "Lingering Pain Strike";
-                        lingeringPainStrikeStrike.StrikeModifiers.OnEachTarget += (Func<Creature, Creature, CheckResult, Task>)(async (attacker, defender, checkResult) =>
+                        lingeringPainStrikeStrike.StrikeModifiers.OnEachTarget += (async (attacker, defender, checkResult) =>
                         {
                             if (checkResult >= CheckResult.Success)
                             {
                                 ActiveRollSpecification activeRollSpecification = new ActiveRollSpecification(Checks.SavingThrow(Defense.Fortitude), Checks.FlatDC(ThaumaturgeUtilities.CalculateClassDC(attacker, ThaumaturgeTraits.Thaumaturge)));
                                 int classDC = ThaumaturgeUtilities.CalculateClassDC(attacker, ThaumaturgeTraits.Thaumaturge);
-                                CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(defender, lingeringPainStrikeStrike, Defense.Fortitude, creature => classDC);
+                                CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(defender, lingeringPainStrikeStrike, Defense.Fortitude, (creature) => classDC);
                                 if (savingThrowResult <= CheckResult.Failure)
                                 {
                                     defender.AddQEffect(QEffect.Sickened(1, classDC));
@@ -1351,7 +1391,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="esotericaSellerFeat">The Esoterica Seller feat object</param>
         public static void AddEsotericaSellerLogic(Feat esotericaSellerFeat)
         {
-            esotericaSellerFeat.WithPermanentQEffect("Esoterica Seller", delegate (QEffect self)
+            esotericaSellerFeat.WithPermanentQEffect("Earn more money collecting esoterica", delegate (QEffect self)
             {
                 self.StartOfCombat = async (QEffect startOfCombat) =>
                 {
@@ -1394,6 +1434,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         private static void AddImplementEnsureLogic(Feat implementFeat)
         {
             implementFeat.WithOnSheet((character) =>
+            {
+                ThaumaturgeUtilities.EnsureCorrectImplements(character);
+            });
+            implementFeat.WithOnCreature((character, creature) =>
             {
                 ThaumaturgeUtilities.EnsureCorrectImplements(character);
             });

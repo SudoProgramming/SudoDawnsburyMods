@@ -94,9 +94,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                         return null;
                     }
 
+                    int distanceAllowed = (melee.HasTrait(Trait.Reach)) ? 2 : 1;
+
                     // Creates and returns the action with all desired restrictions
                     return new ActionPossibility(new CombatAction(reloadingStrikeShotEffect.Owner, new SideBySideIllustration(ranged.Illustration, melee != null ? melee.Illustration : IllustrationName.Fist), "Reloading Strike", [Trait.Basic], driftersWay.SlingersReloadRulesText.Substring(driftersWay.SlingersReloadRulesText.IndexOf('\n') + 1), Target.Self()
-                    .WithAdditionalRestriction(self => self.Battle != null && self.Battle.AllCreatures.Count(creature => self.DistanceTo(creature) <= 1 && creature != self && !self.FriendOf(creature)) > 0 ? null : "No valid melee targets."))
+                    .WithAdditionalRestriction(self => self.Battle != null && self.Battle.AllCreatures.Count(creature => self.DistanceTo(creature) <= distanceAllowed && creature != self && !self.FriendOf(creature)) > 0 ? null : "No valid melee targets."))
                     .WithActionCost(1).WithItem(ranged)
                     .WithEffectOnEachTarget(async (CombatAction action, Creature attacker, Creature defender, CheckResult result) =>
                     {
@@ -223,10 +225,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             createADiversion.Name = "Raconteur's Reload (Diversion)";
                             createADiversion.Illustration = new SideBySideIllustration(item.Illustration, createADiversion.Illustration);
                             createADiversion.Description = "Interact to reload and then attempt a Deception check to Create a Diversion.\n\n" + createADiversion.Description;
-                            createADiversion.WithEffectOnSelf(async innerSelf =>
-                            {
-                                FirearmUtilities.AwaitReloadItem(owner, item);
-                            });
 
                             if (createADiversion.Target != null && createADiversion.Target is MultipleCreatureTargetsTarget createADiversionTarget)
                             {
@@ -257,6 +255,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                     if (action.ActionId == GunslingerActionIDs.BlackPowderBoost && action.Item != null)
                     {
                         FirearmUtilities.DischargeItem(action.Item);
+                    }
+                };
+                self.YouBeginAction = async (QEffect reloadItem, CombatAction action) =>
+                {
+                    if (action.Name == "Raconteur's Reload (Diversion)" && action.Item != null)
+                    {
+                        FirearmUtilities.AwaitReloadItem(reloadItem.Owner, action.Item);
                     }
                 };
             });
@@ -500,7 +505,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                 }
 
                                 // Creates a shove action and updates it's properties to match Clear a Path
-                                CombatAction clearAPathAction = Possibilities.CreateShove(owner);
+                                CombatAction clearAPathAction = CombatManeuverPossibilities.CreateShoveAction(owner, item);
                                 clearAPathAction.Name = "Clear a Path";
                                 clearAPathAction.Item = item;
                                 clearAPathAction.ActionCost = 1;

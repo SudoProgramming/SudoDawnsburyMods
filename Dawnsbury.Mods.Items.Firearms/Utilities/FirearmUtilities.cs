@@ -63,7 +63,7 @@ namespace Dawnsbury.Mods.Items.Firearms.Utilities
         /// </summary>
         /// <param name="self">The creature weilding the item</param>
         /// <param name="item">The item being reloaded</param>
-        public static async void AwaitReloadItem(Creature self, Item item)
+        public static async Task AwaitReloadItem(Creature self, Item item)
         {
             if (item.HasTrait(FirearmTraits.DoubleBarrel))
             {

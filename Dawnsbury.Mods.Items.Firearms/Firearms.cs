@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Dawnsbury.Mods.Items.Firearms.Utilities;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
+using System.Threading.Tasks;
 
 namespace Dawnsbury.Mods.Items.Firearms
 {
@@ -861,7 +862,7 @@ namespace Dawnsbury.Mods.Items.Firearms
         /// </summary>
         /// <param name="self">The state check</param>
         /// <param name="action">The action just taken</param>
-        private async static void AddAfterActionCleanupLogic(QEffect self, CombatAction action)
+        private async static Task AddAfterActionCleanupLogic(QEffect self, CombatAction action)
         {
             // Collacts all the fatal aim items for cleanup and handles it
             string actionName = action.Name.ToLower();

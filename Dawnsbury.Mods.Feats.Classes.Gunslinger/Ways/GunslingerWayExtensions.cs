@@ -89,9 +89,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                     Creature owner = reloadingStrikeShotEffect.Owner;
                     Item? ranged = owner.HeldItems.FirstOrDefault(item => FirearmUtilities.IsItemFirearmOrCrossbow(item) && (!FirearmUtilities.IsItemLoaded(item) || FirearmUtilities.IsMultiAmmoWeaponReloadable(item)) && item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.TwoHanded));
                     Item? melee = owner.HeldItems.FirstOrDefault(item => item.HasTrait(Trait.Melee) && !item.HasTrait(Trait.TwoHanded));
-                    if (ranged == null || melee == null && !owner.HasFreeHand)
+                    if (ranged == null || (melee == null && !owner.HasFreeHand))
                     {
                         return null;
+                    }
+                    if (melee == null)
+                    {
+                        melee = owner.UnarmedStrike;
                     }
 
                     int distanceAllowed = (melee.HasTrait(Trait.Reach)) ? 2 : 1;

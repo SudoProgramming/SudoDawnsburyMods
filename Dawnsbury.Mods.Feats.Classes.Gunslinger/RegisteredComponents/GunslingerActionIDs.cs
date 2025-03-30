@@ -22,5 +22,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents
         /// The Black Powder Boost persistent Action ID
         /// </summary>
         public static readonly ActionId BlackPowderBoost = ModManager.RegisterEnumMember<ActionId>("Black Powder Boost AID");
+
+        /// <summary>
+        /// The Pistolero's Challenge persistent Action ID
+        /// </summary>
+        public static readonly ActionId PistolerosChallenge = ModManager.RegisterEnumMember<ActionId>("Pistolero's Challenge AID");
+
+        /// <summary>
+        /// The Scatter Blast persistent Action ID
+        /// </summary>
+        public static readonly ActionId ScatterBlast = ModManager.RegisterEnumMember<ActionId>("Scatter Blast AID");
     }
 }

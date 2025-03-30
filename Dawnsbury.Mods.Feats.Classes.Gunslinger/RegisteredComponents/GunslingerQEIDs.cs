@@ -47,5 +47,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents
         /// The Clear a Path persistent QEffect ID 
         /// </summary>
         public static readonly QEffectId ClearAPath = ModManager.RegisterEnumMember<QEffectId>("Clear a Path QEID");
+
+        /// <summary>
+        /// The Pistolero's Challenge persistent QEffect ID 
+        /// </summary>
+        public static readonly QEffectId PistolerosChallenge = ModManager.RegisterEnumMember<QEffectId>("Pistolero's Challenge QEID");
     }
 }

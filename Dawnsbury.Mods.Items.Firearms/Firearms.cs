@@ -162,6 +162,28 @@ namespace Dawnsbury.Mods.Items.Firearms
                     .WithWeaponProperties(new WeaponProperties("1d8", DamageKind.Slashing) { Sfx = FirearmSFXNames.LargeFirearm2 }
                         .WithRangeIncrement(6)));
 
+            // Bayonets
+            ModManager.RegisterNewItemIntoTheShop("Bayonet", itemName =>
+            {
+                Item bayonet = new Item(itemName, new ModdedIllustration("FirearmsAssets/Bayonet.png"), "Bayonet", 0, 1, Trait.Agile, Trait.Finesse, Trait.Simple, Trait.Knife, FirearmTraits.Bayonet);
+                return bayonet
+                    .WithRuneProperties(new RuneProperties("Bayonet", FirearmRuneKind.Bayonet, "An attachable blade for firearms and crossbows.", "This blade or spike can be attached to a crossbow or firearm, which will add an agile and finesse Knife that deals 1d4 slashing. This blade will use all runes from its attached weapon.", item =>
+                    {
+                        item.Traits.Add(FirearmTraits.Bayonet);
+                        item.Tag = bayonet;
+                        bayonet.Tag = item;
+                    })
+                        .WithCanBeAppliedTo((Item rune, Item weapon) =>
+                        {
+                            if (!weapon.HasTrait(FirearmTraits.Firearm) && !weapon.HasTrait(Trait.Crossbow))
+                            {
+                                return "Must be attached to a Firearm or Crossbow";
+                            }
+
+                            return null;
+                        }));
+            });
+
             // Other Items
             //  - Firearm Stabalizer
             ModManager.RegisterNewItemIntoTheShop("Firearm Stabalizer", itemName =>
@@ -244,6 +266,11 @@ namespace Dawnsbury.Mods.Items.Firearms
                             if (item.HasTrait(FirearmTraits.Misfired))
                             {
                                 AddMisfireLogic(self, item);
+                            }
+
+                            if (item.HasTrait(FirearmTraits.Bayonet))
+                            {
+                                AddBayonetLogic(self, item);
                             }
                         }
                     },
@@ -563,7 +590,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                 // Adds the penality to attack rolls depending on if you have a tripod setup, just a firearm stabalizer, enough strength, or nothing
                 BonusToAttackRolls = (QEffect self, CombatAction action, Creature? defender) =>
                 {
-                    if (self.Owner.Abilities.Strength < 2 && !self.Owner.QEffects.Any(qe => qe.Id == FirearmQEIDs.TripodSetup))
+                    if (action.Item != null && action.Item.HasTrait(FirearmTraits.Kickback) && !action.HasTrait(FirearmTraits.IgnoreKickbackPenalty) && self.Owner.Abilities.Strength < 2 && !self.Owner.QEffects.Any(qe => qe.Id == FirearmQEIDs.TripodSetup))
                     {
                         int penality = (self.Owner.HeldItems.Concat(self.Owner.CarriedItems).Count(item => item.Name == "Firearm Stabalizer") > 0) ? -1 : -2;
                         return new Bonus(penality, BonusType.Circumstance, "Kickback" + ((penality == -1) ? " (Stablized)" : ""));
@@ -574,7 +601,12 @@ namespace Dawnsbury.Mods.Items.Firearms
                 // Adds the bonus damage
                 BonusToDamage = (QEffect self, CombatAction action, Creature defender) =>
                 {
-                    return new Bonus(1, BonusType.Untyped, "Kickback");
+                    if (action.Item != null && action.Item.HasTrait(FirearmTraits.Kickback))
+                    {
+                        return new Bonus(1, BonusType.Untyped, "Kickback");
+                    }
+
+                    return null;
                 }
             });
         }
@@ -595,32 +627,35 @@ namespace Dawnsbury.Mods.Items.Firearms
                     // After a strike with the scatter item the targeted crature is looked at
                     AfterYouTakeAction = async (QEffect self, CombatAction action) =>
                     {
-                        List<string> specialActionsToIgnore = new List<string>() { "Reloading Strike", "Cover Fire", "Pistol Twirl", "Fake Out", "Hit the Dirt", "Risky Reload" };
-                        if (action.Item == item) // && !specialActionsToIgnore.Contains(action.Name)
+                        if (!action.HasTrait(FirearmTraits.IgnoreScatter))
                         {
-                            CheckResult lastAttackResult = action.CheckResult;
-                            if (lastAttackResult >= CheckResult.Success && action.HasTrait(Trait.Strike) && action.ChosenTargets != null && action.ChosenTargets.ChosenCreature != null && action.ChosenTargets.ChosenCreature != self.Owner && item.WeaponProperties != null)
+                            List<string> specialActionsToIgnore = new List<string>() { "Reloading Strike", "Cover Fire", "Pistol Twirl", "Fake Out", "Hit the Dirt", "Risky Reload" };
+                            if (action.Item == item) // && !specialActionsToIgnore.Contains(action.Name)
                             {
-                                Creature? targetCreature = action.ChosenTargets.ChosenCreature;
-                                if (targetCreature != null)
+                                CheckResult lastAttackResult = action.CheckResult;
+                                if (lastAttackResult >= CheckResult.Success && action.HasTrait(Trait.Strike) && action.ChosenTargets != null && action.ChosenTargets.ChosenCreature != null && action.ChosenTargets.ChosenCreature != self.Owner && item.WeaponProperties != null)
                                 {
-                                    // The best damage against the original target, the map, and tile with the targeted creature is saved for the next checks
-                                    List<DamageKind> damageOptions = item.DetermineDamageKinds();
-                                    DamageKind bestDamageToTarget = targetCreature.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(damageOptions);
-                                    Map map = targetCreature.Battle.Map;
-                                    Tile? tile = map.AllTiles.FirstOrDefault(tile => tile.PrimaryOccupant == targetCreature);
-
-
-                                    // Check tile is looped through to see how close it was to the target. If it was exactly 10 feet away the calculated splash damage is applied to any creatures
-                                    if (tile != null)
+                                    Creature? targetCreature = action.ChosenTargets.ChosenCreature;
+                                    if (targetCreature != null)
                                     {
-                                        Tile[] tilesToScatterTo = map.AllTiles.Where(tileToCheck => tile.DistanceTo(tileToCheck) <= 2).ToArray();
-                                        foreach (Tile tileToScatterTo in tilesToScatterTo)
+                                        // The best damage against the original target, the map, and tile with the targeted creature is saved for the next checks
+                                        List<DamageKind> damageOptions = item.DetermineDamageKinds();
+                                        DamageKind bestDamageToTarget = targetCreature.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(damageOptions);
+                                        Map map = targetCreature.Battle.Map;
+                                        Tile? tile = map.AllTiles.FirstOrDefault(tile => tile.PrimaryOccupant == targetCreature);
+
+
+                                        // Check tile is looped through to see how close it was to the target. If it was exactly 10 feet away the calculated splash damage is applied to any creatures
+                                        if (tile != null)
                                         {
-                                            Creature? potentalSplashTarget = tileToScatterTo.PrimaryOccupant;
-                                            if (potentalSplashTarget != null && potentalSplashTarget is Creature splashTarget && splashTarget != targetCreature)
+                                            Tile[] tilesToScatterTo = map.AllTiles.Where(tileToCheck => tile.DistanceTo(tileToCheck) <= 2).ToArray();
+                                            foreach (Tile tileToScatterTo in tilesToScatterTo)
                                             {
-                                                await CommonSpellEffects.DealDirectDamage(null, DiceFormula.FromText(item.WeaponProperties.DamageDieCount.ToString()), splashTarget, CheckResult.Success, bestDamageToTarget);
+                                                Creature? potentalSplashTarget = tileToScatterTo.PrimaryOccupant;
+                                                if (potentalSplashTarget != null && potentalSplashTarget is Creature splashTarget && splashTarget != targetCreature)
+                                                {
+                                                    await CommonSpellEffects.DealDirectDamage(null, DiceFormula.FromText(item.WeaponProperties.DamageDieCount.ToString()), splashTarget, CheckResult.Success, bestDamageToTarget);
+                                                }
                                             }
                                         }
                                     }
@@ -715,6 +750,84 @@ namespace Dawnsbury.Mods.Items.Firearms
                         return null;
                     }
                 });
+            }
+        }
+
+        /// <summary>
+        /// Adds the logic for all Bayonet firearms
+        /// </summary>
+        /// <param name="self">The state check</param>
+        /// <param name="item">The Bayonet trait item</param>
+        private static void AddBayonetLogic(QEffect self, Item item)
+        {
+            // Checks for only Firearm or Crossbow items
+            if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && item.HasTrait(FirearmTraits.Bayonet) && item.Tag is Item bayonet)
+            {
+                Creature owner = self.Owner;
+
+                if (owner.HeldItems.Contains(item))
+                {
+                    self.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
+                    {
+                        ProvideMainAction = (QEffect mainAction) =>
+                        {
+                            if (!bayonet.HasTrait(FirearmTraits.ItemUpdated))
+                            {
+                                bayonet.Traits.Add(FirearmTraits.ItemUpdated);
+                                bayonet.WithWeaponProperties(new WeaponProperties("1d4", DamageKind.Slashing));
+                                foreach (Item rune in item.Runes)
+                                {
+                                    if (rune.RuneProperties != null && rune.RuneProperties.RuneKind != FirearmRuneKind.Bayonet)
+                                    {
+                                        bayonet.WithModification(new ItemModification(ItemModificationKind.Rune)
+                                        {
+                                            ItemName = rune.ItemName
+                                        });
+                                    }
+                                }
+                            }
+                            List<Possibility> strikes =
+                            [
+                                ..owner.QEffects.Select(qf => {
+                                    var ca = qf.ProvideStrikeModifier?.Invoke(bayonet);
+                                    if (ca != null) {
+                                        ca.ContextMenuName = ca.Name + " (" + bayonet.Name + ")";
+                                    }
+
+                                    return ca;
+                                }).Where(ca => ca != null).Select(strike => new ActionPossibility(strike!))
+                            ];
+                            CombatAction mainStrike = owner.CreateStrike(bayonet);
+                            foreach (var qfStrikeModiers in owner.QEffects)
+                            {
+                                if (qfStrikeModiers.ProvideStrikeModifierAsPossibilities != null)
+                                {
+                                    strikes.AddRange(qfStrikeModiers.ProvideStrikeModifierAsPossibilities(qfStrikeModiers, bayonet));
+                                }
+                            }
+
+                            if (strikes.Count > 0)
+                            {
+                                return new SubmenuPossibility(mainStrike.Illustration, mainStrike.Name, PossibilitySize.Full)
+                                {
+                                    SpellIfAny = mainStrike,
+                                    Subsections =
+                                    {
+                                        new PossibilitySection(mainStrike.Name)
+                                        {
+                                            Possibilities = new ActionPossibility[] { mainStrike }.Concat(strikes).ToList()
+                                        }
+                                    }
+                                };
+                            }
+                            else
+                            {
+                                return new ActionPossibility(mainStrike, PossibilitySize.Full);
+                            }
+                        }
+                    });
+                }
+
             }
         }
 

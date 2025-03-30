@@ -90,6 +90,76 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents
         public static readonly FeatName RunningReload = ModManager.RegisterFeatName("Running Reload", "Running Reload");
 
         /// <summary>
+        /// The Drifter's Juke class feat name
+        /// </summary>
+        public static readonly FeatName DriftersJuke = ModManager.RegisterFeatName("Drifter's Juke", "Drifter's Juke");
+
+        /// <summary>
+        /// The Pistolero's Challenge class feat name
+        /// </summary>
+        public static readonly FeatName PistolerosChallenge = ModManager.RegisterFeatName("Pistolero's Challenge", "Pistolero's Challenge");
+
+        /// <summary>
+        /// The Sniper's Aim class feat name
+        /// </summary>
+        public static readonly FeatName SnipersAim = ModManager.RegisterFeatName("Sniper's Aim", "Sniper's Aim");
+
+        /// <summary>
+        /// The Phalanx Breaker class feat name
+        /// </summary>
+        public static readonly FeatName PhalanxBreaker = ModManager.RegisterFeatName("Phalanx Breaker", "Phalanx Breaker");
+
+        /// <summary>
+        /// The Advanced Shooter class feat name
+        /// </summary>
+        public static readonly FeatName AdvancedShooter = ModManager.RegisterFeatName("Advanced Shooter", "Advanced Shooter");
+
+        /// <summary>
+        /// The Advanced Shooter Firearm class feat name
+        /// </summary>
+        public static readonly FeatName AdvancedShooterFirearm = ModManager.RegisterFeatName("Advanced Shooter Firearm", "Advanced Shooter Firearm");
+
+        /// <summary>
+        /// The Advanced Shooter Crossbow class feat name
+        /// </summary>
+        public static readonly FeatName AdvancedShooterCrossbow = ModManager.RegisterFeatName("Advanced Shooter Crossbow", "Advanced Shooter Crossbow");
+
+        /// <summary>
+        /// The Cauterize class feat name
+        /// </summary>
+        public static readonly FeatName Cauterize = ModManager.RegisterFeatName("Cauterize", "Cauterize");
+
+        /// <summary>
+        /// The Scatter Blast class feat name
+        /// </summary>
+        public static readonly FeatName ScatterBlast = ModManager.RegisterFeatName("Scatter Blast", "Scatter Blast");
+
+        /// <summary>
+        /// The Stab And Blast class feat name
+        /// </summary>
+        public static readonly FeatName StabAndBlast = ModManager.RegisterFeatName("Stab And Blast", "Stab And Blast");
+
+        /// <summary>
+        /// The Smoke Curtain class feat name
+        /// </summary>
+        public static readonly FeatName SmokeCurtain = ModManager.RegisterFeatName("Smoke Curtain", "Smoke Curtain");
+
+        /// <summary>
+        /// The Leap and Fire class feat name
+        /// </summary>
+        public static readonly FeatName LeapAndFire = ModManager.RegisterFeatName("Leap And Fire", "Leap And Fire");
+
+        /// <summary>
+        /// The Grit and Tenacity class feat name
+        /// </summary>
+        public static readonly FeatName GritAndTenacity = ModManager.RegisterFeatName("Grit And Tenacity", "Grit And Tenacity");
+
+        /// <summary>
+        /// The Bullet Split class feat name
+        /// </summary>
+        public static readonly FeatName BulletSplit = ModManager.RegisterFeatName("Bullet Split", "Bullet Split");
+
+        /// <summary>
         /// The Way of the Drifter Subclass Feat Name
         /// </summary>
         public static readonly FeatName WayOfTheDrifter = ModManager.RegisterFeatName("Way of the Drifter", "Way of the Drifter");

@@ -5,10 +5,11 @@ namespace Dawnsbury.Mods.Items.Firearms.RegisteredComponents
 {
     public static class FirearmTraits
     {
-        /// <summary>
-        /// Adds the weapon group trait of Firearm
-        /// </summary>
-        public static readonly Trait Firearm = ModManager.RegisterTrait("Firearm", new TraitProperties("Firearm", true, relevantForShortBlock: true));
+        ///// <summary>
+        ///// Adds the weapon group trait of Firearm
+        ///// NOW IN THE BASE GAME
+        ///// </summary>
+        //public static readonly Trait Firearm = ModManager.RegisterTrait("Firearm", new TraitProperties("Firearm", true, relevantForShortBlock: true));
 
         /// <summary>
         /// Adds the technical trait for simple firearms used for proficiency
@@ -86,6 +87,26 @@ namespace Dawnsbury.Mods.Items.Firearms.RegisteredComponents
         /// Adds the Scatter 10 trait for firearms
         /// </summary>
         public static readonly Trait Misfired = ModManager.RegisterTrait("Misfired", new TraitProperties("Misfired", true, "This firearm was misfired and is now jammed. You must use an Interact action to clear the jam before you can reload the weapon and fire again.", relevantForShortBlock: true));
+
+        /// <summary>
+        /// Adds the Ignore Kickback Penalty trait for actions
+        /// </summary>
+        public static readonly Trait IgnoreKickbackPenalty = ModManager.RegisterTrait("IgnoreKickbackPenalty", new TraitProperties("IgnoreKickbackPenalty", false));
+
+        /// <summary>
+        /// Adds the Ignore Scatter trait for actions
+        /// </summary>
+        public static readonly Trait IgnoreScatter = ModManager.RegisterTrait("IgnoreScatter", new TraitProperties("IgnoreScatter", false));
+
+        /// <summary>
+        /// Adds the Bayonet trait for actions
+        /// </summary>
+        public static readonly Trait Bayonet = ModManager.RegisterTrait("Bayonet", new TraitProperties("Bayonet", false));
+
+        /// <summary>
+        /// Adds the Item Updated trait for actions
+        /// </summary>
+        public static readonly Trait ItemUpdated = ModManager.RegisterTrait("ItemUpdated", new TraitProperties("ItemUpdated", false));
 
         // HACK: Repeating is hard coded to 5 round magazines, so right now the magazine will just be left to 5
         //public static readonly Trait Magazine6 = ModManager.RegisterTrait("Magazine6", new TraitProperties("Magazine", true, "This repeating weapon has a magazine capacity of 6 instead of 5.", relevantForShortBlock: true));

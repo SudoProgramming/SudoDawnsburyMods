@@ -170,7 +170,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
             // Adds a permanent effect to add a +1 circumstance bonus to poison effect and bump successes to critical successes
             sewerRat.WithPermanentQEffect("+1 Circumstance bonus to poison effects", delegate (QEffect self)
             {
-                self.AdjustSavingThrowResult = (QEffect effectBonus, CombatAction action, CheckResult result) =>
+                self.AdjustSavingThrowCheckResult = (QEffect effectBonus, Defense defense, CombatAction action, CheckResult result) =>
                 {
                     if (action != null && action.HasTrait(Trait.Poison))
                     {

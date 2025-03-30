@@ -5,10 +5,11 @@ namespace Dawnsbury.Mods.Items.Firearms.RegisteredComponents
 {
     public static class FirearmTraits
     {
-        /// <summary>
-        /// Adds the weapon group trait of Firearm
-        /// </summary>
-        public static readonly Trait Firearm = ModManager.RegisterTrait("Firearm", new TraitProperties("Firearm", true, relevantForShortBlock: true));
+        ///// <summary>
+        ///// Adds the weapon group trait of Firearm
+        ///// NOW IN THE BASE GAME
+        ///// </summary>
+        //public static readonly Trait Firearm = ModManager.RegisterTrait("Firearm", new TraitProperties("Firearm", true, relevantForShortBlock: true));
 
         /// <summary>
         /// Adds the technical trait for simple firearms used for proficiency

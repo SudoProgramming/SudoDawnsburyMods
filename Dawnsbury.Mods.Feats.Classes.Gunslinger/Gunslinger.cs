@@ -144,6 +144,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 })
                 .WithOnCreature((creature) =>
                 {
+                    if (creature.Level >= 5)
+                    {
+                        creature.AddQEffect(new QEffect("Weapon Mastery", "Your firearm and crossbow attacks trigger {tooltip:criteffect}critical specialization effects{/}.")
+                        {
+                            YouHaveCriticalSpecialization = (QEffect specialization, Item item, CombatAction action, Creature defender) =>
+                            {
+                                return item.HasTrait(Trait.Firearm) || item.HasTrait(Trait.Crossbow);
+                            }
+                        });
+                    }
                     if (creature.Level >= 7)
                     {
                         creature.AddQEffect(QEffect.WeaponSpecialization());
@@ -328,7 +338,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.BonusToDamage = (QEffect self, CombatAction action, Creature defender) =>
                 {
-                    if (action.HasTrait(FirearmTraits.Firearm) || action.HasTrait(Trait.Crossbow) || (action.Item != null && action.Item.WeaponProperties != null && FirearmUtilities.IsItemFirearmOrCrossbow(action.Item)))
+                    if (action.HasTrait(Trait.Firearm) || action.HasTrait(Trait.Crossbow) || (action.Item != null && action.Item.WeaponProperties != null && FirearmUtilities.IsItemFirearmOrCrossbow(action.Item)))
                     {
                         return new Bonus(1, BonusType.Circumstance, "Singular Expertise");
                     }
@@ -482,7 +492,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
-                    if (item.HasTrait(FirearmTraits.Firearm) && FirearmUtilities.IsItemLoaded(item) && item.WeaponProperties != null)
+                    if (item.HasTrait(Trait.Firearm) && FirearmUtilities.IsItemLoaded(item) && item.WeaponProperties != null)
                     {
                         // Creates a demoarlize action that has the effect for Intimidating glare
                         CombatAction warningShotAction = CommonCombatActions.Demoralize(self.Owner);
@@ -550,7 +560,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                 {
                                     replacementSfx = (firstHeldItem.WeaponProperties.Sfx == SfxName.Bow) ? SfxName.Fist : SfxName.Bow;
                                 }
-                                else if (secondHeldItem.HasTrait(FirearmTraits.Firearm))
+                                else if (secondHeldItem.HasTrait(Trait.Firearm))
                                 {
                                     replacementSfx = (firstHeldItem.WeaponProperties.Sfx == FirearmSFXNames.SmallFirearm1) ? FirearmSFXNames.SmallFirearm2 : FirearmSFXNames.SmallFirearm1;
                                 }
@@ -659,7 +669,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         Creature owner = blackPowderBoostEffect.Owner;
                         SubmenuPossibility blackPowderBoostMenu = new SubmenuPossibility(IllustrationName.Jump, "Black Powder Boost");
 
-                        foreach (Item firearm in owner.HeldItems.Where(item => item.HasTrait(FirearmTraits.Firearm)))
+                        foreach (Item firearm in owner.HeldItems.Where(item => item.HasTrait(Trait.Firearm)))
                         {
                             // Creates a Black Powder Boost button and calculates the standard leap distance
                             PossibilitySection firearmBlackPowderBoostSection = new PossibilitySection(firearm.Name);
@@ -1061,7 +1071,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 self.BeforeYourActiveRoll = async (QEffect addingEffects, CombatAction action, Creature defender) =>
                 {
                     // If you attack within your melee range with a ranged Firearm or Crossbow, you gain a Melee buff 
-                    if (action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(FirearmTraits.Firearm) || action.HasTrait(Trait.Crossbow)) && addingEffects.Owner.DistanceTo(defender) == 1 && !addingEffects.Owner.QEffects.Any(qe => qe.Id == GunslingerQEIDs.SwordAndPistolMeleeBuff && qe.Tag != null && qe.Tag == defender))
+                    if (action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(Trait.Firearm) || action.HasTrait(Trait.Crossbow)) && addingEffects.Owner.DistanceTo(defender) == 1 && !addingEffects.Owner.QEffects.Any(qe => qe.Id == GunslingerQEIDs.SwordAndPistolMeleeBuff && qe.Tag != null && qe.Tag == defender))
                     {
                         addingEffects.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
                         {
@@ -1096,7 +1106,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                 {
                                     foreach (Item item in addingEffects.Owner.HeldItems.Concat(addingEffects.Owner.CarriedItems))
                                     {
-                                        if (!item.HasTrait(Trait.DoesNotProvoke) && item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.TwoHanded) && (item.HasTrait(FirearmTraits.Firearm) || item.HasTrait(Trait.Crossbow)))
+                                        if (!item.HasTrait(Trait.DoesNotProvoke) && item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.TwoHanded) && (item.HasTrait(Trait.Firearm) || item.HasTrait(Trait.Crossbow)))
                                         {
                                             item.Traits.Add(GunslingerTraits.TemporaryDoesNotProvoke);
                                             item.Traits.Add(Trait.DoesNotProvoke);
@@ -1117,7 +1127,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             // After a valid attack is done the effects should be removed
                             BeforeYourActiveRoll = async (QEffect rollEffect, CombatAction action, Creature attackedCreature) =>
                             {
-                                if (action.HasTrait(Trait.Strike) && action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(FirearmTraits.Firearm) || action.HasTrait(Trait.Crossbow)) && defender == attackedCreature)
+                                if (action.HasTrait(Trait.Strike) && action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(Trait.Firearm) || action.HasTrait(Trait.Crossbow)) && defender == attackedCreature)
                                 {
                                     foreach (Item item in addingEffects.Owner.HeldItems.Concat(addingEffects.Owner.CarriedItems))
                                     {
@@ -1899,7 +1909,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
-                    if (item.HasTrait(FirearmTraits.Firearm))
+                    if (item.HasTrait(Trait.Firearm))
                     {
                         bool IsAnAllyAdjacentAndBleeding(Creature self, Creature ally)
                         {
@@ -1986,7 +1996,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
-                    if (item.HasTrait(FirearmTraits.Firearm) && item.WeaponProperties != null && (item.HasTrait(FirearmTraits.Scatter5) || item.HasTrait(FirearmTraits.Scatter10)))
+                    if (item.HasTrait(Trait.Firearm) && item.WeaponProperties != null && (item.HasTrait(FirearmTraits.Scatter5) || item.HasTrait(FirearmTraits.Scatter10)))
                     {
                         Creature owner = self.Owner;
                         Item dupItem = item.Duplicate();
@@ -1997,7 +2007,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         scatterBlastAction.WithActionCost(2);
                         scatterBlastAction.Illustration = new SideBySideIllustration(item.Illustration, IllustrationName.GenericCombatManeuver);
                         scatterBlastAction.Item = item;
-                        scatterBlastAction.Description = StrikeRules.CreateBasicStrikeDescription3(scatterBlastAction.StrikeModifiers, prologueText: "The firearm's range increment increases by 20 feet and the radius of its scatter increases by 20 feet.", additionalFailureText: "The firearm misfires, and on a {b}Critical Failure{/b} The item breaks and is not useable for the remainder of this combat. It also deals its normal weapon damage to all creatures in a 20-foot burst centered on the firearm, with a basic Reflex save against your class DC. This damage includes any from the weapon's fundamental and property runes.");
+                        scatterBlastAction.Description = StrikeRules.CreateBasicStrikeDescription4(scatterBlastAction.StrikeModifiers, prologueText: "The firearm's range increment increases by 20 feet and the radius of its scatter increases by 20 feet.", additionalFailureText: "The firearm misfires", additionalCriticalFailureText: "The item breaks and is not useable for the remainder of this combat. It also deals its normal weapon damage to all creatures in a 20-foot burst centered on the firearm, with a basic Reflex save against your class DC. This damage includes any from the weapon's fundamental and property runes.");
                         scatterBlastAction.StrikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>
                         {
                             CombatAction CreateScatterExplosion(Creature source, int addedScatterRange)
@@ -2041,9 +2051,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     await CommonSpellEffects.DealBasicDamage(scatterExplosion, attacker, defender, result, DiceFormula.FromText(item.WeaponProperties.Damage), item.DetermineDamageKinds()[0]);
                                 });
                                 EmanationTarget emanationTarget = (EmanationTarget)explosion.Target;
-                                // HACK: This is using reflection but should be updated to remove it when made public
-                                AreaSelection areaSelection = (AreaSelection)typeof(ModManager).Assembly.GetType("Dawnsbury.Core.Mechanics.Targeting.Areas").GetMethod("DetermineTiles", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, new Type[] {typeof(EmanationTarget) }).Invoke(null, [emanationTarget]);
-                                //AreaSelection areaSelection = Areas.DetermineTiles(emanationTarget);
+                                AreaSelection areaSelection = Areas.DetermineTiles(emanationTarget);
                                 explosion.ChosenTargets.SetFromArea(emanationTarget, areaSelection?.TargetedTiles ?? new HashSet<Tile>());
                                 await explosion.AllExecute();
                             }
@@ -2140,7 +2148,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
-                    if (item.HasTrait(FirearmTraits.Firearm))
+                    if (item.HasTrait(Trait.Firearm))
                     {
                         Creature owner = self.Owner;
                         CombatAction scatterBlastAction = owner.CreateStrike(item);
@@ -2148,7 +2156,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         scatterBlastAction.WithActionCost(2);
                         scatterBlastAction.Illustration = new SideBySideIllustration(item.Illustration, IllustrationName.GenericCombatManeuver);
                         scatterBlastAction.Item = item;
-                        scatterBlastAction.Description = StrikeRules.CreateBasicStrikeDescription3(scatterBlastAction.StrikeModifiers, prologueText: "Create a cloud of smoke in a 20-foot emanation centered on your location. Creatures are concealed while within the smoke. The smoke dissipates at the start of your next turn.", additionalFailureText: "{b}Critical Failure{/b} The firearm misfires");
+                        scatterBlastAction.Description = StrikeRules.CreateBasicStrikeDescription4(scatterBlastAction.StrikeModifiers, prologueText: "Create a cloud of smoke in a 20-foot emanation centered on your location. Creatures are concealed while within the smoke. The smoke dissipates at the start of your next turn.", additionalCriticalFailureText: "The firearm misfires");
                         scatterBlastAction.StrikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>
                         {
                             Tile origin = attacker.Occupies;

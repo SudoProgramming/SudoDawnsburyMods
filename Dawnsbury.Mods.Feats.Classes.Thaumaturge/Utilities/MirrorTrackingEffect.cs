@@ -172,7 +172,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             };
 
             // Handles the effect expiring at the start of turn
-            StartOfYourTurn = async (QEffect startOfTurn, Creature self) =>
+            StartOfYourPrimaryTurn = async (QEffect startOfTurn, Creature self) =>
             {
                 if (!(self is MirrorClone))
                 {

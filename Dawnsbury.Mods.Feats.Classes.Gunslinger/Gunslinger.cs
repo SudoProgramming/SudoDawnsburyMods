@@ -44,6 +44,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
     /// <summary>
     /// The Gunslinger class
+    /// TODO WHERE PR MERGED:
+    /// - Remove Reflection
+    /// - Use StrikeModifers4
+    /// - Use Trait.Firearm
     /// </summary>
     public static class Gunslinger
     {

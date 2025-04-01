@@ -611,7 +611,6 @@ namespace Dawnsbury.Mods.Items.Firearms
                 }
             });
         }
-
         /// <summary>
         /// Adds the logic for all Scatter firearms
         /// </summary>
@@ -619,46 +618,33 @@ namespace Dawnsbury.Mods.Items.Firearms
         /// <param name="item">The Scatter trait item</param>
         private static void AddScatterLogic(QEffect self, Item item)
         {
-            // Adds a QEffect that will track all the logic for the Scatter trait
+            Creature owner = self.Owner;
             if (item.WeaponProperties != null)
             {
-                // The result of any scatter attack will be 
-                self.Owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
+                owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
                 {
-                    // After a strike with the scatter item the targeted crature is looked at
                     AfterYouTakeAction = async (QEffect self, CombatAction action) =>
                     {
-                        if (!action.HasTrait(FirearmTraits.IgnoreScatter))
+                        if (!action.HasTrait(FirearmTraits.IgnoreScatter) && action.Item != null && action.Item == item && action.HasTrait(Trait.Strike) && action.ChosenTargets != null && action.ChosenTargets.ChosenCreature != null && action.ChosenTargets.ChosenCreature != self.Owner && item.WeaponProperties != null)
                         {
-                            List<string> specialActionsToIgnore = new List<string>() { "Reloading Strike", "Cover Fire", "Pistol Twirl", "Fake Out", "Hit the Dirt", "Risky Reload" };
-                            if (action.Item == item) // && !specialActionsToIgnore.Contains(action.Name)
+                            Creature target = action.ChosenTargets.ChosenCreature;
+                            // The best damage against the original target, the map, and tile with the targeted creature is saved for the next checks
+                            List<DamageKind> damageOptions = item.DetermineDamageKinds();
+                            DamageKind bestDamageToTarget = target.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(damageOptions);
+                            Map map = target.Battle.Map;
+                            Tile? tile = map.AllTiles.FirstOrDefault(tile => tile.PrimaryOccupant == target);
+
+                            // Check tile is looped through to see how close it was to the target. If it was exactly 10 feet away the calculated splash damage is applied to any creatures
+                            if (tile != null)
                             {
-                                CheckResult lastAttackResult = action.CheckResult;
-                                if (lastAttackResult >= CheckResult.Success && action.HasTrait(Trait.Strike) && action.ChosenTargets != null && action.ChosenTargets.ChosenCreature != null && action.ChosenTargets.ChosenCreature != self.Owner && item.WeaponProperties != null)
+                                int distance = (item.HasTrait(FirearmTraits.Scatter10)) ? 2 : 1;
+                                Tile[] tilesToScatterTo = map.AllTiles.Where(tileToCheck => tile.DistanceTo(tileToCheck) <= distance).ToArray();
+                                foreach (Tile tileToScatterTo in tilesToScatterTo)
                                 {
-                                    Creature? targetCreature = action.ChosenTargets.ChosenCreature;
-                                    if (targetCreature != null)
+                                    Creature? potentalSplashTarget = tileToScatterTo.PrimaryOccupant;
+                                    if (potentalSplashTarget != null && potentalSplashTarget is Creature splashTarget && splashTarget != target)
                                     {
-                                        // The best damage against the original target, the map, and tile with the targeted creature is saved for the next checks
-                                        List<DamageKind> damageOptions = item.DetermineDamageKinds();
-                                        DamageKind bestDamageToTarget = targetCreature.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(damageOptions);
-                                        Map map = targetCreature.Battle.Map;
-                                        Tile? tile = map.AllTiles.FirstOrDefault(tile => tile.PrimaryOccupant == targetCreature);
-
-
-                                        // Check tile is looped through to see how close it was to the target. If it was exactly 10 feet away the calculated splash damage is applied to any creatures
-                                        if (tile != null)
-                                        {
-                                            Tile[] tilesToScatterTo = map.AllTiles.Where(tileToCheck => tile.DistanceTo(tileToCheck) <= 2).ToArray();
-                                            foreach (Tile tileToScatterTo in tilesToScatterTo)
-                                            {
-                                                Creature? potentalSplashTarget = tileToScatterTo.PrimaryOccupant;
-                                                if (potentalSplashTarget != null && potentalSplashTarget is Creature splashTarget && splashTarget != targetCreature)
-                                                {
-                                                    await CommonSpellEffects.DealDirectDamage(null, DiceFormula.FromText(item.WeaponProperties.DamageDieCount.ToString()), splashTarget, CheckResult.Success, bestDamageToTarget);
-                                                }
-                                            }
-                                        }
+                                        await CommonSpellEffects.DealDirectDamage(CombatAction.CreateSimple(owner, "Scatter"), DiceFormula.FromText(item.WeaponProperties.DamageDieCount.ToString()), splashTarget, CheckResult.Success, bestDamageToTarget);
                                     }
                                 }
                             }

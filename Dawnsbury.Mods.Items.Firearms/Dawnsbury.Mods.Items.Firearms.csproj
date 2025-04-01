@@ -106,11 +106,11 @@
 	  </Content>
 	</ItemGroup>
 	<ItemGroup>
-		<Reference Include="G:\SteamLibrary\steamapps\common\Dawnsbury Days\Data\Dawnsbury Days.dll" />
-		<Reference Include="G:\SteamLibrary\steamapps\common\Dawnsbury Days\Data\Common.dll" />
-		<Reference Include="G:\SteamLibrary\steamapps\common\Dawnsbury Days\Data\MonoGame.Framework.dll" />
+		<Reference Include="C:\Program Files (x86)\Steam\steamapps\common\Dawnsbury Days\Data\Dawnsbury Days.dll" />
+		<Reference Include="C:\Program Files (x86)\Steam\steamapps\common\Dawnsbury Days\Data\Common.dll" />
+		<Reference Include="C:\Program Files (x86)\Steam\steamapps\common\Dawnsbury Days\Data\MonoGame.Framework.dll" />
 	</ItemGroup>
 	<Target Name="CopyToGameModsFolder" AfterTargets="Build">
-		<Copy SourceFiles="$(TargetPath)" DestinationFolder="G:\SteamLibrary\steamapps\common\Dawnsbury Days\CustomMods" />
+		<Copy SourceFiles="$(TargetPath)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Dawnsbury Days\CustomMods" />
 	</Target>
 </Project>

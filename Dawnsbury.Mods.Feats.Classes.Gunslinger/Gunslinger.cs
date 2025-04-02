@@ -561,11 +561,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             //    {
                             //        replacementSfx = (firstHeldItem.WeaponProperties.Sfx == SfxName.Bow) ? SfxName.Fist : SfxName.Bow;
                             //    }
-<<<<<<< HEAD
-                            //    else if (secondHeldItem.HasTrait(FirearmTraits.Firearm))
-=======
                             //    else if (secondHeldItem.HasTrait(Trait.Firearm))
->>>>>>> main
                             //    {
                             //        replacementSfx = (firstHeldItem.WeaponProperties.Sfx == FirearmSFXNames.SmallFirearm1) ? FirearmSFXNames.SmallFirearm2 : FirearmSFXNames.SmallFirearm1;
                             //    }

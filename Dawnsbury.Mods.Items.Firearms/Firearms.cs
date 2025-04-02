@@ -285,7 +285,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                     // Adds cleanup logic for pick up and drawing items
                     AfterYouTakeAction = async (QEffect self, CombatAction action) =>
                     {
-                        AddAfterActionCleanupLogic(self, action);
+                        await AddAfterActionCleanupLogic(self, action);
                     },
 
                     // Adds cleanup logic for entering dying

@@ -140,7 +140,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                         }
 
                         // Reload item
-                        FirearmUtilities.AwaitReloadItem(attacker, ranged);
+                        await FirearmUtilities.AwaitReloadItem(attacker, ranged);
                     }));
                 };
             });
@@ -158,8 +158,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
             {
                 self.StartOfCombat = async (startOfCombat) =>
                 {
+                    if (startOfCombat.Owner.HasEffect(QEffectId.Prone) && await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Crawl as a free action?", "Yes"))
+                    {
+                        await startOfCombat.Owner.StepAsync("Choose where to crawl.", true, true);
+                    }
+
                     // Prompts for reaction, then has the user select a tile closer to the enemy then strides towards it.
-                    if (await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Stride as a free action towards a creature?", "Yes"))
+                    else if (await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Stride as a free action towards a creature?", "Yes"))
                     {
                         Tile? tileToStrideTo = await GetTileCloserToEnemy(startOfCombat.Owner, "Stride towards the selected enemy or right-click to cancel.");
                         if (tileToStrideTo != null)
@@ -205,7 +210,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             demoralizeAction.Description = "Interact to reload and then attempt an Intimidation check to Demoralize.\n\n" + demoralizeAction.Description;
                             demoralizeAction.WithEffectOnSelf(async innerSelf =>
                             {
-                                FirearmUtilities.AwaitReloadItem(owner, item);
+                                await FirearmUtilities.AwaitReloadItem(owner, item);
                             });
 
                             // Checks if the item needs to be reloaded
@@ -265,7 +270,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                 {
                     if (action.Name == "Raconteur's Reload (Diversion)" && action.Item != null)
                     {
-                        FirearmUtilities.AwaitReloadItem(reloadItem.Owner, action.Item);
+                        await FirearmUtilities.AwaitReloadItem(reloadItem.Owner, action.Item);
                     }
                 };
             });
@@ -331,9 +336,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             bool canTakeCover = !self.HasEffect(QEffectId.TakingCover);
 
                             CombatAction takeCoverAction = CommonCombatActions.TakeCover(self);
-                            takeCoverAction.WithEffectOnSelf((self) =>
+                            takeCoverAction.WithEffectOnSelf(async (self) =>
                             {
-                                FirearmUtilities.AwaitReloadItem(self, item);
+                                await FirearmUtilities.AwaitReloadItem(self, item);
                             });
 
                             takeCoverAction.ActionCost = 1;
@@ -360,7 +365,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             CombatAction hideAction = CommonCombatActions.CreateHide(self);
                             hideAction.WithEffectOnEachTarget(async (CombatAction action, Creature attacker, Creature defender, CheckResult result) =>
                             {
-                                FirearmUtilities.AwaitReloadItem(self, item);
+                                await FirearmUtilities.AwaitReloadItem(self, item);
                             });
 
                             hideAction.ActionCost = 1;
@@ -540,9 +545,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                         return null;
                                     }
                                 };
-                                clearAPathAction.WithEffectOnSelf((self) =>
+                                clearAPathAction.WithEffectOnSelf(async (self) =>
                                 {
-                                    FirearmUtilities.AwaitReloadItem(self, item);
+                                    await FirearmUtilities.AwaitReloadItem(self, item);
                                 });
 
                                 return new ActionPossibility(clearAPathAction);

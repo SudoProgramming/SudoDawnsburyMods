@@ -303,7 +303,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
             // Creates and adds the logic for the Grit And Tenacity class feat
             TrueFeat gritAndTenacity = new TrueFeat(GunslingerFeatNames.GritAndTenacity, 8, "You call upon deep reserves of toughness and mental fortitude to power through an otherwise debilitating effect.", "{b}Trigger{/b} You fail a Fortitude or Will save.\n{b}Frequency{/b} once per combat\n\nReroll the triggering save with a +2 circumstance bonus; you must use the second result.", [Trait.Fortune, GunslingerTraits.Gunslinger]);
-            gritAndTenacity.WithActionCost(-1);
+            gritAndTenacity.WithActionCost(-2);
             AddGritAndTenacityLogic(gritAndTenacity);
             yield return gritAndTenacity;
 
@@ -474,7 +474,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         coverFireAction.WithTargetingTooltip((action, defender, index) => action.Description);
 
                         return coverFireAction;
-                    };
+                    }
+                    ;
 
                     return null;
                 };
@@ -1041,7 +1042,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     }
                                     else
                                     {
-                                        FirearmUtilities.AwaitReloadItem(self, heldItem);
+                                        await FirearmUtilities.AwaitReloadItem(self, heldItem);
                                     }
                                 });
                                 ActionPossibility itemPossibility = new ActionPossibility(itemAction);
@@ -1160,7 +1161,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && FirearmUtilities.IsItemLoaded(item) && !item.HasTrait(Trait.TwoHanded) && item.WeaponProperties != null)
                     {
                         // Creates the action and handles the success results of the actions
-                        CombatAction pistolTwirlAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.Feint), "Pistol Twirl", [], pistolTwirlFeat.RulesText, Target.Ranged(item.WeaponProperties.RangeIncrement)).WithActionCost(1).WithItem(item)
+                        CombatAction pistolTwirlAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.Feint), "Pistol Twirl", [Trait.Basic], pistolTwirlFeat.RulesText, Target.Ranged(item.WeaponProperties.RangeIncrement)).WithActionCost(1).WithItem(item)
                         .WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Deception), Checks.DefenseDC(Defense.Perception)))
                         .WithEffectOnEachTarget(async delegate (CombatAction pistolTwirl, Creature attacker, Creature defender, CheckResult result)
                         {
@@ -1613,7 +1614,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     // Returns the main action
                     return new ActionPossibility(new CombatAction(driftersJukeEffect.Owner, new SideBySideIllustration(firearm.Illustration, otherWeapon.Illustration), "Drifter's Juke", [Trait.Flourish], "{b}Requirements{/b} You're wielding a firearm or crossbow in one hand, and your other hand is either wielding a melee weapon or is empty.\n\nYou may Step, make a Strike, Step, and make another Strike (Each is opptional). One Strike must be a ranged Strike using your firearm or crossbow, and the other must be a melee Strike using your melee weapon or unarmed attack.", Target.Self())
                         .WithActionCost(2)
-                        .WithEffectOnSelf(async (Creature innerSelf) =>
+                        .WithEffectOnSelf(async (CombatAction action, Creature innerSelf) =>
                         {
                             // A helper method to handle the strikes and steps
                             async Task HandleStrikes(Item weapon)
@@ -1645,19 +1646,26 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             }
 
                             // Steps then, Strikes with a choice, then Step then strike with the remianing choice
-                            await innerSelf.StrideAsync("Choose where to step.", allowStep: true, maximumFiveFeet: true, allowPass: true, allowCancel: true);
-                            ChoiceButtonOption choice = await innerSelf.AskForChoiceAmongButtons(IllustrationName.QuestionMark, "Choose which Strike to use first.", firearm.BaseItemName.HumanizeTitleCase2(), otherWeapon.BaseItemName.HumanizeTitleCase2(), "Pass");
-                            Item remainingWeapon = firearm;
-                            if (choice.Index != 2)
+                            bool didMove = await innerSelf.StrideAsync("Choose where to step.", allowStep: true, maximumFiveFeet: true, allowPass: true, allowCancel: true);
+                            if (didMove)
                             {
-                                Item weapon = (choice.Index == 0) ? firearm : otherWeapon;
-                                remainingWeapon = (choice.Index == 0) ? otherWeapon : firearm;
-                                await HandleStrikes(weapon);
+                                ChoiceButtonOption choice = await innerSelf.AskForChoiceAmongButtons(IllustrationName.QuestionMark, "Choose which Strike to use first.", firearm.BaseItemName.HumanizeTitleCase2(), otherWeapon.BaseItemName.HumanizeTitleCase2(), "Pass");
+                                Item remainingWeapon = firearm;
+                                if (choice.Index != 2)
+                                {
+                                    Item weapon = (choice.Index == 0) ? firearm : otherWeapon;
+                                    remainingWeapon = (choice.Index == 0) ? otherWeapon : firearm;
+                                    await HandleStrikes(weapon);
+                                }
+                                await innerSelf.StrideAsync("Choose where to step.", allowStep: true, maximumFiveFeet: true, allowPass: true, allowCancel: false);
+                                if (await innerSelf.AskForConfirmation(remainingWeapon.Illustration, "Make a strike?", "Yes"))
+                                {
+                                    await HandleStrikes(remainingWeapon);
+                                }
                             }
-                            await innerSelf.StrideAsync("Choose where to step.", allowStep: true, maximumFiveFeet: true, allowPass: true, allowCancel: false);
-                            if (await innerSelf.AskForConfirmation(remainingWeapon.Illustration, "Make a strike?", "Yes"))
+                            else
                             {
-                                await HandleStrikes(remainingWeapon);
+                                action.RevertRequested = true;
                             }
                         }));
                 };

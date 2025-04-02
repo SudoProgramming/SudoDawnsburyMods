@@ -1,5 +1,6 @@
 ﻿using Dawnsbury.Audio;
 using Dawnsbury.Auxiliary;
+using Dawnsbury.Campaign.Encounters;
 using Dawnsbury.Core;
 using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.CharacterBuilder.AbilityScores;
@@ -22,6 +23,7 @@ using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Core.Possibilities;
 using Dawnsbury.Core.Roller;
 using Dawnsbury.Core.Tiles;
+using Dawnsbury.Display;
 using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Modding;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.Enums;
@@ -31,14 +33,21 @@ using Dawnsbury.Mods.Items.Firearms.RegisteredComponents;
 using Dawnsbury.Mods.Items.Firearms.Utilities;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Threading.Tasks;
+using static Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb.BarbarianFeatsDb.AnimalInstinctFeat;
 using static Dawnsbury.Core.Mechanics.Core.CalculatedNumber;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 {
     /// <summary>
     /// The Gunslinger class
+    /// TODO WHERE PR MERGED:
+    /// - Remove Reflection
+    /// - Use StrikeModifers4
+    /// - Use Trait.Firearm
     /// </summary>
     public static class Gunslinger
     {
@@ -72,6 +81,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             // An additional character sheet selection for Perception being rolled for initative
             yield return new Feat(GunslingerFeatNames.GunslingerSniperPerceptionInitiative, "You stay alert and ready for a fight.", "You will roll perception as initiative as normal, and will gain no other benefits from One Shot, One Kill.", [], null);
 
+            yield return new Feat(GunslingerFeatNames.AdvancedShooterFirearm, "You've dedicated your training to the most complex and weird firearms.", "You are a Master in advanced firearms", [], null)
+                .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
+                {
+                    sheet.SetProficiency(FirearmTraits.AdvancedFirearm, Proficiency.Master);
+                });
+
+            yield return new Feat(GunslingerFeatNames.AdvancedShooterCrossbow, "You've dedicated your training to the most complex and weird crossbow.", "You are a Master in advanced crossbow", [], null)
+                .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
+                {
+                    sheet.SetProficiency(FirearmTraits.AdvancedCrossbow, Proficiency.Master);
+                });
+
             // Creates and adds the logic for the Singular Expertise class feature
             Feat singularExpertiseFeat = new Feat(GunslingerFeatNames.SingularExpertise, "You have particular expertise with guns and crossbows that grants you greater proficiency with them and the ability to deal more damage.", "You gain a +1 circumstance bonus to damage rolls with firearms and crossbows.", [], null);
             AddSingularExpertiseLogic(singularExpertiseFeat);
@@ -85,7 +106,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 3,
                 "{b}1. Gunslinger's Way{/b} All gunslingers have a particular way they follow, a combination of philosophy and combat style that defines both how they fight and the weapons they excel with. At 1st level, your way grants you an initial deed, a unique reload action called a slinger's reload, and proficiency with a particular skill. You also gain advanced and greater deeds at later levels, as well as access to way-specific feats.\n\n" +
                 "{b}2. Singular Expertise{/b} You have particular expertise with guns and crossbows that grants you greater proficiency with them and the ability to deal more damage. You gain a +1 circumstance bonus to damage rolls with firearms and crossbows.\r\n\r\nThis intense focus on firearms and crossbows prevents you from reaching the same heights with other weapons. Your proficiency with unarmed attacks and with weapons other than firearms and crossbows can't be higher than trained, even if you gain an ability that would increase your proficiency in one or more other weapons to match your highest weapon proficiency (such as the weapon expertise feats many ancestries have). If you have gunslinger weapon mastery, the limit is expert, and if you have gunslinging legend, the limit is master.\n\n" +
-                "{b}3. Gunslinger Feat{/b}", new List<Feat>() { wayOfTheDrifter.Feat, wayOfThePistolero.Feat, wayOfTheSniper.Feat, wayOfTheVanguard.Feat })
+                "{b}3. Gunslinger Feat{/b}\n\n" +
+                "{b}At higher levels:{/b}\n" +
+                "{b}Level 2:{/b} Gunslinger feat\n" +
+                "{b}Level 3:{/b} General feat, skill increase, expert in Will,\n" +
+                "{b}Level 4:{/b} Gunslinger feat\n" +
+                "{b}Level 5:{/b}Ability boosts, ancestry feat, skill increase, gunslinger weapon master {i}(Your proficiency rank increases to master with simple and martial firearms and crossbows. Your proficiency rank for advanced firearms and crossbows, simple weapons, martial weapons, and unarmed attacks increases to expert. You gain access to the critical specialization effects for firearms and crossbows.){/i}\n" +
+                "{b}Level 6:{/b}Gunslinger feat\n" +
+                "{b}Level 7:{/b}General feat, skill increase, weapon specialization {i}(you deal 2 additional damage with weapons and unarmed attacks in which you are an expert; this damage increases to 3 if you're a master, and to 4 if you're legendary){/i}, master in Perception\n" +
+                "{b}Level 8:{/b}Gunslinger feat\n", new List<Feat>() { wayOfTheDrifter.Feat, wayOfThePistolero.Feat, wayOfTheSniper.Feat, wayOfTheVanguard.Feat })
                 .WithOnSheet(delegate (CalculatedCharacterSheetValues sheet)
                 {
                     // Adds the Singular Expertise base class feature, adds a Level 1 Gunslinger feat selection, and adds the Will Expert profeciency at level 3
@@ -95,6 +124,40 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     {
                         values.SetProficiency(Trait.Will, Proficiency.Expert);
                     });
+                    sheet.AddAtLevel(5, delegate (CalculatedCharacterSheetValues values)
+                    {
+                        values.SetProficiency(FirearmTraits.SimpleCrossbow, Proficiency.Master);
+                        values.SetProficiency(FirearmTraits.MartialCrossbow, Proficiency.Master);
+                        values.SetProficiency(FirearmTraits.SimpleFirearm, Proficiency.Master);
+                        values.SetProficiency(FirearmTraits.MartialFirearm, Proficiency.Master);
+                        values.SetProficiency(Trait.Unarmed, Proficiency.Expert);
+                        values.SetProficiency(Trait.Simple, Proficiency.Expert);
+                        values.SetProficiency(Trait.Martial, Proficiency.Expert);
+                        values.SetProficiency(FirearmTraits.AdvancedCrossbow, Proficiency.Expert);
+                        values.SetProficiency(FirearmTraits.AdvancedFirearm, Proficiency.Expert);
+                        // TODO: Crit Specilization needed to be added for fire arms
+                    });
+                    sheet.AddAtLevel(7, delegate (CalculatedCharacterSheetValues values)
+                    {
+                        values.SetProficiency(Trait.Perception, Proficiency.Master);
+                    });
+                })
+                .WithOnCreature((creature) =>
+                {
+                    if (creature.Level >= 5)
+                    {
+                        creature.AddQEffect(new QEffect("Weapon Mastery", "Your firearm and crossbow attacks trigger {tooltip:criteffect}critical specialization effects{/}.")
+                        {
+                            YouHaveCriticalSpecialization = (QEffect specialization, Item item, CombatAction action, Creature defender) =>
+                            {
+                                return item.HasTrait(Trait.Firearm) || item.HasTrait(Trait.Crossbow);
+                            }
+                        });
+                    }
+                    if (creature.Level >= 7)
+                    {
+                        creature.AddQEffect(QEffect.WeaponSpecialization());
+                    }
                 });
 
             // Level 1 Class Feats
@@ -151,6 +214,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             AddWarningShotLogic(warningShotFeat);
             yield return warningShotFeat;
 
+            // Level 4 Class Feats
             // Creates and adds the logic for the Alchemical Shot class feat
             TrueFeat alchemicalShotFeat = new TrueFeat(GunslingerFeatNames.AlchemicalShot, 4, "You've practiced a technique for mixing alchemical bombs with your loaded shot.", "{b}Requirements{/b} You have an alchemical bomb worn or in one hand, and are wielding a firearm or crossbow.\n\nYou Interact to retrieve the bomb (if it's not already in your hand) and pour its contents onto your ammunition, consuming the bomb, then resume your grip on the required weapon. Next, Strike with your firearm. The Strike deals damage of the same type as the bomb (for instance, fire damage for alchemist's fire), and it deals an additional 1d6 persistent damage of the same type as the bomb. If the Strike is a failure, you take 1d6 damage of the same type as the bomb you used, and the firearm misfires. " + misfireDescriptionText, [GunslingerTraits.Gunslinger]);
             alchemicalShotFeat.WithActionCost(2);
@@ -171,6 +235,83 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             TrueFeat runningReloadFeat = new TrueFeat(GunslingerFeatNames.RunningReload, 4, "You can reload your weapon on the move.", "You Stride, Step, or Sneak, then Interact to reload.", [GunslingerTraits.Gunslinger]).WithActionCost(1);
             AddRunningReloadLogic(runningReloadFeat);
             yield return runningReloadFeat;
+
+            // Level 6 Class Feats
+            // Creates and adds the logic for the Drifter's Juke class feat
+            TrueFeat driftersJuke = new TrueFeat(GunslingerFeatNames.DriftersJuke, 6, "You move in and out of range to complement your attacks.", "{b}Requirements{/b} You're wielding a firearm or crossbow in one hand, and your other hand is either wielding a melee weapon or is empty.\n\nYou may Step, make a Strike, Step, and make another Strike (Each is opptional). One Strike must be a ranged Strike using your firearm or crossbow, and the other must be a melee Strike using your melee weapon or unarmed attack.", [GunslingerTraits.Gunslinger]);
+            driftersJuke.WithActionCost(2);
+            driftersJuke.WithPrerequisite(GunslingerFeatNames.WayOfTheDrifter, "Way of the Drifter");
+            AddDriftersJukeLogic(driftersJuke);
+            yield return driftersJuke;
+
+            // Creates and adds the logic for the Pistolero's Challenge class feat
+            TrueFeat pistolerosChallenge = new TrueFeat(GunslingerFeatNames.PistolerosChallenge, 6, "With a stern call, carefully chosen barb, or some other challenging declaration, you demand your foe's attention in a duel.", "Make a Deception or Intimidation check against a creature within 30 feet against their Will DC. The target will be immune to this for the rest of the encounter. If you succeed, they are your challenged foe, and you can only have 1 challenged foe at a time.\n\n{b}Success{/b} You and the target gain a +2 status bonus to damage rolls with Strikes against each other. If you are a master in the skill you used for the check, the bonus increases to +3, and if you're legendary it is instead +4.\b{b}Critical Failure{/b} You become frightened 1 and can't use this again for 1 minute.", [Trait.Auditory, Trait.Flourish, Trait.Linguistic, Trait.Mental, GunslingerTraits.Gunslinger]);
+            pistolerosChallenge.WithActionCost(1);
+            pistolerosChallenge.WithPrerequisite(GunslingerFeatNames.WayOfThePistolero, "Way of the Pistolero");
+            AddPistolerosChallengeLogic(pistolerosChallenge);
+            yield return pistolerosChallenge;
+
+            // Creates and adds the logic for the Sniper's Aim class feat
+            TrueFeat snipersAim = new TrueFeat(GunslingerFeatNames.SnipersAim, 6, "You take an extra moment to carefully sync your aim and breathing, then fire a shot with great accuracy.", "Make a ranged weapon Strike. You gain a +2 circumstance bonus to this Strike's attack roll and ignore the target's concealment. If you're using a kickback firearm, you don't take the normal circumstance penalty on this Strike for not having the required Strength score or firing without using a stabilizer.", [Trait.Concentrate, GunslingerTraits.Gunslinger]);
+            snipersAim.WithActionCost(2);
+            snipersAim.WithPrerequisite(GunslingerFeatNames.WayOfTheSniper, "Way of the Sniper");
+            AddSnipersAimLogic(snipersAim);
+            yield return snipersAim;
+
+            // Creates and adds the logic for the Phalanx Breaker class feat
+            TrueFeat phalanxBreaker = new TrueFeat(GunslingerFeatNames.PhalanxBreaker, 6, "You know that to take out an enemy formation, you must punch a hole through its center.", "{b}Requirements{/b} You're wielding a two-handed firearm or a two-handed crossbow.\n\nMake a ranged Strike with the required weapon against a target within the weapon's first range increment. The target is pushed directly back 10 feet (20 feet on a critical hit), and if this pushes the target into an obstacle, the target takes bludgeoning damage equal to half your level.", [GunslingerTraits.Gunslinger]);
+            phalanxBreaker.WithActionCost(2);
+            phalanxBreaker.WithPrerequisite(GunslingerFeatNames.WayOfTheVanguard, "Way of the Vanguard");
+            AddPhalanxBreakerLogic(phalanxBreaker);
+            yield return phalanxBreaker;
+
+            // Creates and adds the logic for the Advanced Shooter class feat
+            TrueFeat advancedShooter = new TrueFeat(GunslingerFeatNames.AdvancedShooter, 6, "You've dedicated your training to the most complex and weird weapons of your favorite group.", "Choose firearms or crossbows. You become a Master with all advanced weapons of your choice.", [GunslingerTraits.Gunslinger]);
+            AddAdvancedShooterLogic(advancedShooter);
+            yield return advancedShooter;
+
+            // Creates and adds the logic for the Cauterize class feat
+            TrueFeat cauterize = new TrueFeat(GunslingerFeatNames.Cauterize, 6, "You use the smoking barrel of your firearm to sear shut a bleeding wound.", "Make a Strike with your firearm. You then press the heated barrel to the wounds of you or an ally within reach that is taking persistent bleed damage, giving an immediate flat check to end the bleed with the lower DC for particularly effective assistance.", [Trait.Flourish, GunslingerTraits.Gunslinger]);
+            AddCauterizeLogic(cauterize);
+            yield return cauterize;
+
+            // Creates and adds the logic for the Scatter Blast class feat
+            // TODO: Figure out temp range increment increase - range increment increases by 20 feet and the 
+            TrueFeat scatterBlast = new TrueFeat(GunslingerFeatNames.ScatterBlast, 6, "You pack your weapon with additional shot and powder, creating a risky but devastating wave of destruction.", "{b}Requirements{/b} You're wielding a loaded firearm that has the scatter trait.\n\nMake a ranged Strike with the firearm. The firearm's range increment increases by 20 feet and the radius of its scatter increases by 20 feet. The Strike gains the following failure conditions.\n\n{b}Failure{/b} The firearm misfires, but it doesn't cause the other critical failure effects listed below.\n{b}Critical Failure{/b} The firearm misfires and also explodes. It becomes broken, and it deals its normal weapon damage to all creatures in a 20-foot burst centered on the firearm, with a basic Reflex save against your class DC. This damage includes any from the weapon's fundamental and property runes.", [GunslingerTraits.Gunslinger]);
+            scatterBlast.WithActionCost(2);
+            AddScatterBlastLogic(scatterBlast);
+            yield return scatterBlast;
+
+            // Level 8 Class Feats
+            // Creates and adds the logic for the Stab And Blast class feat
+            TrueFeat stabAndBlast = new TrueFeat(GunslingerFeatNames.StabAndBlast, 8, "You slice or smash your opponent with the melee portion of your weapon before pulling the trigger at point-blank range.", "{b}Requirements{/b} You're wielding a loaded firearm that has a bayonet attached.\n\nMake a melee Strike with the required weapon. If the Strike is successful, you can immediately make a ranged Strike against the same target with a +2 circumstance bonus to the attack roll. This counts as two attacks toward your multiple attack penalty, but you don't apply the multiple attack penalty until after making both attacks.", [Trait.Flourish, GunslingerTraits.Gunslinger]);
+            stabAndBlast.WithActionCost(1);
+            AddStabAndBlastLogic(stabAndBlast);
+            yield return stabAndBlast;
+
+            // Creates and adds the logic for the Smoke Curtain class feat
+            TrueFeat smokeCurtain = new TrueFeat(GunslingerFeatNames.SmokeCurtain, 8, "You load an extra dose of powder into your shot, causing it to belch a cloud of smoke.", "{b}Requirements{/b} You're wielding a loaded firearm.\n\nYou make a Strike with your firearm and create a cloud of smoke in a 20-foot emanation centered on your location. Creatures are concealed while within the smoke. The smoke dissipates at the start of your next turn. If your Strike is a critical failure, your firearm misfires.", [GunslingerTraits.Gunslinger]);
+            smokeCurtain.WithActionCost(2);
+            AddSmokeCurtainLogic(smokeCurtain);
+            yield return smokeCurtain;
+
+            // Creates and adds the logic for the Leap And Fire class feat
+            TrueFeat leapAndFire = new TrueFeat(GunslingerFeatNames.LeapAndFire, 8, "You're quick enough to line up a shot even while diving to the ground.", "When you use your Hit the Dirt! reaction, you may make a ranged Strike with a loaded firearm or crossbow, targeting the creature whose attack triggered the reaction. You can choose to make this strike before or after leaping. (Before you fall prone)", [GunslingerTraits.Gunslinger]);
+            leapAndFire.WithPrerequisite(GunslingerFeatNames.HitTheDirt, "Hit the Dirt");
+            AddLeapAndFireLogic(leapAndFire);
+            yield return leapAndFire;
+
+            // Creates and adds the logic for the Grit And Tenacity class feat
+            TrueFeat gritAndTenacity = new TrueFeat(GunslingerFeatNames.GritAndTenacity, 8, "You call upon deep reserves of toughness and mental fortitude to power through an otherwise debilitating effect.", "{b}Trigger{/b} You fail a Fortitude or Will save.\n{b}Frequency{/b} once per combat\n\nReroll the triggering save with a +2 circumstance bonus; you must use the second result.", [Trait.Fortune, GunslingerTraits.Gunslinger]);
+            gritAndTenacity.WithActionCost(-2);
+            AddGritAndTenacityLogic(gritAndTenacity);
+            yield return gritAndTenacity;
+
+            // Creates and adds the logic for the Bullet Split class feat
+            TrueFeat bulletSplit = new TrueFeat(GunslingerFeatNames.BulletSplit, 8, "You carefully align your weapon with the edge of your blade, splitting the projectile in two as you fire to attack two different targets.", "{b}Requirements{/b} You're wielding a firearm or crossbow in one hand and a slashing, versatile S, or bayonet melee weapon in the other.\n\nMake two Strikes, one each against two separate targets. The targets must be adjacent to each other and within your weapon's maximum range. Each of these attacks takes a –2 penalty to the attack roll, but the two count as only one attack when calculating your multiple attack penalty.", [Trait.Flourish, GunslingerTraits.Gunslinger]);
+            bulletSplit.WithActionCost(1);
+            AddBulletSplitLogic(bulletSplit);
+            yield return bulletSplit;
         }
 
         /// <summary>
@@ -197,7 +338,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.BonusToDamage = (QEffect self, CombatAction action, Creature defender) =>
                 {
-                    if (action.HasTrait(FirearmTraits.Firearm) || action.HasTrait(Trait.Crossbow) || (action.Item != null && action.Item.WeaponProperties != null && FirearmUtilities.IsItemFirearmOrCrossbow(action.Item)))
+                    if (action.HasTrait(Trait.Firearm) || action.HasTrait(Trait.Crossbow) || (action.Item != null && action.Item.WeaponProperties != null && FirearmUtilities.IsItemFirearmOrCrossbow(action.Item)))
                     {
                         return new Bonus(1, BonusType.Circumstance, "Singular Expertise");
                     }
@@ -264,7 +405,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
                                 // Determines the logic for all non-human controlled creatures when Cover Fire targets them
                                 bool shouldDodge = true;
-                                if (!target.OwningFaction.IsHumanControlled)
+                                if (!target.OwningFaction.IsPlayer)
                                 {
                                     if (cover <= 0 && target.WieldsItem(Trait.Ranged))
                                     {
@@ -333,7 +474,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         coverFireAction.WithTargetingTooltip((action, defender, index) => action.Description);
 
                         return coverFireAction;
-                    };
+                    }
+                    ;
 
                     return null;
                 };
@@ -351,7 +493,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
-                    if (item.HasTrait(FirearmTraits.Firearm) && FirearmUtilities.IsItemLoaded(item) && item.WeaponProperties != null)
+                    if (item.HasTrait(Trait.Firearm) && FirearmUtilities.IsItemLoaded(item) && item.WeaponProperties != null)
                     {
                         // Creates a demoarlize action that has the effect for Intimidating glare
                         CombatAction warningShotAction = CommonCombatActions.Demoralize(self.Owner);
@@ -419,7 +561,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             //    {
                             //        replacementSfx = (firstHeldItem.WeaponProperties.Sfx == SfxName.Bow) ? SfxName.Fist : SfxName.Bow;
                             //    }
+<<<<<<< HEAD
                             //    else if (secondHeldItem.HasTrait(FirearmTraits.Firearm))
+=======
+                            //    else if (secondHeldItem.HasTrait(Trait.Firearm))
+>>>>>>> main
                             //    {
                             //        replacementSfx = (firstHeldItem.WeaponProperties.Sfx == FirearmSFXNames.SmallFirearm1) ? FirearmSFXNames.SmallFirearm2 : FirearmSFXNames.SmallFirearm1;
                             //    }
@@ -465,7 +611,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         foreach (DamageKind damageKind in elementalDamageKinds)
                         {
                             string damageString = damageKind.ToString();
-                            ActionPossibility damageAction = new ActionPossibility(new CombatAction(coatedMunitionsEffect.Owner, illustraions[damageKind], damageString, [], "You deal an additional {Blue}1{/} persistent {Blue}" + damageString + "{/} damage and {Blue}1{/} {Blue}" + damageString + "{/} splash damage.", Target.Self()
+                            ActionPossibility damageAction = new ActionPossibility(new CombatAction(coatedMunitionsEffect.Owner, illustraions[damageKind], damageString, [Trait.Basic], "You deal an additional {Blue}1{/} persistent {Blue}" + damageString + "{/} damage and {Blue}1{/} {Blue}" + damageString + "{/} splash damage.", Target.Self()
                                 .WithAdditionalRestriction((Creature user) =>
                                 {
                                     if (user.QEffects.Any(qe => qe.Name == "Coated Munitions is Applied"))
@@ -528,7 +674,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         Creature owner = blackPowderBoostEffect.Owner;
                         SubmenuPossibility blackPowderBoostMenu = new SubmenuPossibility(IllustrationName.Jump, "Black Powder Boost");
 
-                        foreach (Item firearm in owner.HeldItems.Where(item => item.HasTrait(FirearmTraits.Firearm)))
+                        foreach (Item firearm in owner.HeldItems.Where(item => item.HasTrait(Trait.Firearm)))
                         {
                             // Creates a Black Powder Boost button and calculates the standard leap distance
                             PossibilitySection firearmBlackPowderBoostSection = new PossibilitySection(firearm.Name);
@@ -797,19 +943,67 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 // Prompts the user to leap and sets them to prone
                 self.AfterYouAreTargeted = async (QEffect cleanupEffects, CombatAction action) =>
                 {
-                    if (cleanupEffects.Owner.HasEffect(GunslingerQEIDs.HitTheDirt))
+                    Creature owner = cleanupEffects.Owner;
+                    if (owner.HasEffect(GunslingerQEIDs.HitTheDirt) && owner.HP > 0)
                     {
-                        cleanupEffects.Owner.RemoveAllQEffects(qe => qe.Id == GunslingerQEIDs.HitTheDirt);
-                        int leapDistance = ((cleanupEffects.Owner.Speed >= 6) ? 3 : 2) + (cleanupEffects.Owner.HasEffect(QEffectId.PowerfulLeap) ? 1 : 0);
-                        CombatAction leapAction = CommonCombatActions.Leap(cleanupEffects.Owner);
+                        async Task<Item?> GetStrikeWeapon(List<Item> weapons)
+                        {
+                            if (weapons.Count == 2)
+                            {
+                                ChoiceButtonOption choice = await owner.AskForChoiceAmongButtons(new SideBySideIllustration(weapons[0].Illustration, weapons[1].Illustration), $"Strike with which weapon?", weapons[0].Name, weapons[1].Name, "Pass");
+                                if (choice.Index == 2)
+                                {
+                                    return null;
+                                }
+
+                                return weapons[choice.Index];
+                            }
+
+                            return weapons.FirstOrDefault();
+                        }
+
+                        List<Item> validWeapons = owner.HeldItems.Where(item => FirearmUtilities.IsItemFirearmOrCrossbow(item) && FirearmUtilities.IsItemLoaded(item)).ToList();
+                        bool hasLeapAndFire = owner.HasFeat(GunslingerFeatNames.LeapAndFire);
+                        bool strikeNeedsToBeMadeAfterLeap = false;
+                        if (hasLeapAndFire && action.Owner != null)
+                        {
+                            if (validWeapons.Count > 0)
+                            {
+                                Illustration illustration = (validWeapons.Count == 2) ? new SideBySideIllustration(validWeapons[0].Illustration, validWeapons[1].Illustration) : validWeapons[0].Illustration;
+                                ChoiceButtonOption choice = await owner.AskForChoiceAmongButtons(illustration, $"Make a Strike against {action.Owner} as a free action?", "Before Leaping", "After Leaping", "Pass");
+                                if (choice.Index == 1)
+                                {
+                                    strikeNeedsToBeMadeAfterLeap = true;
+                                }
+                                else if (choice.Index == 0)
+                                {
+                                    Item? weapon = await GetStrikeWeapon(validWeapons);
+                                    if (weapon != null)
+                                    {
+                                        await owner.MakeStrike(action.Owner, weapon);
+                                    }
+                                }
+                            }
+                        }
+                        owner.RemoveAllQEffects(qe => qe.Id == GunslingerQEIDs.HitTheDirt);
+                        int leapDistance = ((owner.Speed >= 6) ? 3 : 2) + (owner.HasEffect(QEffectId.PowerfulLeap) ? 1 : 0);
+                        CombatAction leapAction = CommonCombatActions.Leap(owner);
                         leapAction.EffectOnChosenTargets = null;
                         Tile? tileToLeapTo = await GetLeapTileWithinDistance(cleanupEffects.Owner, "Choose the tile to leap to.", leapDistance);
                         if (tileToLeapTo != null)
                         {
-                            await cleanupEffects.Owner.SingleTileMove(tileToLeapTo, leapAction);
+                            await owner.SingleTileMove(tileToLeapTo, leapAction);
+                            if (strikeNeedsToBeMadeAfterLeap && action.Owner != null)
+                            {
+                                Item? weapon = await GetStrikeWeapon(validWeapons);
+                                if (weapon != null)
+                                {
+                                    await owner.MakeStrike(action.Owner, weapon);
+                                }
+                            }
                         }
 
-                        await cleanupEffects.Owner.FallProne();
+                        await owner.FallProne();
                     }
                 };
             });
@@ -852,7 +1046,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     }
                                     else
                                     {
-                                        FirearmUtilities.AwaitReloadItem(self, heldItem);
+                                        await FirearmUtilities.AwaitReloadItem(self, heldItem);
                                     }
                                 });
                                 ActionPossibility itemPossibility = new ActionPossibility(itemAction);
@@ -882,7 +1076,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 self.BeforeYourActiveRoll = async (QEffect addingEffects, CombatAction action, Creature defender) =>
                 {
                     // If you attack within your melee range with a ranged Firearm or Crossbow, you gain a Melee buff 
-                    if (action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(FirearmTraits.Firearm) || action.HasTrait(Trait.Crossbow)) && addingEffects.Owner.DistanceTo(defender) == 1 && !addingEffects.Owner.QEffects.Any(qe => qe.Id == GunslingerQEIDs.SwordAndPistolMeleeBuff && qe.Tag != null && qe.Tag == defender))
+                    if (action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(Trait.Firearm) || action.HasTrait(Trait.Crossbow)) && addingEffects.Owner.DistanceTo(defender) == 1 && !addingEffects.Owner.QEffects.Any(qe => qe.Id == GunslingerQEIDs.SwordAndPistolMeleeBuff && qe.Tag != null && qe.Tag == defender))
                     {
                         addingEffects.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
                         {
@@ -917,7 +1111,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                 {
                                     foreach (Item item in addingEffects.Owner.HeldItems.Concat(addingEffects.Owner.CarriedItems))
                                     {
-                                        if (!item.HasTrait(Trait.DoesNotProvoke) && item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.TwoHanded) && (item.HasTrait(FirearmTraits.Firearm) || item.HasTrait(Trait.Crossbow)))
+                                        if (!item.HasTrait(Trait.DoesNotProvoke) && item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.TwoHanded) && (item.HasTrait(Trait.Firearm) || item.HasTrait(Trait.Crossbow)))
                                         {
                                             item.Traits.Add(GunslingerTraits.TemporaryDoesNotProvoke);
                                             item.Traits.Add(Trait.DoesNotProvoke);
@@ -938,7 +1132,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             // After a valid attack is done the effects should be removed
                             BeforeYourActiveRoll = async (QEffect rollEffect, CombatAction action, Creature attackedCreature) =>
                             {
-                                if (action.HasTrait(Trait.Strike) && action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(FirearmTraits.Firearm) || action.HasTrait(Trait.Crossbow)) && defender == attackedCreature)
+                                if (action.HasTrait(Trait.Strike) && action.HasTrait(Trait.Ranged) && !action.HasTrait(Trait.TwoHanded) && (action.HasTrait(Trait.Firearm) || action.HasTrait(Trait.Crossbow)) && defender == attackedCreature)
                                 {
                                     foreach (Item item in addingEffects.Owner.HeldItems.Concat(addingEffects.Owner.CarriedItems))
                                     {
@@ -971,7 +1165,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && FirearmUtilities.IsItemLoaded(item) && !item.HasTrait(Trait.TwoHanded) && item.WeaponProperties != null)
                     {
                         // Creates the action and handles the success results of the actions
-                        CombatAction pistolTwirlAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.Feint), "Pistol Twirl", [], pistolTwirlFeat.RulesText, Target.Ranged(item.WeaponProperties.RangeIncrement)).WithActionCost(1).WithItem(item)
+                        CombatAction pistolTwirlAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.Feint), "Pistol Twirl", [Trait.Basic], pistolTwirlFeat.RulesText, Target.Ranged(item.WeaponProperties.RangeIncrement)).WithActionCost(1).WithItem(item)
                         .WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Deception), Checks.DefenseDC(Defense.Perception)))
                         .WithEffectOnEachTarget(async delegate (CombatAction pistolTwirl, Creature attacker, Creature defender, CheckResult result)
                         {
@@ -1288,7 +1482,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 };
 
                 // Add the start of the turn the tracking effect has it's list of creatures cleared
-                fakeOutEffect.StartOfYourTurn = async (QEffect startOfTurn, Creature self) =>
+                fakeOutEffect.StartOfYourPrimaryTurn = async (QEffect startOfTurn, Creature self) =>
                 {
                     QEffect? fakeOutTrackingEffect = startOfTurn.Owner.QEffects.FirstOrDefault(qe => qe.Id == GunslingerQEIDs.FakeOut);
                     if (fakeOutTrackingEffect != null)
@@ -1311,7 +1505,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             // Handles the aid reaction for all allies
             ModManager.RegisterActionOnEachCreature(creature =>
             {
-                if (creature.OwningFaction == null || creature.OwningFaction.IsHumanControlled)
+                if (creature.OwningFaction == null || creature.OwningFaction.IsPlayer)
                 {
                     creature.AddQEffect(new QEffect()
                     {
@@ -1386,6 +1580,792 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         }
                     });
                 }
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Drifter's Juke feat
+        /// </summary>
+        /// <param name="driftersJukeFeat">The Drifter's Juke true feat object</param>
+        private static void AddDriftersJukeLogic(TrueFeat driftersJukeFeat)
+        {
+            // Provides the effect that adds the Drifter's Juke as a main action
+            driftersJukeFeat.WithPermanentQEffect("Step, Strike, Step, Strike (One Melee Strike, One Ranged Strike)", delegate (QEffect self)
+            {
+                self.ProvideMainAction = (QEffect driftersJukeEffect) =>
+                {
+                    Creature owner = driftersJukeEffect.Owner;
+
+                    // Hides the action if the requirements of holding a loaded firearm and a melee weapon or empty
+                    if (owner.HeldItems.Count(item => FirearmUtilities.IsItemFirearmOrCrossbow(item) && FirearmUtilities.IsItemLoaded(item) && !item.HasTrait(FirearmTraits.Misfired) && item.WeaponProperties != null) != 1)
+                    {
+                        return null;
+                    }
+
+                    Item firearm = FirearmUtilities.IsItemFirearmOrCrossbow(owner.HeldItems[0]) ? owner.HeldItems[0] : owner.HeldItems[1];
+                    Item otherWeapon = (owner.HeldItems.Count > 1) ? (owner.HeldItems[0] == firearm) ? owner.HeldItems[1] : owner.HeldItems[0] : owner.UnarmedStrike;
+
+                    if (firearm.HasTrait(FirearmTraits.Bayonet) && firearm.Tag != null && firearm.Tag is Item bayonet)
+                    {
+                        otherWeapon = bayonet;
+                    }
+
+                    if (!otherWeapon.HasTrait(Trait.Melee))
+                    {
+                        return null;
+                    }
+
+                    // Returns the main action
+                    return new ActionPossibility(new CombatAction(driftersJukeEffect.Owner, new SideBySideIllustration(firearm.Illustration, otherWeapon.Illustration), "Drifter's Juke", [Trait.Flourish], "{b}Requirements{/b} You're wielding a firearm or crossbow in one hand, and your other hand is either wielding a melee weapon or is empty.\n\nYou may Step, make a Strike, Step, and make another Strike (Each is opptional). One Strike must be a ranged Strike using your firearm or crossbow, and the other must be a melee Strike using your melee weapon or unarmed attack.", Target.Self())
+                        .WithActionCost(2)
+                        .WithEffectOnSelf(async (CombatAction action, Creature innerSelf) =>
+                        {
+                            // A helper method to handle the strikes and steps
+                            async Task HandleStrikes(Item weapon)
+                            {
+                                // Adds the weapon to useage
+                                CombatAction strike = innerSelf.CreateStrike(weapon).WithActionCost(0);
+                                List<Option> possibilities = new List<Option>();
+                                GameLoop.AddDirectUsageOnCreatureOptions(strike, possibilities, true);
+
+                                // Creates the possibilites and prompts for user selection
+                                if (possibilities.Count > 0)
+                                {
+                                    Option chosenOption;
+                                    if (possibilities.Count >= 2)
+                                    {
+                                        var result = await innerSelf.Battle.SendRequest(new AdvancedRequest(innerSelf, "Choose a creature to Strike.", possibilities)
+                                        {
+                                            TopBarText = "Choose a creature to Strike.",
+                                            TopBarIcon = weapon.Illustration
+                                        });
+                                        chosenOption = result.ChosenOption;
+                                    }
+                                    else
+                                    {
+                                        chosenOption = possibilities[0];
+                                    }
+                                    await chosenOption.Action();
+                                }
+                            }
+
+                            // Steps then, Strikes with a choice, then Step then strike with the remianing choice
+                            bool didMove = await innerSelf.StrideAsync("Choose where to step.", allowStep: true, maximumFiveFeet: true, allowPass: true, allowCancel: true);
+                            if (didMove)
+                            {
+                                ChoiceButtonOption choice = await innerSelf.AskForChoiceAmongButtons(IllustrationName.QuestionMark, "Choose which Strike to use first.", firearm.BaseItemName.HumanizeTitleCase2(), otherWeapon.BaseItemName.HumanizeTitleCase2(), "Pass");
+                                Item remainingWeapon = firearm;
+                                if (choice.Index != 2)
+                                {
+                                    Item weapon = (choice.Index == 0) ? firearm : otherWeapon;
+                                    remainingWeapon = (choice.Index == 0) ? otherWeapon : firearm;
+                                    await HandleStrikes(weapon);
+                                }
+                                await innerSelf.StrideAsync("Choose where to step.", allowStep: true, maximumFiveFeet: true, allowPass: true, allowCancel: false);
+                                if (await innerSelf.AskForConfirmation(remainingWeapon.Illustration, "Make a strike?", "Yes"))
+                                {
+                                    await HandleStrikes(remainingWeapon);
+                                }
+                            }
+                            else
+                            {
+                                action.RevertRequested = true;
+                            }
+                        }));
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Pistolero's Challenge feat
+        /// </summary>
+        /// <param name="pistolerosChallengeFeat">The Pistolero's Challenge true feat object</param>
+        private static void AddPistolerosChallengeLogic(TrueFeat pistolerosChallengeFeat)
+        {
+            // Provides the effect that adds the Pistolero's Challenge as a main action
+            pistolerosChallengeFeat.WithPermanentQEffect("Callenge an emeny to gain increased damage against them.", delegate (QEffect self)
+            {
+                self.ProvideMainAction = (QEffect pistolerosChallengeEffect) =>
+                {
+                    PossibilitySection challengeSection = new PossibilitySection("Challenge");
+
+                    CombatAction CreateChallengeAction(string actionName, Trait skill)
+                    {
+                        return new CombatAction(pistolerosChallengeEffect.Owner, IllustrationName.GenericCombatManeuver, actionName, [Trait.Auditory, Trait.Flourish, Trait.Linguistic, Trait.Mental], "Make a " + actionName + " check against a creature within 30 feet against their Will DC. The target will be immune to this for the rest of the encounter. If you succeed, they are your challenged foe, and you can only have 1 challenged foe at a time.\n\n{b}Success{/b} You and the target gain a +2 status bonus to damage rolls with Strikes against each other. If you are a master " + actionName + ", the bonus increases to +3, and if you're legendary it is instead +4.\n{b}Critical Failure{/b} You become frightened 1 and can't use this again for 1 minute.", Target.Ranged(30))
+                        .WithActionCost(1)
+                        .WithActionId(GunslingerActionIDs.PistolerosChallenge)
+                        .WithEffectOnEachTarget(async delegate (CombatAction challenge, Creature attacker, Creature defender, CheckResult result)
+                        {
+                            if (result >= CheckResult.Success)
+                            {
+                                QEffect createPistolerosChallenge(Creature foe, int additionalBonus = 0)
+                                {
+                                    return new QEffect()
+                                    {
+                                        Name = $"Pistolero's Challenge ({foe.Name})",
+                                        Description = $"You have a +{2 + additionalBonus} status bonus to damage with Strikes against {foe.Name}",
+                                        Illustration = IllustrationName.GenericCombatManeuver,
+                                        Id = GunslingerQEIDs.PistolerosChallenge,
+                                        Tag = foe,
+                                        BonusToDamage = (QEffect _, CombatAction action, Creature _) =>
+                                        {
+                                            if (action.HasTrait(Trait.Strike) && action.ChosenTargets.ChosenCreature == foe)
+                                            {
+                                                return new Bonus(2 + additionalBonus, BonusType.Circumstance, "Pistolero's Challenge", true);
+                                            }
+
+                                            return null;
+                                        },
+                                        YouBeginAction = async (QEffect qfYouTakeAction, CombatAction action) =>
+                                        {
+                                            if (action.ActionId == GunslingerActionIDs.PistolerosChallenge)
+                                            {
+                                                qfYouTakeAction.ExpiresAt = ExpirationCondition.Immediately;
+                                            }
+                                        }
+                                    };
+                                }
+
+                                Proficiency proficiency = attacker.Proficiencies.Get(skill);
+                                int additionalAttackerBonus = 0;
+                                if (proficiency >= Proficiency.Master)
+                                {
+                                    additionalAttackerBonus = (proficiency == Proficiency.Legendary) ? 2 : 1;
+                                }
+
+                                QEffect attackersChallenge = createPistolerosChallenge(defender, additionalAttackerBonus);
+                                QEffect defendersChallenge = createPistolerosChallenge(attacker);
+
+                                attackersChallenge.WhenExpires = (QEffect qfExpires) =>
+                                {
+                                    if (qfExpires.Tag is Creature foe)
+                                    {
+                                        QEffect? foesChallenge = foe.FindQEffect(GunslingerQEIDs.PistolerosChallenge);
+                                        if (foesChallenge != null)
+                                        {
+                                            foesChallenge.ExpiresAt = ExpirationCondition.Immediately;
+                                        }
+                                    }
+                                };
+                                defendersChallenge.WhenExpires = (QEffect qfExpires) =>
+                                {
+                                    if (qfExpires.Tag is Creature foe)
+                                    {
+                                        QEffect? foesChallenge = foe.FindQEffect(GunslingerQEIDs.PistolerosChallenge);
+                                        if (foesChallenge != null)
+                                        {
+                                            foesChallenge.ExpiresAt = ExpirationCondition.Immediately;
+                                        }
+                                    }
+                                };
+
+                                attacker.AddQEffect(attackersChallenge);
+                                defender.AddQEffect(defendersChallenge);
+                            }
+                            else if (result == CheckResult.CriticalFailure)
+                            {
+                                attacker.AddQEffect(QEffect.Frightened(1));
+                                attacker.AddQEffect(new QEffect(ExpirationCondition.CountsDownAtEndOfYourTurn)
+                                {
+                                    Value = 10,
+                                    PreventTakingAction = (CombatAction action) =>
+                                    {
+                                        if (action.ActionId == GunslingerActionIDs.PistolerosChallenge)
+                                        {
+                                            return $"You can not use {action.Name} for 1 minute after a Critical Failure";
+                                        }
+
+                                        return null;
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    challengeSection.AddPossibility(new ActionPossibility(CreateChallengeAction("Deception", Trait.Deception)));
+                    challengeSection.AddPossibility(new ActionPossibility(CreateChallengeAction("Intimidation", Trait.Intimidation)));
+                    SubmenuPossibility pistolerosChallengeMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, "Pistolero's Challenge");
+                    pistolerosChallengeMenu.Subsections.Add(challengeSection);
+                    return pistolerosChallengeMenu;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Sniper's Aim feat
+        /// </summary>
+        /// <param name="snipersAimFeat">The Sniper's Aim true feat object</param>
+        private static void AddSnipersAimLogic(TrueFeat snipersAimFeat)
+        {
+            // Provides the effect that adds the Sniper's Aim as a strike modifier
+            snipersAimFeat.WithPermanentQEffect("Make a ranged Strike with a +2 circumstance bonus and ignoring concealment.", delegate (QEffect self)
+            {
+                self.ProvideStrikeModifier = (Item item) =>
+                {
+                    if (item.HasTrait(Trait.Ranged))
+                    {
+                        Creature owner = self.Owner;
+                        CombatAction snipersAimAction = owner.CreateStrike(item);
+                        snipersAimAction.Name = $"Sniper's Aim ({item.Name})";
+                        snipersAimAction.Traits.AddRange([Trait.Concentrate, Trait.UnaffectedByConcealment, FirearmTraits.IgnoreKickbackPenalty]);
+                        snipersAimAction.WithActionCost(2);
+                        snipersAimAction.Illustration = new SideBySideIllustration(item.Illustration, IllustrationName.GenericCombatManeuver);
+                        snipersAimAction.Item = item;
+                        snipersAimAction.Description = StrikeRules.CreateBasicStrikeDescription2(snipersAimAction.StrikeModifiers, additionalAttackRollText: "You gain a +2 circumstance bonus to this Strike's attack roll and ignore the target's concealment. If you're using a kickback firearm, you will take no circumstance penalty if you do not meet the Strength requirement.");
+                        snipersAimAction.StrikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.Ephemeral)
+                        {
+                            BonusToAttackRolls = (QEffect bonusToAttack, CombatAction action, Creature? target) =>
+                            {
+                                return new Bonus(2, BonusType.Circumstance, "Sniper's Aim", true);
+                            },
+
+                        };
+
+                        // Checks if the item needs to be reloaded
+                        ((CreatureTarget)snipersAimAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                        {
+                            if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && !FirearmUtilities.IsItemLoaded(item))
+                            {
+                                return Usability.NotUsable("Needs to be reloaded.");
+                            }
+
+                            return Usability.Usable;
+                        });
+
+                        return snipersAimAction;
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Phalanx Breaker feat
+        /// </summary>
+        /// <param name="phalanxBreakerFeat">The Phalanx Breaker true feat object</param>
+        private static void AddPhalanxBreakerLogic(TrueFeat phalanxBreakerFeat)
+        {
+            // Provides the effect that adds the Phalanx Breaker as a main action
+            phalanxBreakerFeat.WithPermanentQEffect("Make a ranged Strike that pushes the target back and deals damage if the target hits a obsticle.", delegate (QEffect self)
+            {
+                self.ProvideStrikeModifier = (Item item) =>
+                {
+                    if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && item.HasTrait(Trait.TwoHanded) && item.WeaponProperties != null)
+                    {
+                        Creature owner = self.Owner;
+                        CombatAction phalanxBreakerAction = owner.CreateStrike(item);
+                        phalanxBreakerAction.Name = $"Phalanx Breaker ({item.Name})";
+                        phalanxBreakerAction.WithActionCost(2);
+                        phalanxBreakerAction.Illustration = new SideBySideIllustration(item.Illustration, IllustrationName.GenericCombatManeuver);
+                        phalanxBreakerAction.Item = item;
+                        phalanxBreakerAction.Description = StrikeRules.CreateBasicStrikeDescription2(phalanxBreakerAction.StrikeModifiers, additionalAttackRollText: "This strike must be within the weapon's first range increment.", additionalSuccessText: "The target is pushed directly back 10 feet.", additionalCriticalSuccessText: "The target is pushed directly back 20 feet.", additionalAftertext: "If the target is pushed into a obsticle, the target takes bludgeoning damage equal to half your level.");
+                        phalanxBreakerAction.Target = Target.Ranged(item.WeaponProperties.RangeIncrement); // TODO: Check
+                        phalanxBreakerAction.StrikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>
+                        {
+                            if (!defender.WeaknessAndResistance.ImmunityToForcedMovement)
+                            {
+                                if (result >= CheckResult.Success)
+                                {
+                                    int distanceToMove = (result == CheckResult.CriticalSuccess) ? 4 : 2;
+                                    Tile startingTile = defender.Occupies;
+                                    await attacker.PushCreature(defender, distanceToMove);
+                                    if (startingTile.DistanceTo(defender.Occupies) < distanceToMove)
+                                    {
+                                        await CommonSpellEffects.DealDirectDamage(null, DiceFormula.FromText($"{Math.Floor(attacker.Level / 2.0)}"), defender, result, DamageKind.Bludgeoning);
+                                    }
+                                }
+                            }
+                        };
+
+                        // Checks if the item needs to be reloaded
+                        ((CreatureTarget)phalanxBreakerAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                        {
+                            if (!FirearmUtilities.IsItemLoaded(item))
+                            {
+                                return Usability.NotUsable("Needs to be reloaded.");
+                            }
+
+                            return Usability.Usable;
+                        });
+
+                        return phalanxBreakerAction;
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Advanced Shooter feat
+        /// </summary>
+        /// <param name="advancedShooterFeat">The Advanced Shooter true feat object</param>
+        private static void AddAdvancedShooterLogic(TrueFeat advancedShooterFeat)
+        {
+            // Provides the effect that adds the Advanced Shooter as a main action
+            advancedShooterFeat.WithOnSheet((CalculatedCharacterSheetValues sheet) =>
+            {
+                sheet.AddSelectionOption(new SingleFeatSelectionOption("Advanced Shooter Choice", "Advanced Shooter", 6, feat => feat.FeatName == GunslingerFeatNames.AdvancedShooterFirearm || feat.FeatName == GunslingerFeatNames.AdvancedShooterCrossbow));
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Cauterize feat
+        /// </summary>
+        /// <param name="phalanxBreakerFeat">The Cauterize true feat object</param>
+        private static void AddCauterizeLogic(TrueFeat cauterizeFeat)
+        {
+            // Provides the effect that adds the Cauterize as a strike modifier
+            cauterizeFeat.WithPermanentQEffect("Make a ranged Strike then give an ally with persistent bleed an aided recovery check.", delegate (QEffect self)
+            {
+                self.ProvideStrikeModifier = (Item item) =>
+                {
+                    if (item.HasTrait(Trait.Firearm))
+                    {
+                        bool IsAnAllyAdjacentAndBleeding(Creature self, Creature ally)
+                        {
+                            return self.FriendOf(ally) && (self == ally || self.IsAdjacentTo(ally)) && ally.QEffects.Any(qf => qf.Id == QEffectId.PersistentDamage && qf.Key != null && qf.Key.ContainsIgnoreCase("bleed"));
+                        }
+
+                        Creature owner = self.Owner;
+                        CombatAction cauterizeAction = owner.CreateStrike(item);
+                        cauterizeAction.Name = $"Cauterize ({item.Name})";
+                        cauterizeAction.Traits.AddRange([Trait.Flourish, FirearmTraits.IgnoreKickbackPenalty]);
+                        cauterizeAction.WithActionCost(1);
+                        cauterizeAction.Illustration = new SideBySideIllustration(item.Illustration, IllustrationName.PersistentBleed);
+                        cauterizeAction.Item = item;
+                        cauterizeAction.Description = StrikeRules.CreateBasicStrikeDescription2(cauterizeAction.StrikeModifiers, additionalAftertext: "You then press the heated barrel to the wounds of you or an ally within reach that is taking persistent bleed damage, giving an immediate flat check to end the bleed with the lower DC for particularly effective assistance.");
+                        cauterizeAction.StrikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>
+                        {
+                            List<Option> possibilities = new List<Option>();
+                            foreach (Creature ally in attacker.Battle.AllCreatures.Where(creature => IsAnAllyAdjacentAndBleeding(attacker, creature)))
+                            {
+                                possibilities.Add(Option.ChooseCreature("Assisted Recover Check", ally, async () =>
+                                {
+                                    CombatAction recoveryCheck = new CombatAction(attacker, IllustrationName.PersistentBleed, "Recovery Check", [Trait.Manipulate, Trait.AttackDoesNotTargetAC, Trait.Basic], "", Target.AdjacentFriendOrSelf())
+                                        .WithActionCost(0)
+                                        .WithEffectOnEachTarget(async delegate (CombatAction assistedAid, Creature attacker, Creature defender, CheckResult result)
+                                        {
+                                            defender.QEffects.Where(qf => qf.Id == QEffectId.PersistentDamage && qf.Key!.ContainsIgnoreCase("bleed")).ToList().ForEach(qf => qf.RollPersistentDamageRecoveryCheck(true));
+                                        });
+                                    await ally.Battle.GameLoop.FullCast(recoveryCheck, ChosenTargets.CreateSingleTarget(ally));
+                                }));
+                            }
+
+                            // Creates the possibilites and prompts for user selection
+                            if (possibilities.Count > 0)
+                            {
+                                Option chosenOption;
+                                if (possibilities.Count >= 2)
+                                {
+                                    var requestResult = await attacker.Battle.SendRequest(new AdvancedRequest(attacker, "Choose an ally with persistent bleed.", possibilities)
+                                    {
+                                        TopBarText = "Choose an ally with persistent bleed.",
+                                        TopBarIcon = IllustrationName.PersistentBleed
+                                    });
+                                    chosenOption = requestResult.ChosenOption;
+                                }
+                                else
+                                {
+                                    chosenOption = possibilities[0];
+                                }
+                                await chosenOption.Action();
+                            }
+                        };
+
+                        // Checks if the item needs to be reloaded
+                        ((CreatureTarget)cauterizeAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                        {
+                            if (!FirearmUtilities.IsItemLoaded(item))
+                            {
+                                return Usability.NotUsable("Needs to be reloaded.");
+                            }
+                            else if (!attacker.Battle.AllCreatures.Any(creature => IsAnAllyAdjacentAndBleeding(attacker, creature)))
+                            {
+                                return Usability.NotUsable("No adjacent ally with persistent bleed damge.");
+                            }
+
+                            return Usability.Usable;
+                        });
+
+                        return cauterizeAction;
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Scatter Blast feat
+        /// </summary>
+        /// <param name="scatterBlastFeat">The Scatter Blast true feat object</param>
+        private static void AddScatterBlastLogic(TrueFeat scatterBlastFeat)
+        {
+            // Provides the effect that adds the Cauterize as a strike modifier
+            scatterBlastFeat.WithPermanentQEffect("Make a ranged Strike with a scatter firearm that has an increased scatter range but can misfire or break on failure.", delegate (QEffect self)
+            {
+                self.ProvideStrikeModifier = (Item item) =>
+                {
+                    if (item.HasTrait(Trait.Firearm) && item.WeaponProperties != null && (item.HasTrait(FirearmTraits.Scatter5) || item.HasTrait(FirearmTraits.Scatter10)))
+                    {
+                        Creature owner = self.Owner;
+                        Item dupItem = item.Duplicate();
+                        dupItem.WeaponProperties!.WithRangeIncrement(dupItem.WeaponProperties!.RangeIncrement + 4);
+                        CombatAction scatterBlastAction = owner.CreateStrike(dupItem);
+                        scatterBlastAction.Name = $"Scatter Blast ({item.Name})";
+                        scatterBlastAction.Traits.Add(FirearmTraits.IgnoreScatter);
+                        scatterBlastAction.WithActionCost(2);
+                        scatterBlastAction.Illustration = new SideBySideIllustration(item.Illustration, IllustrationName.GenericCombatManeuver);
+                        scatterBlastAction.Item = item;
+                        scatterBlastAction.Description = StrikeRules.CreateBasicStrikeDescription4(scatterBlastAction.StrikeModifiers, prologueText: "The firearm's range increment increases by 20 feet and the radius of its scatter increases by 20 feet.", additionalFailureText: "The firearm misfires", additionalCriticalFailureText: "The item breaks and is not useable for the remainder of this combat. It also deals its normal weapon damage to all creatures in a 20-foot burst centered on the firearm, with a basic Reflex save against your class DC. This damage includes any from the weapon's fundamental and property runes.");
+                        scatterBlastAction.StrikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>
+                        {
+                            CombatAction CreateScatterExplosion(Creature source, int addedScatterRange)
+                            {
+                                return new CombatAction(source, IllustrationName.GenericCombatManeuver, "Scatter Damage", [Trait.DoNotShowInCombatLog], "The scatter explosion from Scatter Blast", Target.Emanation(4 + addedScatterRange))
+                                    .WithActionCost(0);
+                            }
+                            if (result >= CheckResult.Success)
+                            {
+                                int addedScatterRange = (item.HasTrait(FirearmTraits.Scatter5)) ? 1 : 2;
+                                CombatAction explosion = CreateScatterExplosion(defender, addedScatterRange);
+                                explosion.WithEffectOnEachTarget(async delegate (CombatAction scatterExplosion, Creature attacker, Creature defender, CheckResult result)
+                                {
+                                    await CommonSpellEffects.DealDirectDamage(scatterExplosion, DiceFormula.FromText($"{item.WeaponProperties.DamageDieCount}"), defender, result, DamageKind.Untyped);
+                                });
+
+                                await attacker.Battle.GameLoop.FullCast(explosion);
+                            }
+                            else if (result == CheckResult.Failure)
+                            {
+                                item.Traits.Add(FirearmTraits.Misfired);
+                            }
+                            else if (result == CheckResult.CriticalFailure)
+                            {
+                                attacker.AddQEffect(new QEffect()
+                                {
+                                    PreventTakingAction = (CombatAction action) =>
+                                    {
+                                        if (action.Item != null && action.Item == item)
+                                        {
+                                            return $"{item.Name} is broken";
+                                        }
+
+                                        return null;
+                                    }
+                                });
+                                CombatAction explosion = CreateScatterExplosion(attacker, 0);
+                                explosion.WithSavingThrow(new SavingThrow(Defense.Reflex, 2 + attacker.Level + attacker.Abilities.Dexterity));
+                                explosion.WithEffectOnEachTarget(async delegate (CombatAction scatterExplosion, Creature attacker, Creature defender, CheckResult result)
+                                {
+                                    await CommonSpellEffects.DealBasicDamage(scatterExplosion, attacker, defender, result, DiceFormula.FromText(item.WeaponProperties.Damage), item.DetermineDamageKinds()[0]);
+                                });
+                                EmanationTarget emanationTarget = (EmanationTarget)explosion.Target;
+                                AreaSelection areaSelection = Areas.DetermineTiles(emanationTarget);
+                                explosion.ChosenTargets.SetFromArea(emanationTarget, areaSelection?.TargetedTiles ?? new HashSet<Tile>());
+                                await explosion.AllExecute();
+                            }
+
+                            FirearmUtilities.DischargeItem(item);
+                        };
+
+                        // Checks if the item needs to be reloaded
+                        ((CreatureTarget)scatterBlastAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                        {
+                            if (!FirearmUtilities.IsItemLoaded(item))
+                            {
+                                return Usability.NotUsable("Needs to be reloaded.");
+                            }
+
+                            return Usability.Usable;
+                        });
+
+                        return scatterBlastAction;
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Stab And Blast feat
+        /// </summary>
+        /// <param name="scatterBlastFeat">The Stab And Blast true feat object</param>
+        private static void AddStabAndBlastLogic(TrueFeat stabAndBlastFeat)
+        {
+            // Provides the effect that adds the Stab And Blast as a strike modifier
+            stabAndBlastFeat.WithPermanentQEffect("Make a melee strike with your Bayonet then a ranged stike.", delegate (QEffect self)
+            {
+                self.ProvideStrikeModifier = (Item item) =>
+                {
+                    if (item.HasTrait(FirearmTraits.Bayonet) && item.Tag != null && item.Tag is Item rangedWeapon && FirearmUtilities.IsItemFirearmOrCrossbow(rangedWeapon))
+                    {
+                        Creature owner = self.Owner;
+                        CombatAction stabAndBlastAction = owner.CreateStrike(item);
+                        stabAndBlastAction.Name = $"Stab and Blast";
+                        stabAndBlastAction.Traits.Add(Trait.Flourish);
+                        stabAndBlastAction.WithActionCost(1);
+                        stabAndBlastAction.Illustration = new SideBySideIllustration(item.Illustration, rangedWeapon.Illustration);
+                        stabAndBlastAction.Item = rangedWeapon;
+                        stabAndBlastAction.Description = StrikeRules.CreateBasicStrikeDescription3(stabAndBlastAction.StrikeModifiers, additionalSuccessText: "Make a ranged Strike against the same target with a +2 circumstance bonus to the attack roll. This counts as two attacks toward your multiple attack penalty, but you don't apply the multiple attack penalty until after making both attacks.");
+                        stabAndBlastAction.StrikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>
+                        {
+                            if (result >= CheckResult.Success)
+                            {
+                                CombatAction meleeStrike = attacker.CreateStrike(rangedWeapon);
+                                meleeStrike.WithActionCost(0);
+                                meleeStrike.StrikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.EphemeralAtEndOfImmediateAction)
+                                {
+                                    BonusToAttackRolls = (QEffect qfAttackRoll, CombatAction action, Creature? target) =>
+                                    {
+                                        return new Bonus(2, BonusType.Circumstance, "Stab and Blast", true);
+                                    }
+                                };
+                                attacker.Actions.AttackedThisManyTimesThisTurn--;
+                                await attacker.MakeStrike(meleeStrike, defender);
+                                attacker.Actions.AttackedThisManyTimesThisTurn++;
+                            }
+                        };
+
+                        // Checks if the item needs to be reloaded
+                        ((CreatureTarget)stabAndBlastAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                        {
+                            if (!FirearmUtilities.IsItemLoaded(rangedWeapon))
+                            {
+                                return Usability.NotUsable("Needs to be reloaded.");
+                            }
+
+                            return Usability.Usable;
+                        });
+
+                        return stabAndBlastAction;
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Scatter Blast feat
+        /// </summary>
+        /// <param name="scatterBlastFeat">The Scatter Blast true feat object</param>
+        private static void AddSmokeCurtainLogic(TrueFeat scatterBlastFeat)
+        {
+            // Provides the effect that adds the Scatter Blast as a strike modifier
+            scatterBlastFeat.WithPermanentQEffect("Make a ranged Strike and create a cloud of smoke around yourself.", delegate (QEffect self)
+            {
+                self.ProvideStrikeModifier = (Item item) =>
+                {
+                    if (item.HasTrait(Trait.Firearm))
+                    {
+                        Creature owner = self.Owner;
+                        CombatAction scatterBlastAction = owner.CreateStrike(item);
+                        scatterBlastAction.Name = $"Smoke Curtain ({item.Name})";
+                        scatterBlastAction.WithActionCost(2);
+                        scatterBlastAction.Illustration = new SideBySideIllustration(item.Illustration, IllustrationName.GenericCombatManeuver);
+                        scatterBlastAction.Item = item;
+                        scatterBlastAction.Description = StrikeRules.CreateBasicStrikeDescription4(scatterBlastAction.StrikeModifiers, prologueText: "Create a cloud of smoke in a 20-foot emanation centered on your location. Creatures are concealed while within the smoke. The smoke dissipates at the start of your next turn.", additionalCriticalFailureText: "The firearm misfires");
+                        scatterBlastAction.StrikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>
+                        {
+                            Tile origin = attacker.Occupies;
+                            List<TileQEffect> effectsToRemoveAtStartOfTurn = new List<TileQEffect>();
+                            foreach (Tile tile in attacker.Battle.Map.AllTiles.Where(tile => tile.HasLineOfEffectToIgnoreLesser(origin) < CoverKind.Blocked && tile.DistanceTo(origin) <= 4))
+                            {
+                                TileQEffect tileQEffect = new TileQEffect()
+                                {
+                                    StateCheck = source =>
+                                    {
+                                        source.Owner.FoggyTerrain = true;
+                                    }
+                                };
+                                effectsToRemoveAtStartOfTurn.Add(tileQEffect);
+                                tile.AddQEffect(tileQEffect);
+                            }
+                            attacker.AddQEffect(new QEffect()
+                            {
+                                StartOfYourPrimaryTurn = async (QEffect startOfTurn, Creature me) =>
+                                {
+                                    foreach (TileQEffect tileEffect in effectsToRemoveAtStartOfTurn)
+                                    {
+                                        tileEffect.ExpiresAt = ExpirationCondition.Immediately;
+                                    }
+                                    startOfTurn.ExpiresAt = ExpirationCondition.Immediately;
+                                }
+                            });
+                            if (result == CheckResult.CriticalFailure)
+                            {
+                                item.Traits.Add(FirearmTraits.Misfired);
+                            }
+                        };
+
+                        // Checks if the item needs to be reloaded
+                        ((CreatureTarget)scatterBlastAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                        {
+                            if (!FirearmUtilities.IsItemLoaded(item))
+                            {
+                                return Usability.NotUsable("Needs to be reloaded.");
+                            }
+
+                            return Usability.Usable;
+                        });
+
+                        return scatterBlastAction;
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Leap and Fire feat
+        /// </summary>
+        /// <param name="leapAndFireFeat">The Leap and Fire true feat object</param>
+        private static void AddLeapAndFireLogic(TrueFeat leapAndFireFeat)
+        {
+            // Provides the effect that adds the Leap and Fire as a strike modifier
+            leapAndFireFeat.WithPermanentQEffect("Make a ranged Strike when you Hit the Dirt!", delegate (QEffect self)
+            {
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Grit and Tenacity feat
+        /// </summary>
+        /// <param name="gritAndTenacityFeat">The Grit and Tenacity true feat object</param>
+        private static void AddGritAndTenacityLogic(TrueFeat gritAndTenacityFeat)
+        {
+            // Provides the effect that adds the Grit and Tenacity as a strike modifier
+            gritAndTenacityFeat.WithPermanentQEffect("When you fail a Fortitude or Will save you can reroll with a +2 circumstance bonus.", delegate (QEffect self)
+            {
+                self.Tag = true;
+                self.RerollSavingThrow = async (QEffect reroll, CheckBreakdownResult result, CombatAction action) =>
+                {
+                    if ((action.SavingThrow?.Defense == Defense.Fortitude || action.SavingThrow?.Defense == Defense.Will) && result.CheckResult <= CheckResult.Failure && reroll.Tag is bool canUse && canUse)
+                    {
+                        Creature owner = reroll.Owner;
+                        if (await owner.AskToUseReaction("You rolled a " + result.CheckResult.HumanizeLowerCase2() + "against " + action + ". Use Grit and Tenacity to reroll the save with a +2 circumstance bonus?"))
+                        {
+                            owner.AddQEffect(new QEffect(ExpirationCondition.Ephemeral)
+                            {
+                                BonusToDefenses = (QEffect bonusToSave, CombatAction? action, Defense defense) =>
+                                {
+                                    return new Bonus(2, BonusType.Circumstance, "Grit and Tenacity", true);
+                                }
+                            });
+
+                            return RerollDirection.RerollAndKeepSecond;
+                        }
+                    }
+
+                    return RerollDirection.DoNothing;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Bullet Split feat
+        /// </summary>
+        /// <param name="bulletSplitFeat">The Bullet Split true feat object</param>
+        private static void AddBulletSplitLogic(TrueFeat bulletSplitFeat)
+        {
+            // Provides the effect that adds the Bullet Split as a main action
+            bulletSplitFeat.WithPermanentQEffect("Make a ranged strike against two adjacent enemies with a -2 circumstance penality.", delegate (QEffect self)
+            {
+                self.ProvideStrikeModifier = (Item item) =>
+                {
+                    if (FirearmUtilities.IsItemFirearmOrCrossbow(item))
+                    {
+                        Creature owner = self.Owner;
+                        CombatAction bulletSplitAction = owner.CreateStrike(item);
+                        bulletSplitAction.Name = $"Bullet Split ({item.Name})";
+                        bulletSplitAction.WithActionCost(1);
+                        bulletSplitAction.Illustration = new SideBySideIllustration(item.Illustration, IllustrationName.GenericCombatManeuver);
+                        bulletSplitAction.Item = item;
+                        bulletSplitAction.Description = StrikeRules.CreateBasicStrikeDescription3(bulletSplitAction.StrikeModifiers, prologueText: "Make two Strikes, one each against two separate targets. The targets must be adjacent to each other and within your weapon's maximum range. Each of these attacks takes a –2 penalty to the attack roll, but the two count as only one attack when calculating your multiple attack penalty.");
+                        bulletSplitAction.StrikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.Ephemeral)
+                        {
+                            BonusToAttackRolls = (QEffect attackRoll, CombatAction action, Creature? defender) =>
+                            {
+                                return new Bonus(-2, BonusType.Circumstance, "Bullet Split", false);
+                            }
+                        };
+                        bulletSplitAction.StrikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>
+                        {
+                            Item duplicatedItem = item.Duplicate();
+                            // Adds the weapon to useage
+                            CombatAction strike = attacker.CreateStrike(duplicatedItem).WithActionCost(0);
+                            ((CreatureTarget)strike.Target).WithAdditionalConditionOnTargetCreature((Creature a, Creature d) =>
+                            {
+                                if (d == defender || !defender.IsAdjacentTo(d))
+                                {
+                                    return Usability.NotUsableOnThisCreature("not adjacent");
+                                }
+
+                                return Usability.Usable;
+                            });
+                            strike.StrikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.Ephemeral)
+                            {
+                                BonusToAttackRolls = (QEffect attackRoll, CombatAction action, Creature? defender) =>
+                                {
+                                    return new Bonus(-2, BonusType.Circumstance, "Bullet Split", false);
+                                }
+                            };
+                            List<Option> possibilities = new List<Option>();
+                            GameLoop.AddDirectUsageOnCreatureOptions(strike, possibilities, true);
+
+                            // Creates the possibilites and prompts for user selection
+                            if (possibilities.Count > 0)
+                            {
+                                Option chosenOption;
+                                if (possibilities.Count >= 2)
+                                {
+                                    var requestResult = await attacker.Battle.SendRequest(new AdvancedRequest(attacker, "Choose a creature to Strike.", possibilities)
+                                    {
+                                        TopBarText = "Choose a creature to Strike.",
+                                        TopBarIcon = duplicatedItem.Illustration
+                                    });
+                                    chosenOption = requestResult.ChosenOption;
+                                }
+                                else
+                                {
+                                    chosenOption = possibilities[0];
+                                }
+
+                                attacker.Actions.AttackedThisManyTimesThisTurn--;
+                                await chosenOption.Action();
+                                attacker.Actions.AttackedThisManyTimesThisTurn++;
+                            }
+                        };
+
+                        // Checks if the item needs to be reloaded
+                        ((CreatureTarget)bulletSplitAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                        {
+                            if (!FirearmUtilities.IsItemLoaded(item))
+                            {
+                                return Usability.NotUsable("Needs to be reloaded.");
+                            }
+                            else if (!owner.HeldItems.Any(heldItem => heldItem != item && (heldItem.WeaponProperties != null && (heldItem.WeaponProperties.DamageKind == DamageKind.Slashing || heldItem.HasTrait(Trait.VersatileS)) || heldItem.HasTrait(FirearmTraits.Bayonet))))
+                            {
+                                return Usability.NotUsable("You must be holding a Slashing, Versatile S or Bayonet weapon in the other hand.");
+                            }
+                            else if (!attacker.Battle.AllCreatures.Any(creature => defender != creature && !attacker.FriendOf(creature) && creature.IsAdjacentTo(defender)))
+                            {
+                                return Usability.NotUsableOnThisCreature("not adjacent");
+                            }
+
+                            return Usability.Usable;
+                        });
+
+                        return bulletSplitAction;
+                    }
+
+                    return null;
+                };
             });
         }
 

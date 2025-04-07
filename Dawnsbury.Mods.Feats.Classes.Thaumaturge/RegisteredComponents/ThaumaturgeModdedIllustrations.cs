@@ -1,4 +1,6 @@
-﻿using Dawnsbury.Display.Illustrations;
+﻿using Dawnsbury.Core;
+using Dawnsbury.Display.Illustrations;
+using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Enums;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
 {
@@ -83,5 +85,21 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Divine Disharmony Illustration
         /// </summary>
         public static readonly ModdedIllustration DivineDisharmony = new ModdedIllustration("ThaumaturgeAssets/DivineDisharmony.png");
+
+        public static Illustration GetIllustration(ImplementIDs implementID)
+        {
+            switch(implementID)
+            {
+                case ImplementIDs.Amulet: return Amulet;
+                case ImplementIDs.Bell: return Bell;
+                case ImplementIDs.Chalice: return Chalice;
+                case ImplementIDs.Lantern: return Lantern;
+                case ImplementIDs.Mirror: return Mirror;
+                case ImplementIDs.Regalia: return Regalia;
+                case ImplementIDs.Tome: return Tome;
+                case ImplementIDs.Wand: return Wand;
+                default: return IllustrationName.GenericCombatManeuver;
+            }
+        }
     }
 }

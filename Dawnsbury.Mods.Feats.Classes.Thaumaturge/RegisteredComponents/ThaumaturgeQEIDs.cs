@@ -82,5 +82,20 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Esoteric Seller persistent QEffect ID
         /// </summary>
         public static readonly QEffectId EsotericSeller = ModManager.RegisterEnumMember<QEffectId>("Esoteric Seller QEID");
+
+        /// <summary>
+        /// The Adept Chalice Buff persistent QEffect ID
+        /// </summary>
+        public static readonly QEffectId AdeptChaliceBuff = ModManager.RegisterEnumMember<QEffectId>("Adept Chalice Buff QEID");
+
+        /// <summary>
+        /// The Adept Chalice Tracker persistent QEffect ID
+        /// </summary>
+        public static readonly QEffectId AdeptChaliceTracker = ModManager.RegisterEnumMember<QEffectId>("Adept Chalice Tracker QEID");
+
+        /// <summary>
+        /// The Adept Regalia Tracker persistent QEffect ID
+        /// </summary>
+        public static readonly QEffectId AdeptRegaliaTracker = ModManager.RegisterEnumMember<QEffectId>("Adept Regalia QEID");
     }
 }

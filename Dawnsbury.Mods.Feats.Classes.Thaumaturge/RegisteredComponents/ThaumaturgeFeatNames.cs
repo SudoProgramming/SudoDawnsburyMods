@@ -156,6 +156,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         public static readonly FeatName LingeringPainStrike = ModManager.RegisterFeatName("Lingering Pain Strike", "Lingering Pain Strike");
 
         /// <summary>
+        /// The One More Activation class Feat
+        /// </summary>
+        public static readonly FeatName OneMoreActivation = ModManager.RegisterFeatName("One More Activation", "One More Activation");
+
+        /// <summary>
+        /// The Scroll Esoterica class Feat
+        /// </summary>
+        public static readonly FeatName ScrollEsoterica = ModManager.RegisterFeatName("Scroll Esoterica", "Scroll Esoterica");
+
+        /// <summary>
         /// The Esoterica Seller class Feat
         /// </summary>
         public static readonly FeatName EsotericaSeller = ModManager.RegisterFeatName("Esoterica Seller", "Esoterica Seller");

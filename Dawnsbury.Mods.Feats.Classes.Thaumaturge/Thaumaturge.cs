@@ -263,6 +263,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             lingeringPainStrikeFeat.WithActionCost(2);
             AddLingeringPainStrikeLogic(lingeringPainStrikeFeat);
             yield return lingeringPainStrikeFeat;
+
+            TrueFeat oneMoreActivationFeat = new TrueFeat(ThaumaturgeFeatNames.OneMoreActivation, 6, "You've forged a deeper bond to your invested items, allowing you to activate them more than usual.", "Once each day, you can activate an non-consumable item that has already been used up.", [ThaumaturgeTraits.Thaumaturge]);
+            AddOneMoreActivationLogic(oneMoreActivationFeat);
+            yield return oneMoreActivationFeat;
+
+            TrueFeat scrollEsotericaFeat = new TrueFeat(ThaumaturgeFeatNames.ScrollEsoterica, 6, "Your esoterica includes scraps of scriptures, magic tomes, druidic markings, and the like, which you can use to create temporary scrolls.", "Once each day, you can create a scroll you used this combat in the same hand you are holding your implement or your open hand. This scroll is temporary and will only last this encounter.", [ThaumaturgeTraits.Thaumaturge]);
+            scrollEsotericaFeat.WithPrerequisite(ThaumaturgeFeatNames.ScrollThaumaturgy, "Requires Scroll Thaumaturgy");
+            AddScrollEsotericaLogic(scrollEsotericaFeat);
+            yield return scrollEsotericaFeat;
         }
 
         /// <summary>
@@ -1552,7 +1561,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                             {
                                                 CombatAction drawScrollImplementAction = new CombatAction(owner, scroll.Illustration, drawOrReplace + " " + scroll.Name, [Trait.Manipulate, Trait.Basic], drawOrReplace + " a scroll into the same hand you are holding this implement in.\n----\n" + scroll.Description, Target.Self())
                                                     .WithActionCost(1)
-                                                    .WithEffectOnSelf((Creature self) =>
+                                                    .WithEffectOnSelf(async (Creature self) =>
                                                     {
                                                         if (self.HeldItems[implementIndex].HasTrait(ThaumaturgeTraits.Implement))
                                                         {
@@ -1960,6 +1969,145 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             }
                         }
                     }
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the One More Activation feat
+        /// </summary>
+        /// <param name="oneMoreActivationFeat">The One More Activation feat object</param>
+        public static void AddOneMoreActivationLogic(Feat oneMoreActivationFeat)
+        {
+            oneMoreActivationFeat.WithPermanentQEffect("Once per day, you can reactivate an item.", delegate (QEffect self)
+            {
+                self.ProvideActionIntoPossibilitySection = (QEffect qfProvideAction, PossibilitySection section) =>
+                {
+                    if (section.PossibilitySectionId == PossibilitySectionId.ItemActions)
+                    {
+                        Creature owner = qfProvideAction.Owner;
+
+                        if (owner.PersistentUsedUpResources.UsedUpActions.Contains("One More Activation"))
+                        {
+                            return null;
+                        }
+
+                        List<Item> allItems = owner.HeldItems.Concat(owner.CarriedItems).ToList();
+                        List<Item> usedUpItems = allItems.Where(item => item.IsUsedUp == true).ToList();
+                        foreach (Item item in allItems)
+                        {
+                            foreach (Item subItem in item.StoredItems)
+                            {
+                                if (subItem.IsUsedUp)
+                                {
+                                    usedUpItems.Add(subItem);
+                                }
+                            }
+                        }
+
+                        if (usedUpItems.Count > 0)
+                        {
+                            SubmenuPossibility oneMoreActivationMenu = new SubmenuPossibility(IllustrationName.GenericCombatManeuver, "Reactivate an item that already been used up.");
+                            PossibilitySection oneMoreActivationSection = new PossibilitySection($"One more activation");
+                            foreach (Item item in usedUpItems)
+                            {
+                                CombatAction oneMoreActivationAction = new CombatAction(owner, item.Illustration, "One More Activation (" + item.Name + ")", [Trait.Basic], $"Reactivate {item.Name} so it can be used again today. You can not use 'One More Activation' again for the rest of the day.", Target.Self()
+                                    .WithAdditionalRestriction((Creature user) =>
+                                    {
+                                        if (user.PersistentUsedUpResources.UsedUpActions.Contains("One More Activation"))
+                                        {
+                                            return "Already used 'One More Activation' today.";
+                                        }
+
+                                        return null;
+                                    }))
+                                    .WithActionCost(0)
+                                    .WithEffectOnSelf(async (Creature self) =>
+                                    {
+                                        item.RevertUseUp();
+                                        self.PersistentUsedUpResources.UsedUpActions.Add("One More Activation");
+                                    });
+                                ActionPossibility oneMoreActivationPossibility = new ActionPossibility(oneMoreActivationAction);
+                                oneMoreActivationSection.AddPossibility(oneMoreActivationPossibility);
+                            }
+
+                            oneMoreActivationMenu.Subsections.Add(oneMoreActivationSection);
+                            return oneMoreActivationMenu;
+                        }
+                    }
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Scroll Esoterica feat
+        /// </summary>
+        /// <param name="scrollEsotericaFeat">The Scroll Esoterica feat object</param>
+        public static void AddScrollEsotericaLogic(Feat scrollEsotericaFeat)
+        {
+            scrollEsotericaFeat.WithPermanentQEffect("Once per day, you recreate a scroll.", delegate (QEffect self)
+            {
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    startOfCombat.Tag = new List<Item>();
+                };
+
+                self.AfterYouTakeAction = async (QEffect youTakeAction, CombatAction action) =>
+                {
+                    if (youTakeAction.Tag != null && youTakeAction.Tag is List<Item> usedScrollsThisCombat && action.CastFromScroll != null)
+                    {
+                        usedScrollsThisCombat.Add(action.CastFromScroll);
+                    }
+                };
+
+                self.ProvideActionIntoPossibilitySection = (QEffect qfProvideAction, PossibilitySection section) =>
+                {
+                    if (section.PossibilitySectionId == PossibilitySectionId.ItemActions)
+                    {
+                        Creature owner = qfProvideAction.Owner;
+
+                        if (owner.PersistentUsedUpResources.UsedUpActions.Contains("Scroll Esoterica"))
+                        {
+                            return null;
+                        }
+
+                        if (qfProvideAction.Tag != null && qfProvideAction.Tag is List<Item> usedScrollsThisCombat && usedScrollsThisCombat.Count > 0)
+                        {
+                            SubmenuPossibility scrollEsotericaMenu = new SubmenuPossibility(IllustrationName.Scroll, "Recreate a scroll you used this combat.");
+                            PossibilitySection scrollEsotericaSection = new PossibilitySection($"Scroll Esoterica");
+                            foreach (Item item in usedScrollsThisCombat)
+                            {
+                                CombatAction scrollEsotericaAction = new CombatAction(owner, item.Illustration, "Scroll Esoterica (" + item.Name + ")", [Trait.Basic], $"Recreate {item.Name} and place it in your hand holding your implement or a free hand. You can not use 'Scroll Esoterica' again for the rest of the day.", Target.Self()
+                                    .WithAdditionalRestriction((Creature user) =>
+                                    {
+                                        if (user.PersistentUsedUpResources.UsedUpActions.Contains("Scroll Esoterica"))
+                                        {
+                                            return "Already used 'Scroll Esoterica' today.";
+                                        }
+
+                                        return null;
+                                    }))
+                                    .WithActionCost(0)
+                                    .WithEffectOnSelf(async (Creature self) =>
+                                    {
+                                        // TODO: Handle Implement Hand
+                                        if (self.HasFreeHand)
+                                        {
+                                            self.AddHeldItem(item);
+                                        }
+
+                                        self.PersistentUsedUpResources.UsedUpActions.Add("Scroll Esoterica");
+                                    });
+                                ActionPossibility scrollEsotericaPossibility = new ActionPossibility(scrollEsotericaAction);
+                                scrollEsotericaSection.AddPossibility(scrollEsotericaPossibility);
+                            }
+
+                            scrollEsotericaMenu.Subsections.Add(scrollEsotericaSection);
+                            return scrollEsotericaMenu;
+                        }
+                    }
+                    return null;
                 };
             });
         }

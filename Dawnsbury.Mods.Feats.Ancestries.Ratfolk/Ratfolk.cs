@@ -1,16 +1,21 @@
-﻿using Dawnsbury.Core;
+﻿using Dawnsbury.Auxiliary;
+using Dawnsbury.Core;
 using Dawnsbury.Core.Animations.Movement;
 using Dawnsbury.Core.CharacterBuilder.AbilityScores;
 using Dawnsbury.Core.CharacterBuilder.Feats;
+using Dawnsbury.Core.CharacterBuilder.Selections.Options;
+using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Intelligence;
 using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Core;
+using Dawnsbury.Core.Mechanics.Damage;
 using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Core.Possibilities;
+using Dawnsbury.Core.Roller;
 using Dawnsbury.Core.Tiles;
 using Dawnsbury.Modding;
 using Dawnsbury.Mods.Feats.Ancestries.Ratfolk.RegisteredComponents;
@@ -18,7 +23,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using static Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb.BarbarianFeatsDb.AnimalInstinctFeat;
+using static Dawnsbury.Delegates;
 
 namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
 {
@@ -95,6 +103,35 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
 
             // Creates the Vicious Incisors Ratfolk Feat
             yield return new TrueFeat(RatfolkFeatNames.ViciousIncisors, 1, "You've let your incisors grow long enough to serve as formidable weapons", "Your jaws unarmed attack deals 1d6 piercing damage instead of 1d4, and gains the backstabber trait.", [RatfolkTraits.Ratfolk]);
+
+            // Level 5 Ancestry Feats
+            // Creates and adds the logic for the Cornered Fury Ratfolk Feat
+            TrueFeat corneredFuryFeat = new TrueFeat(RatfolkFeatNames.CorneredFury, 5, "When physically outmatched, you fight with unexpected ferocity.", "If a foe critically hits and damages you, that foe is flat-footed to you for 1 round.", [RatfolkTraits.Ratfolk]);
+            AddCorneredFuryLogic(corneredFuryFeat);
+            yield return corneredFuryFeat;
+
+            // Creates and adds the logic for the Gnaw Ratfolk Feat
+            TrueFeat gnawFeat = new TrueFeat(RatfolkFeatNames.Gnaw, 5, "With enough time and determination, you can chew through nearly anything.", "Your jaws deal an additional die of damage against constructs and objects.", [RatfolkTraits.Ratfolk]);
+            gnawFeat.WithPrerequisite(RatfolkFeatNames.ViciousIncisors, "Requires Vicious Incisors");
+            AddGnawLogic(gnawFeat);
+            yield return gnawFeat;
+
+            // Creates and adds the logic for the Lab Rat Ratfolk Feat
+            TrueFeat labRatFeat = new TrueFeat(RatfolkFeatNames.LabRat, 5, "You've spent more than your share of time in an alchemy lab.", "You have a +1 circumstance bonus to saves against poisons and elixirs. If you roll a success on your saving throw against an elixir or poison, you get a critical success instead.", [RatfolkTraits.Ratfolk]);
+            AddLabRatLogic(labRatFeat);
+            yield return labRatFeat;
+
+            // Creates and adds the logic for the Quick Stow Ratfolk Feat
+            TrueFeat quickStowFeat = new TrueFeat(RatfolkFeatNames.QuickStow, 5, "You are adept at quickly moving items into your cheek pouches", "You can stow as a free action.", [RatfolkTraits.Ratfolk]);
+            quickStowFeat.WithPrerequisite(RatfolkFeatNames.CheekPouches, "Requires Check Pouches");
+            quickStowFeat.WithActionCost(0);
+            AddQuickStowLogic(quickStowFeat);
+            yield return quickStowFeat;
+
+            // Creates and adds the logic for the Rat Magic Ratfolk Feat
+            TrueFeat ratMagicFeat = new TrueFeat(RatfolkFeatNames.RatMagic, 5, "There always seemed to be a little magic within you.", "Choose any one primal cantrip. You can cast it at-will as an innate spell.", [RatfolkTraits.Ratfolk]);
+            AddRatMagicLogic(ratMagicFeat);
+            yield return ratMagicFeat;
         }
 
         /// <summary>
@@ -395,6 +432,117 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
         }
 
         /// <summary>
+        /// Adds the Cornered Fury Logic
+        /// </summary>
+        /// <param name="corneredFuryFeat">The Cornered Fury feat</param>
+        public static void AddCorneredFuryLogic(TrueFeat corneredFuryFeat)
+        {
+            corneredFuryFeat.WithPermanentQEffect("Foe's are flat-footed for a round if they critically hit you.", delegate (QEffect self)
+            {
+                self.AfterYouTakeDamage = async (QEffect qeffect, int amount, DamageKind kind, CombatAction? action, bool critical) =>
+                {
+                    if (action != null && action.HasTrait(Trait.Attack) && action.CheckResult == CheckResult.CriticalSuccess)
+                    {
+                        QEffect flatFooted = QEffect.FlatFooted("Cornered Fury");
+                        flatFooted.IsFlatFootedTo = (QEffect qf, Creature? attacker, CombatAction? power) =>
+                        {
+                            if (attacker != null && attacker == qeffect.Owner)
+                            {
+                                return "Cornered Fury";
+                            }
+
+                            return null;
+                        };
+                        flatFooted.Name += " (Cornered Fury)";
+                        flatFooted.Description = $"You have a -2 circumstance penalty to AC against {qeffect.Owner.Name} until the start of your next turn.";
+                        flatFooted.ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn;
+                        action.Owner.AddQEffect(flatFooted);
+                    }
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the Gnaw Logic
+        /// </summary>
+        /// <param name="gnawFeat">The Gnaw feat</param>
+        public static void AddGnawLogic(TrueFeat gnawFeat)
+        {
+            gnawFeat.WithPermanentQEffect("Your jaws deal an additional die of damage against constructs.", delegate (QEffect self)
+            {
+                self.YouDealDamageEvent = async (QEffect qfDamage, DamageEvent damageEvent) =>
+                {
+                    Creature owner = qfDamage.Owner;
+                    if (damageEvent.CombatAction != null && damageEvent.CombatAction.Item != null && damageEvent.CombatAction.Item.Name.ToLower().Contains("ratfolk sharp teeth") && damageEvent.TargetCreature.HasTrait(Trait.Construct) || damageEvent.TargetCreature.HasTrait(Trait.Object))
+                    {
+                        damageEvent.KindedDamages.Add(new KindedDamage(DiceFormula.FromText("1d6", "Gnaw"), damageEvent.KindedDamages[0].DamageKind));
+                    }
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the Lab Rat Logic
+        /// </summary>
+        /// <param name="labRatFeat">The Lab Rat feat</param>
+        public static void AddLabRatLogic(TrueFeat labRatFeat)
+        {
+            labRatFeat.WithPermanentQEffect("You have a +1 circumstance bonus against poisons and elixirs", delegate (QEffect self)
+            {
+                self.BonusToDefenses = (QEffect defenseBonus, CombatAction? action, Defense defense) =>
+                {
+                    if (action != null && (action.HasTrait(Trait.Poison) || action.HasTrait(Trait.Elixir)))
+                    {
+                        return new Bonus(1, BonusType.Circumstance, "Lab Rat", true);
+                    }
+
+                    return null;
+                };
+                self.AdjustSavingThrowCheckResult = (QEffect qfCheckUp, Defense defense, CombatAction action, CheckResult checkResult) =>
+                {
+                    if (checkResult == CheckResult.Success && (action.HasTrait(Trait.Poison) || action.HasTrait(Trait.Elixir)))
+                    {
+                        return CheckResult.CriticalSuccess;
+                    }
+
+                    return checkResult;
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the Quick Stow Logic
+        /// </summary>
+        /// <param name="quickStowFeat">The Quick Stow feat</param>
+        public static void AddQuickStowLogic(TrueFeat quickStowFeat)
+        {
+            quickStowFeat.WithPermanentQEffect("You can stow as a free action.", delegate (QEffect self)
+            {
+                ModManager.RegisterActionOnEachActionPossibility(action =>
+                {
+                    if (action.Owner.HasFeat(RatfolkFeatNames.QuickStow) && action.Name.ToLower().StartsWith("stow"))
+                    {
+                        action.ActionCost = 0;
+                    }
+                });
+            });
+        }
+
+        /// <summary>
+        /// Adds the Rat Magic Logic
+        /// </summary>
+        /// <param name="ratMagicFeat">The Rat Magic feat</param>
+        public static void AddRatMagicLogic(TrueFeat ratMagicFeat)
+        {
+            ratMagicFeat.WithOnSheet((character) =>
+            {
+                character.SetProficiency(Trait.Spell, Proficiency.Trained);
+                character.InnateSpells.GetOrCreate(RatfolkTraits.Ratfolk, () => new InnateSpells(Trait.Primal));
+                character.AddSelectionOption(new AddInnateSpellOption("ExtraRatfolkCantrip", "Rat magic cantrip", -1, RatfolkTraits.Ratfolk, 0, spell => spell.HasTrait(Trait.Primal)));
+            });
+        }
+
+        /// <summary>
         /// Asyncronisly gets the first creature in the tumble through path
         /// </summary>
         /// <param name="self">The creature tumbling through</param>
@@ -402,7 +550,6 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
         /// <returns>The first creature tumbled through or null</returns>
         private static async Task<Creature?> GetTumbleThroughCreature(Creature self, Tile tile)
         {
-            // HACK: Pathfinding is internal so this should be updated when and if it is made public
             MovementStyle movementStyle = new MovementStyle()
             {
                 MaximumSquares = self.Speed
@@ -412,7 +559,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
                 Squares = movementStyle.MaximumSquares,
                 Style = movementStyle
             };
-            IList<Tile>? pathToTiles = (IList<Tile>?)(typeof(ModManager).Assembly.GetType("Dawnsbury.Core.Intelligence.Pathfinding").GetMethod("GetPath", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static).Invoke(null, [self, tile, tile.Battle, pathfindingDescription]));
+            IList<Tile>? pathToTiles = Pathfinding.GetPath(self, tile, tile.Battle, pathfindingDescription);
 
             // After pathfinding the first non-friendly creature is returned
             if (pathToTiles != null)

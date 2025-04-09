@@ -54,6 +54,31 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk.RegisteredComponents
         public static readonly FeatName AgileTail = ModManager.RegisterFeatName("Agile Tail", "Agile Tail");
 
         /// <summary>
+        /// The Cornered Fury ancestry feat name
+        /// </summary>
+        public static readonly FeatName CorneredFury = ModManager.RegisterFeatName("Cornered Fury", "Cornered Fury");
+
+        /// <summary>
+        /// The Lab Rat ancestry feat name
+        /// </summary>
+        public static readonly FeatName LabRat = ModManager.RegisterFeatName("Lab Rat", "Lab Rat");
+
+        /// <summary>
+        /// The Quick Stow ancestry feat name
+        /// </summary>
+        public static readonly FeatName QuickStow = ModManager.RegisterFeatName("Quick Stow", "Quick Stow");
+
+        /// <summary>
+        /// The Gnaw ancestry feat name
+        /// </summary>
+        public static readonly FeatName Gnaw = ModManager.RegisterFeatName("Gnaw", "Gnaw");
+
+        /// <summary>
+        /// The Rat Magic ancestry feat name
+        /// </summary>
+        public static readonly FeatName RatMagic = ModManager.RegisterFeatName("Rat Magic", "Rat Magic");
+
+        /// <summary>
         /// The Tumbling Trickster ancestry feat name
         /// </summary>
         public static readonly FeatName TumblingTrickster = ModManager.RegisterFeatName("Tumbling Trickster", "Tumbling Trickster");

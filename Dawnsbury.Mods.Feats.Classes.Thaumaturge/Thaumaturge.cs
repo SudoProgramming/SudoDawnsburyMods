@@ -1064,6 +1064,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Second Extra Skill", "Tome Second Extra Skill", sheet.CurrentLevel, (feat => feat is SkillSelectionFeat)));
                 //sheet.AddSkillIncreaseOption(sheet.CurrentLevel > 3 ? sheet.CurrentLevel : 3);
                 //sheet.AddSkillIncreaseOption(5);
+                ThaumaturgeUtilities.EnsureCorrectImplements(sheet);
             };
             tomeImplementFeat.WithPermanentQEffect(ImplementDetails.TomeInitiateBenefitName + " - Improved Exploit Vulnerability and extra skills", delegate (QEffect self) {
             });

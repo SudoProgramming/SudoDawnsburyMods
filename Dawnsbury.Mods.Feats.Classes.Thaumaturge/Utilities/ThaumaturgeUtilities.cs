@@ -403,9 +403,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             {
                 Inventory inventory = character.Sheet.InventoriesByLevel[level];
 
-                if (level >= 5 || (character.Tags["First Implement"] is FeatName firstImplementFeatName && firstImplementFeatName == LookupImplementFeatName(implement.ImplementID)))
+                if (level == 1 || inventory.LeftHand != null || inventory.RightHand != null || inventory.Backpack.Count != 0)
                 {
-                    AddImplementIntoInventory(inventory, implement);
+                    if (level >= 5 || (character.Tags["First Implement"] is FeatName firstImplementFeatName && firstImplementFeatName == LookupImplementFeatName(implement.ImplementID)))
+                    {
+                        AddImplementIntoInventory(inventory, implement);
+                    }
                 }
             }
         }

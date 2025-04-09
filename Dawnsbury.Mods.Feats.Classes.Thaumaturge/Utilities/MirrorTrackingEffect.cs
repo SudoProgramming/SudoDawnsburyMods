@@ -146,34 +146,68 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                 {
                     return acquiredEffect;
                 }
-                else if (PassedOnQEffects.Contains(acquiredEffect))
+                else if (acquiredEffect is not QEffectClone)
                 {
-                    PassedOnQEffects.Remove(acquiredEffect);
-                }
-                else
-                {
-                    QEffect? pairedMirrorTrackingEffect = PairedCreature.FindQEffect(ThaumaturgeQEIDs.MirrorTracking);
-                    if (pairedMirrorTrackingEffect != null && pairedMirrorTrackingEffect is MirrorTrackingEffect effectToUpdate)
-                    {
-                        effectToUpdate.PassedOnQEffects.Add(acquiredEffect);
-                        if (acquiredEffect.Id == QEffectId.Unconscious)
-                        {
-                            if (!(this.Owner is MirrorClone))
-                            {
-                                CloneDeathTile = PairedCreature.Occupies;
-                            }
+                    QEffect forSelf = new QEffectClone(acquiredEffect);
+                    QEffect forPair = new QEffectClone(acquiredEffect);
 
-                            OnUnconscious?.Invoke(this.Owner);
-                        }
-                        else
-                        {
-                            OnAcquireQEffect?.Invoke(acquiredEffect, this.Owner);
-                        }
-                    }
+                    forSelf.WhenExpires += (QEffect expires) =>
+                    {
+                        forPair.ExpiresAt = ExpirationCondition.Immediately;
+                    };
+
+                    forPair.WhenExpires += (QEffect expires) =>
+                    {
+                        forSelf.ExpiresAt = ExpirationCondition.Immediately;
+                    };
+
+                    PairedCreature.AddQEffect(forPair);
+
+                    return forSelf;
                 }
 
                 return acquiredEffect;
             };
+
+            ////// Pass on acquired QEffects to the paired creature
+            ////YouAcquireQEffect = (QEffect youAcquireEffect, QEffect acquiredEffect) =>
+            ////{
+            ////    if (acquiredEffect.Id == QEffectId.FlankedBy)
+            ////    {
+            ////        return acquiredEffect;
+            ////    }
+            ////    else if (acquiredEffect.Id == ThaumaturgeQEIDs.MirrorImmunity)
+            ////    {
+            ////        return acquiredEffect;
+            ////    }
+            ////    else if (PassedOnQEffects.Contains(acquiredEffect))
+            ////    {
+            ////        PassedOnQEffects.Remove(acquiredEffect);
+            ////    }
+            ////    else
+            ////    {
+            ////        QEffect? pairedMirrorTrackingEffect = PairedCreature.FindQEffect(ThaumaturgeQEIDs.MirrorTracking);
+            ////        if (pairedMirrorTrackingEffect != null && pairedMirrorTrackingEffect is MirrorTrackingEffect effectToUpdate)
+            ////        {
+            ////            effectToUpdate.PassedOnQEffects.Add(acquiredEffect);
+            ////            if (acquiredEffect.Id == QEffectId.Unconscious)
+            ////            {
+            ////                if (!(this.Owner is MirrorClone))
+            ////                {
+            ////                    CloneDeathTile = PairedCreature.Occupies;
+            ////                }
+
+            ////                OnUnconscious?.Invoke(this.Owner);
+            ////            }
+            ////            else
+            ////            {
+            ////                OnAcquireQEffect?.Invoke(acquiredEffect, this.Owner);
+            ////            }
+            ////        }
+            ////    }
+
+            ////    return acquiredEffect;
+            ////};
 
             // Handles the effect expiring at the start of turn
             StartOfYourPrimaryTurn = async (QEffect startOfTurn, Creature self) =>

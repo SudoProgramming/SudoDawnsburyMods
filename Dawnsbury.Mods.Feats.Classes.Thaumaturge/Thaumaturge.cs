@@ -898,10 +898,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 
                                     foreach (QEffect effect in owner.QEffects)
                                     {
-                                        if (effect.ProvideMainAction == null && effect.ProvideActionIntoPossibilitySection == null)
-                                        {
-                                            mirrorClone.AddQEffect(effect);
-                                        }
+                                        mirrorClone.AddQEffect(new QEffectClone(effect));
                                     }
 
                                     foreach (Item item in owner.HeldItems)
@@ -1370,13 +1367,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         weaponImplement.Traits.Add(ThaumaturgeTraits.Implement);
                         owner.AddQEffect(new QEffect("Implement's Interruption {icon:Reaction}", ImplementDetails.WeaponInitiateBenefitRulesText)
                         {
-                            Owner = owner,
                             Id = QEffectId.AttackOfOpportunity,
                             WhenProvoked = async (QEffect aooEffect, CombatAction provokingAction) =>
                             {
                                 Creature attacker = aooEffect.Owner;
                                 Creature provoker = provokingAction.Owner;
-                                if (attacker.PrimaryWeapon != null && attacker.QEffects.Any(qe => qe is ExploitEffect exploitEffect && exploitEffect.Target.BaseName == provoker.BaseName))
+                                if (attacker.PrimaryWeapon != null && attacker.QEffects.Any(qe => (qe is ExploitEffect exploitEffect && exploitEffect.Target.BaseName == provoker.BaseName) || (qe is QEffectClone clonedEffect && clonedEffect.OriginalEffect is ExploitEffect clonedExploitEffect && clonedExploitEffect.Target.BaseName == provoker.BaseName)))
                                 {
                                     MirrorTrackingEffect? pairedCreatureEffect = (MirrorTrackingEffect?)attacker.QEffects.FirstOrDefault(qe => qe is MirrorTrackingEffect mirrorTrackingEffect);
                                     if (((attacker is not MirrorClone && attacker.Actions.CanTakeReaction()) || (pairedCreatureEffect != null && pairedCreatureEffect.PairedCreature.Actions.CanTakeReaction())) && await ThaumaturgeUtilities.HeldImplementOrSwap(Enums.ImplementIDs.Weapon, attacker, " since you have been provoked and can make an attack of opportunity", false))
@@ -1392,10 +1388,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                         else if (strikeCheckResult == CheckResult.Failure && ((attacker is not MirrorClone && attacker.HasFeat(ThaumaturgeFeatNames.WeaponAdept) || (pairedCreatureEffect != null && pairedCreatureEffect.PairedCreature.HasFeat(ThaumaturgeFeatNames.WeaponAdept)))) && attacker.PrimaryWeapon != null)
                                         {
                                             List<DamageKind> damageTypes = attacker.PrimaryWeapon.DetermineDamageKinds();
-                                            ExploitEffect? exploitEffect = (ExploitEffect?)attacker.QEffects.FirstOrDefault(qe => qe is ExploitEffect exploitEffect && exploitEffect.Target.BaseName == provoker.BaseName);
-                                            if (exploitEffect != null)
+                                            QEffect? exploitEffect = attacker.QEffects.FirstOrDefault(qe => (qe is ExploitEffect exploitEffect && exploitEffect.Target.BaseName == provoker.BaseName) || (qe is QEffectClone clonedEffect && clonedEffect.OriginalEffect is ExploitEffect clonedExploitEffect && clonedExploitEffect.Target.BaseName == provoker.BaseName));
+
+                                            if (exploitEffect != null && exploitEffect is ExploitEffect actualExploitEffect)
                                             {
-                                                damageTypes.Add(exploitEffect.ExploitedDamageKind);
+                                                damageTypes.Add(actualExploitEffect.ExploitedDamageKind);
+                                            }
+                                            else if (exploitEffect != null && exploitEffect is QEffectClone clonedEffect && clonedEffect.OriginalEffect is ExploitEffect clonedExploitEffect)
+                                            {
+                                                damageTypes.Add(clonedExploitEffect.ExploitedDamageKind);
                                             }
                                             DamageKind damageKindToUse = provoker.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(damageTypes);
                                             await CommonSpellEffects.DealDirectSplashDamage(CombatAction.CreateSimple(attacker, "Weapon Adept"), DiceFormula.FromText("1"), provoker, damageKindToUse);

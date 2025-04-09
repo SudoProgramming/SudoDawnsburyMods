@@ -18,14 +18,16 @@
         // Chalice Details
         public static readonly string ChaliceInitiateBenefitName = "Drink from the Chalice";
         public static readonly string ChaliceInitiateBenefitFlavorText = "Chalice implements are vessels that fill with liquid, associating them with healing, nourishment, and life. Your chalice might be a traditional cup or goblet, but it could also be a small amphora, a polished gourd, or even a hollowed-out skull. Chalice implements are associated with the astrological signs of the mother and the newlyweds, as well as the sea dragon.";
+        public static readonly string ChaliceInitiateBenefitSipUnformattedText = "Grants the drinker {{Blue}}{0}{{/Blue}} temporary Hit Points.";
         public static readonly string ChaliceInitiateBenefitSipText = "{b}Sip{/b} A sip grants the drinker an amount of temporary Hit Points equal to 2 + half your level.";
-        public static readonly string ChaliceInitiateBenefitDrainText = "{b}Drain{/b} {i}(healing, positive){/i} Drinking deep instead heals the drinker 3 Hit Points for each level you have. The chalice can not be drained again this encounter.";
+        public static readonly string ChaliceInitiateBenefitDrainUnformattedText = "Heals the drinker {{Blue}}{0}{{/Blue}} Hit Points. The chalice can not be drained again this encounter.";
+        public static readonly string ChaliceInitiateBenefitDrainText = "{b}Drain{/b} {i}(healing, positive){/i} Drinking deep instead heals the drinker 3 Hit Points for each level you have.\n\nThe chalice can not be drained again this encounter.";
         public static readonly string ChaliceInitiateBenefitRulesText = "{b}Frequency{/b} once per round\n{b}Requirements{/b} You are holding your chalice implement.\n\nYou drink from the liquid that slowly collects in your chalice or administer it to an adjacent ally. The drinker chooses whether to take a small sip or to drain the contents.\n\n" + ChaliceInitiateBenefitSipText + "\n\n" + ChaliceInitiateBenefitDrainText;
 
         // Lantern Details
         public static readonly string LanternInitiateBenefitName = string.Empty;
         public static readonly string LanternInitiateBenefitFlavorText = "Lantern implements shine the light of revelation to part shadows and expose truth. You might use a common glass lantern, torch, paper lantern, or other similar light source. Lantern implements are associated with the harrow suit of stars and the astrological signs of the lantern bearer and the archer.";
-        public static readonly string LanternInitiateBenefitRulesText = "While you hold your lantern, its burning light leaves secrets no place to hide. You are always Seeking passively without the need to spend an Action. You gain a +1 status bonus to Perception checks to Seek.";
+        public static readonly string LanternInitiateBenefitRulesText = "While you hold your lantern, its burning 20 feet light leaves secrets no place to hide. You are always Seeking passively without the need to spend an Action. You gain a +1 status bonus to Perception checks to Seek.";
 
         // Mirror Details
         public static readonly string MirrorInitiateBenefitName = "Mirror's Reflection";
@@ -35,12 +37,12 @@
         // Regalia Details
         public static readonly string RegaliaInitiateBenefitName = "Regalia Initiate Benefit";
         public static readonly string RegaliaInitiateBenefitFlavorText = "Regalia implements represent rulership, leadership, and social connections. While they differ in shape depending on regional customs and markers used to signify authority, common regalia implements are scepters, jeweled orbs, and heraldic banners. Regalia implements are associated with the harrow suit of crowns and the astrological signs of the patriarch and the sovereign dragon.";
-        public static readonly string RegaliaInitiateBenefitRulesText = "While you hold your regalia, you gain an air of authority and bolster the courage of allies who believe in you. When you are holding your regalia, you gain an inspiring aura that stokes the courage of you and all allies in a 15-foot emanation who can see you, granting them a +1 status bonus to saving throws against fear. At the end of your turn, at the same time you would reduce your frightened value by 1, you reduce the frightened value of all allies within your inspiring aura by 1. Your aura has the emotion, mental, and visual traits.";
+        public static readonly string RegaliaInitiateBenefitRulesText = "While you hold your regalia, you gain an air of authority and bolster the courage of allies who believe in you. You gain a +1 circumstance bonus to Deception, Diplomacy, and Intimidation checks. When you are holding your regalia, you gain an inspiring aura that stokes the courage of you and all allies in a 15-foot emanation who can see you, granting them a +1 status bonus to saving throws against fear. At the end of your turn, at the same time you would reduce your frightened value by 1, you reduce the frightened value of all allies within your inspiring aura by 1. Your aura has the emotion, mental, and visual traits.";
 
         // Tome Details
         public static readonly string TomeInitiateBenefitName = "Tome Initiate Benefit";
         public static readonly string TomeInitiateBenefitFlavorText = "Tome implements embody lost knowledge and otherworldly insights. While a weathered book is most common, tome implements can have as many different form factors as there are ways to store knowledge, from carved clay tablets to bundles of knotted cords. Tome implements are associated with the harrow suit of books and the astrological signs of the stargazer and the underworld dragon.";
-        public static readonly string TomeInitiateBenefitRulesText = "While you hold your tome, lines of text appear on the open pages, revealing useful information. While you hold your tome, you gain a +1 circumstance bonus to Exploit Vulnerability skill checks. You gain two additional trained skills, and at level 3 you gain an additional skill to raise to Expert.";
+        public static readonly string TomeInitiateBenefitRulesText = "While you hold your tome, lines of text appear on the open pages, revealing useful information. While you hold your tome, you gain a +1 circumstance bonus to Exploit Vulnerability skill checks. You gain two additional trained skills, and at level 3 and 5 you gain a skill increase.";
 
         // Wand Details
         public static readonly string WandInitiateBenefitName = "Fling Magic";

@@ -68,6 +68,51 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// </summary>
         public static readonly FeatName WeaponImplement = ModManager.RegisterFeatName("Weapon Implement", "Weapon");
 
+        /// <summary>
+        /// The Amulet Adept Implement
+        /// </summary>
+        public static readonly FeatName AmuletAdept = ModManager.RegisterFeatName("Amulet Adept", "Amulet Adept");
+
+        /// <summary>
+        /// The Bell Adept Implement
+        /// </summary>
+        public static readonly FeatName BellAdept = ModManager.RegisterFeatName("Bell Adept", "Bell Adept");
+
+        /// <summary>
+        /// The Chalice Adept Implement
+        /// </summary>
+        public static readonly FeatName ChaliceAdept = ModManager.RegisterFeatName("Chalice Adept", "Chalice Adept");
+
+        /// <summary>
+        /// The Lantern Adept Implement
+        /// </summary>
+        public static readonly FeatName LanternAdept = ModManager.RegisterFeatName("Lantern Adept", "Lantern Adept");
+
+        /// <summary>
+        /// The Mirror Adept Implement
+        /// </summary>
+        public static readonly FeatName MirrorAdept = ModManager.RegisterFeatName("Mirror Adept", "Mirror Adept");
+
+        /// <summary>
+        /// The Regalia Adept Implement
+        /// </summary>
+        public static readonly FeatName RegaliaAdept = ModManager.RegisterFeatName("Regalia Adept", "Regalia Adept");
+
+        /// <summary>
+        /// The Tome Adept Implement
+        /// </summary>
+        public static readonly FeatName TomeAdept = ModManager.RegisterFeatName("Tome Adept", "Tome Adept");
+
+        /// <summary>
+        /// The Wand Adept Implement
+        /// </summary>
+        public static readonly FeatName WandAdept = ModManager.RegisterFeatName("Wand Adept", "Wand Adept");
+
+        /// <summary>
+        /// The Weapon Adept Implement
+        /// </summary>
+        public static readonly FeatName WeaponAdept = ModManager.RegisterFeatName("Weapon Adept", "Weapon Adept");
+
         public static readonly FeatName AmmunitionThaumaturgy = ModManager.RegisterFeatName("Ammunition Thaumaturgy", "Ammunition Thaumaturgy");
 
         /// <summary>
@@ -109,6 +154,41 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Lingering Pain Strike class Feat
         /// </summary>
         public static readonly FeatName LingeringPainStrike = ModManager.RegisterFeatName("Lingering Pain Strike", "Lingering Pain Strike");
+
+        /// <summary>
+        /// The One More Activation class Feat
+        /// </summary>
+        public static readonly FeatName OneMoreActivation = ModManager.RegisterFeatName("One More Activation", "One More Activation");
+
+        /// <summary>
+        /// The Scroll Esoterica class Feat
+        /// </summary>
+        public static readonly FeatName ScrollEsoterica = ModManager.RegisterFeatName("Scroll Esoterica", "Scroll Esoterica");
+
+        /// <summary>
+        /// The Sympathetic Vulnerabilities class Feat
+        /// </summary>
+        public static readonly FeatName SympatheticVulnerabilities = ModManager.RegisterFeatName("Sympathetic Vulnerabilities", "Sympathetic Vulnerabilities");
+
+        /// <summary>
+        /// The Profane Insight class Feat
+        /// </summary>
+        public static readonly FeatName ProfaneInsight = ModManager.RegisterFeatName("Profane Insight", "Profane Insight");
+
+        /// <summary>
+        /// The Cursed Effigy class Feat
+        /// </summary>
+        public static readonly FeatName CursedEffigy = ModManager.RegisterFeatName("Cursed Effigy", "Cursed Effigy");
+
+        /// <summary>
+        /// The Know it All class Feat
+        /// </summary>
+        public static readonly FeatName KnowitAll = ModManager.RegisterFeatName("Know it All", "Know it All");
+
+        /// <summary>
+        /// The Magical Exploits class Feat
+        /// </summary>
+        public static readonly FeatName MagicalExploits = ModManager.RegisterFeatName("Magical Exploits", "Magical Exploits");
 
         /// <summary>
         /// The Esoterica Seller class Feat

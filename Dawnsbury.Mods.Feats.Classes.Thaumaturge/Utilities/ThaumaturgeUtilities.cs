@@ -26,6 +26,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 {
@@ -34,11 +35,87 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
     /// </summary>
     public static class ThaumaturgeUtilities
     {
-        public static bool IsCreatureWeildingImplement(Creature creature)
+        public static bool IsCreatureHoldingAnyImplement(Creature creature)
         {
             if (creature.HeldItems.Count(item => item.HasTrait(ThaumaturgeTraits.Implement)) > 0)
             {
                 return true;
+            }
+
+            return false;
+        }
+
+        public static bool IsCreatureHoldingOrCarryingImplement(ImplementIDs implementID, Creature creature)
+        {
+            return AnyHeldImplementsMatchID(implementID, creature) || AnyCarriedImplementsMatchID(implementID, creature);
+        }
+
+        public static bool DoesImplementMatchID(ImplementIDs implementID, Item item)
+        {
+            if (item is Implement implement && implement.ImplementID == implementID)
+            {
+                return true;
+            }
+            else if (item is not Implement && implementID == ImplementIDs.Weapon && item.HasTrait(ThaumaturgeTraits.Implement))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool AnyHeldImplementsMatchID(ImplementIDs implementID, Creature owner)
+        {
+            return owner.HeldItems.Any(item => DoesImplementMatchID(implementID, item));
+        }
+
+        public static bool AnyCarriedImplementsMatchID(ImplementIDs implementID, Creature owner)
+        {
+            return owner.CarriedItems.Any(item => DoesImplementMatchID(implementID, item));
+        }
+
+        public static async Task<bool> HeldImplementOrSwap(ImplementIDs implementID, Creature owner, string promptText = "", bool ignoreSingleImplementPrompt = true)
+        {
+            return AnyHeldImplementsMatchID(implementID, owner) || await HandleImplementPromptAndSwap(implementID, owner, ignoreSingleImplementPrompt, promptText);
+        }
+
+        public static async Task<bool> HandleImplementPromptAndSwap(ImplementIDs implementID, Creature owner, bool ignoreSingleImplementPrompt, string promptText = "")
+        {
+            if (!AnyCarriedImplementsMatchID(implementID, owner))
+            {
+                return false;
+            }
+
+            Item[] heldImplements = owner.HeldItems.Where(item => item.HasTrait(ThaumaturgeTraits.Implement)).ToArray();
+
+            Item? implementToSwap = null;
+            if (heldImplements.Length == 1 && (ignoreSingleImplementPrompt || await owner.AskForConfirmation(ThaumaturgeModdedIllustrations.GetIllustration(implementID), $"Swap {heldImplements[0]} with {implementID.HumanizeTitleCase2()}{promptText}", "Yes")))
+            {
+                implementToSwap = heldImplements[0];
+            }
+            else if (heldImplements.Length > 1)
+            {
+                List<string> buttonOptions = heldImplements.Select(item => item.Name).ToList();
+                buttonOptions.Add("Pass");
+                ChoiceButtonOption option = await owner.AskForChoiceAmongButtons(ThaumaturgeModdedIllustrations.GetIllustration(implementID), $"Swap which held implement with {implementID.HumanizeTitleCase2()}{promptText}", buttonOptions.ToArray());
+                if (option.Index != buttonOptions.Count - 1)
+                {
+                    implementToSwap = heldImplements[option.Index];
+                }
+            }
+
+            if (implementToSwap != null)
+            {
+                Item? carriedImplement = owner.CarriedItems.FirstOrDefault(item => DoesImplementMatchID(implementID, item));
+                if (carriedImplement != null)
+                {
+                    owner.CarriedItems.Remove(carriedImplement);
+                    owner.HeldItems.Remove(implementToSwap);
+                    owner.HeldItems.Add(carriedImplement);
+                    owner.CarriedItems.Add(implementToSwap);
+
+                    return true;
+                }
             }
 
             return false;
@@ -83,6 +160,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                         Id = ThaumaturgeQEIDs.UsedExploitVulnerability
                     });
                     bool skipAntithesis = false;
+                    bool applyToAll = attacker.HasFeat(ThaumaturgeFeatNames.SympatheticVulnerabilities);
                     if (result >= CheckResult.Success)
                     {
                         if (defender.WeaknessAndResistance.Weaknesses.Count(resistance => resistance.DamageKind != ThaumaturgeDamageKinds.PersonalAntithesis) > 0)
@@ -91,10 +169,22 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                             Resistance weakness = weaknesses[0];
                             if (weaknesses.Count > 1)
                             {
-                                ChoiceButtonOption selectedWeakness = await attacker.AskForChoiceAmongButtons(ThaumaturgeModdedIllustrations.ExploitVulnerability, "Which weakness would you like to exploit against all " + defender.BaseName + "?", weaknesses.Select(weakness => weakness.DamageKind.HumanizeTitleCase2()).ToArray());
+                                ChoiceButtonOption selectedWeakness = await attacker.AskForChoiceAmongButtons(ThaumaturgeModdedIllustrations.ExploitVulnerability, "Which weakness would you like to exploit against all " + (applyToAll ? "creatures with that weakness" : defender.BaseName) + "?", weaknesses.Where(weak => weak is not ResistanceToAll).Select(weakness =>
+                                    {
+                                        if (weakness is SpecialResistance specialWeakness)
+                                        {
+                                            return $"{specialWeakness.Name} {specialWeakness.Value}";
+                                        }
+                                        else
+                                        {
+                                            return $"{weakness.DamageKind.HumanizeTitleCase2()} {weakness.Value}";
+                                        }
+                                    }).ToArray());
                                 weakness = weaknesses[selectedWeakness.Index];
                             }
-                            if (weakness.Value >= 2 + Math.Floor(attacker.Level / 2.0))
+
+                            int personalAntithesisValue = (int)(2 + Math.Floor(attacker.Level / 2.0));
+                            if (weakness.Value >= personalAntithesisValue || await attacker.AskForConfirmation(ThaumaturgeModdedIllustrations.ExploitVulnerability, $"The {(weakness is SpecialResistance spec ? spec.Name : weakness.DamageKind.HumanizeLowerCase2())} {weakness.Value} weakness is less than the {personalAntithesisValue} weakness you could apply with Personal Antithesis. Which would you like to use?", (weakness is SpecialResistance spe ? spe.Name : weakness.DamageKind.HumanizeLowerCase2()), "Personal Antithesis"))
                             {
                                 skipAntithesis = true;
                                 foreach (Creature creature in attacker.Battle.AllCreatures.Where(creature => !creature.FriendOf(attacker) && creature.BaseName == defender.BaseName))
@@ -104,27 +194,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                                         Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
                                         Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
                                         Name = "Exploited Vulnerability",
-                                        Description = "Exploited Weakness by " + attacker.Name + " - " + weakness.DamageKind.HumanizeTitleCase2() + " " + weakness.Value,
+                                        Description = "Exploited Weakness by " + attacker.Name + " - " + (weakness is SpecialResistance changed ? changed.Name : weakness.DamageKind.HumanizeLowerCase2()) + " " + weakness.Value,
                                         Tag = attacker
                                     });
                                 }
-                                attacker.AddQEffect(new QEffect(ExpirationCondition.Never)
-                                {
-                                    Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeakness,
-                                    Tag = defender,
-                                    Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
-                                    Name = "Exploit Vulnerability",
-                                    Description = "Exploiting Weakness to all " + defender.BaseName + " - " + weakness.DamageKind.HumanizeTitleCase2() + " " + weakness.Value,
-                                    AddExtraKindedDamageOnStrike = (CombatAction action, Creature damageTarget) =>
-                                    {
-                                        if (damageTarget == defender || damageTarget.BaseName == defender.BaseName)
-                                        {
-                                            return new KindedDamage(DiceFormula.FromText("0", "Exploit Vulnerability - Weakness " + weakness.DamageKind), weakness.DamageKind);
-                                        }
 
-                                        return null;
-                                    }
-                                });
+                                attacker.AddQEffect(new ExploitEffect(attacker, defender, weakness: weakness, applyToAll: applyToAll));
                             }
                         }
                     }
@@ -132,47 +207,44 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                     if (result >= CheckResult.Failure && !skipAntithesis)
                     {
                         int antithesisAmount = (int)(2 + Math.Floor(attacker.Level / 2.0));
-                        defender.AddQEffect(new QEffect(ExpirationCondition.Never)
+
+                        List<Creature> applyWeaknessTo = new List<Creature>() { defender };
+
+                        if (applyToAll)
                         {
-                            Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
-                            Tag = attacker,
-                            Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
-                            Name = "Exploited Vulnerability",
-                            Description = "Exploited Weakness by " + attacker.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
-                            StateCheck = (QEffect stateCheck) =>
+                            applyWeaknessTo.AddRange(attacker.Battle.AllCreatures.Where(creature => creature != defender && !creature.FriendOf(attacker) && creature.BaseName == defender.BaseName));
+                        }
+
+                        foreach (Creature applyWeakness in applyWeaknessTo)
+                        {
+                            applyWeakness.AddQEffect(new QEffect(ExpirationCondition.Never)
                             {
-                                Creature owner = stateCheck.Owner;
-                                if (owner.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget))
+                                Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
+                                Tag = attacker,
+                                Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
+                                Name = "Exploited Vulnerability",
+                                Description = "Exploited Weakness by " + attacker.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
+                                StateCheck = (QEffect stateCheck) =>
                                 {
-                                    if (!owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
+                                    Creature owner = stateCheck.Owner;
+                                    if (owner.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget))
                                     {
-                                        owner.WeaknessAndResistance.AddWeakness(ThaumaturgeDamageKinds.PersonalAntithesis, antithesisAmount);
+                                        if (!owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
+                                        {
+                                            owner.WeaknessAndResistance.AddWeakness(ThaumaturgeDamageKinds.PersonalAntithesis, antithesisAmount);
+                                        }
                                     }
-                                }
-                                else if (owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
+                                    else if (owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
                                     {
                                         owner.WeaknessAndResistance.Weaknesses.RemoveAll(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis);
                                     }
                                 }
                             });
-                            attacker.AddQEffect(new QEffect(ExpirationCondition.Never)
-                            {
-                                Id = ThaumaturgeQEIDs.ExploitVulnerabilityWeakness,
-                                Tag = defender,
-                                Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
-                                Name = "Exploit Vulnerability",
-                                Description = "Exploiting Weakness to " + defender.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
-                                AddExtraKindedDamageOnStrike = (CombatAction action, Creature damageTarget) =>
-                                {
-                                    if (damageTarget == defender)
-                                    {
-                                        return new KindedDamage(DiceFormula.FromText("0", "Exploit Vulnerability - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2()), ThaumaturgeDamageKinds.PersonalAntithesis);
-                                    }
 
-                                    return null;
-                                    }
-                                });
-                            }
+                        }
+                        
+                        attacker.AddQEffect(new ExploitEffect(attacker, defender, antithesisAmount: antithesisAmount, applyToAll: applyToAll));
+                    }
                     else if (result == CheckResult.CriticalFailure)
                     {
                         QEffect flatFooted = QEffect.FlatFooted("Exploit Vulnerability");
@@ -189,7 +261,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             int level = roller.Level;
             int proficiency = level + ((roller.Level >= 3) ? 4 : 2);
             List<Bonus?> bonusesToRoll = new List<Bonus?>();
-            if (roller.HasFeat(ThaumaturgeFeatNames.TomeImplement) && IsCreatureWeildingImplement(roller))
+            if (roller.HasFeat(ThaumaturgeFeatNames.TomeImplement) && AnyHeldImplementsMatchID(ImplementIDs.Tome, roller))
             {
                 bonusesToRoll.Add(new Bonus(1, BonusType.Circumstance, ImplementDetails.TomeInitiateBenefitName, true));
             }
@@ -204,14 +276,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
         public static CalculatedNumber CalculateEsotericLoreDC(CombatAction action, Creature roller, Creature? defender)
         {
             Creature dcByLevelTarget = defender ?? roller;
-            return new CalculatedNumber(CalculateDCByLevel(dcByLevelTarget.Level), "DC by Level", new List<Bonus?>());
-        }
-
-        public static int CalculateDCByLevel(int level)
-        {
-            int[] dcsByLevel = [14, 15, 16, 18, 19, 20, 22, 23, 24];
-            level = Math.Min(Math.Max(level, 0), dcsByLevel.Length);
-            return dcsByLevel[level];
+            bool hasKnowItAll = roller.HasFeat(ThaumaturgeFeatNames.KnowitAll);
+            int dcLevel = hasKnowItAll ? dcByLevelTarget.Level -1 : dcByLevelTarget.Level;
+            string dcText = hasKnowItAll ? "DC by Level (Know it All)" : "DC by Level";
+            return new CalculatedNumber(Checks.LevelBasedDC(dcLevel), dcText, new List<Bonus?>());
         }
 
         public static int CalculateClassDC(Creature creature, Trait classTrait)
@@ -307,8 +375,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             foreach (ImplementIDs implementID in implementIDs)
             {
                 FeatName featName = LookupImplementFeatName(implementID);
-                List<FeatName> feats = character.AllFeatNames.ToList();
-                List<string> humanized = feats.Select(feat => feat.HumanizeTitleCase2()).ToList();
                 if (character.HasFeat(featName))
                 {
                     implementsToAdd.Add(implementID);
@@ -346,7 +412,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             foreach (int level in levels)
             {
                 Inventory inventory = character.Sheet.InventoriesByLevel[level];
-                AddImplementIntoInventory(inventory, implement);
+
+                if (level == 1 || inventory.LeftHand != null || inventory.RightHand != null || inventory.Backpack.Count != 0)
+                {
+                    if (level >= 5 || (character.Tags["First Implement"] is FeatName firstImplementFeatName && firstImplementFeatName == LookupImplementFeatName(implement.ImplementID)))
+                    {
+                        AddImplementIntoInventory(inventory, implement);
+                    }
+                }
             }
         }
 
@@ -441,17 +514,40 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 
         private static void RemoveImplementFromInventory(Inventory inventory, ItemName implementName)
         {
+            Item? GetScroll(Item implement)
+            {
+                if (implement.StoredItems.Count == 1)
+                {
+                    return implement.StoredItems[0];
+                }
+
+                return null;
+            }
+
+            Item? scrollToAdd = null;
             if (inventory.RightHand?.BaseItemName == implementName)
             {
+                scrollToAdd = GetScroll(inventory.RightHand);
                 inventory.RightHand = null;
             }
             else if (inventory.LeftHand?.BaseItemName == implementName)
             {
+                scrollToAdd = GetScroll(inventory.LeftHand);
                 inventory.LeftHand = null;
             }
             else
             {
+                Item? possibleImplement = inventory.Backpack.FirstOrDefault(item => item != null && item.BaseItemName == implementName);
+                if (possibleImplement != null)
+                {
+                    scrollToAdd = GetScroll(possibleImplement);
+                }
                 inventory.Backpack.RemoveAll(item => item != null && item.BaseItemName == implementName);
+            }
+
+            if (scrollToAdd != null)
+            {
+                inventory.AddAtEndOfBackpack(scrollToAdd);
             }
         }
 

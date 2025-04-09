@@ -162,7 +162,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions
         {
             // Passes on the QEffect unless they already have the effect, it's FlankedBy, or the untyped Golden Candelabra effect
             if (!self.HasEffect(effect) && 
-                !(effect.Id == QEffectId.FlankedBy) && 
                 (effect.Source != null && effect.Source.BaseName != "The Golden Candelabra"))
             {
                 self.AddQEffect(effect);

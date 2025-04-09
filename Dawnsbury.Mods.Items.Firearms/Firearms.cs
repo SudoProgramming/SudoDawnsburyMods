@@ -644,7 +644,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                                     Creature? potentalSplashTarget = tileToScatterTo.PrimaryOccupant;
                                     if (potentalSplashTarget != null && potentalSplashTarget is Creature splashTarget && splashTarget != target)
                                     {
-                                        await CommonSpellEffects.DealDirectDamage(CombatAction.CreateSimple(owner, "Scatter"), DiceFormula.FromText(item.WeaponProperties.DamageDieCount.ToString()), splashTarget, CheckResult.Success, bestDamageToTarget);
+                                        await CommonSpellEffects.DealDirectSplashDamage(CombatAction.CreateSimple(owner, "Scatter"), DiceFormula.FromText(item.WeaponProperties.DamageDieCount.ToString()), splashTarget, bestDamageToTarget);
                                     }
                                 }
                             }

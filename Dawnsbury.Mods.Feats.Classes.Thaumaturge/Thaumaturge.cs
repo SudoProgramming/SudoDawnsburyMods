@@ -170,7 +170,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 [Trait.Reflex, Trait.Simple, Trait.Martial, Trait.LightArmor, Trait.MediumArmor, Trait.Unarmed, Trait.UnarmoredDefense, Trait.Arcana, Trait.Nature, Trait.Occultism, Trait.Religion],
                 [Trait.Perception, Trait.Fortitude, Trait.Will],
                 3,
-                "{b}1. Esoteric Lore{/b} You become trained in a special lore skill that can used to Exploit Vulnerability. This is a charisma-based skill. {i}(You add your Charisma modifier to checks using this skill.){/i}\n\n" +
+                "{b}1. Esoteric Lore{/b} You become trained in a special lore skill that can used to Exploit Vulnerability. This automatically upgrades to Expert at level 3 and Master at level 7. This is a charisma-based skill. {i}(You add your Charisma modifier to checks using this skill.){/i}\n\n" +
                 "{b}2. Exploit Vulnerability {icon:Action}{/b}\n{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement\n\nSelect a creature you can see and attempt an Esoteric Lore check against a standard DC for its level. You gain the following effects until you Exploit Vulnerabilities again.\n\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn.\n\n" +
                 "{b}3. First Implement{/b} Choose an implement.\n\n" +
                 "{b}4. Implement's Empowerment{/b} When you Strike, you can trace mystic patterns with an implement you're holding to empower the Strike, causing it to deal 2 additional damage per weapon damage die. Channeling the power requires full use of your hands. You don't gain the benefit of implement's empowerment if you are holding anything in either hand other than a single one-handed weapon or other implements and you must be holding at least one implement to gain the benefit.\n\n" +
@@ -1060,10 +1060,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         {
             tomeImplementFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
             {
-                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome First Extra Skill", "Tome First Extra Skill", 1, (feat => feat is SkillSelectionFeat)));
-                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Second Extra Skill", "Tome Second Extra Skill", 1, (feat => feat is SkillSelectionFeat)));
-                sheet.AddSkillIncreaseOption(3);
-                sheet.AddSkillIncreaseOption(5);
+                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome First Extra Skill", "Tome First Extra Skill", sheet.CurrentLevel, (feat => feat is SkillSelectionFeat)));
+                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Second Extra Skill", "Tome Second Extra Skill", sheet.CurrentLevel, (feat => feat is SkillSelectionFeat)));
+                //sheet.AddSkillIncreaseOption(sheet.CurrentLevel > 3 ? sheet.CurrentLevel : 3);
+                //sheet.AddSkillIncreaseOption(5);
             };
             tomeImplementFeat.WithPermanentQEffect(ImplementDetails.TomeInitiateBenefitName + " - Improved Exploit Vulnerability and extra skills", delegate (QEffect self) {
             });

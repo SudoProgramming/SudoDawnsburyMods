@@ -127,7 +127,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                 owner,
                 ThaumaturgeModdedIllustrations.ExploitVulnerability,
                 "Exploit Vulnerability",
-                [Trait.Manipulate, Trait.Basic, ThaumaturgeTraits.Thaumaturge],
+                [Trait.Manipulate, Trait.Basic, Trait.UnaffectedByConcealment, ThaumaturgeTraits.Thaumaturge],
                 "{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement.\nYou scour your experiences and learning to identify something that might repel your foe. You retrieve an object from your esoterica with the appropriate supernatural qualities, then use your implement to stoke the remnants of its power into a blaze. Select a creature you can see and attempt an Esoteric Lore check against a standard DC for its level, as you retrieve the right object from your esoterica and use your implement to empower it. You gain the following effects until you Exploit Vulnerabilities again.\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn.",
                 Target.Ranged(100)
                 .WithAdditionalConditionOnTargetCreature((attacker, defender) => attacker.HasEffect(ThaumaturgeQEIDs.UsedExploitVulnerability) ? Usability.NotUsable("Already Exploited Vulnerability this turn") : Usability.Usable))
@@ -259,7 +259,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
         public static CalculatedNumber RollEsotericLore(CombatAction action, Creature roller, Creature? defender)
         {
             int level = roller.Level;
-            int proficiency = level + ((roller.Level >= 3) ? 4 : 2);
+            int expertiseBonus = 2;
+            if (roller.Level >= 7)
+            {
+                expertiseBonus = 6;
+            }
+            else if (roller.Level >= 3)
+            {
+                expertiseBonus = 4;
+            }
+            int proficiency = level + expertiseBonus;
             List<Bonus?> bonusesToRoll = new List<Bonus?>();
             if (roller.HasFeat(ThaumaturgeFeatNames.TomeImplement) && AnyHeldImplementsMatchID(ImplementIDs.Tome, roller))
             {

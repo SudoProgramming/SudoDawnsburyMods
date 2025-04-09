@@ -1,4 +1,5 @@
-﻿using Dawnsbury.Core.Mechanics.Enumerations;
+﻿using Dawnsbury.Core.Creatures;
+using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Enums;
@@ -28,6 +29,19 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         {
             this.ImplementID = implementID;
             this.Description = description;
+            this.WithStoresItem((Item implement, Item storedItem) =>
+            {
+                if (implement.StoredItems.Count >= 1)
+                {
+                    return "Already holding a scroll";
+                }
+                else if (storedItem.ScrollProperties == null)
+                {
+                    return "Only Scrolls";
+                }
+
+                return null;
+            });
         }
     }
 }

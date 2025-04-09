@@ -138,7 +138,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             // Pass on acquired QEffects to the paired creature
             YouAcquireQEffect = (QEffect youAcquireEffect, QEffect acquiredEffect) =>
             {
-                if (acquiredEffect.Id == ThaumaturgeQEIDs.MirrorImmunity)
+                if (acquiredEffect.Id == QEffectId.FlankedBy)
+                {
+                    return acquiredEffect;
+                }
+                else if (acquiredEffect.Id == ThaumaturgeQEIDs.MirrorImmunity)
                 {
                     return acquiredEffect;
                 }

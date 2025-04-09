@@ -66,46 +66,55 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 
             // Creates and adds the logic for the Amulet Implement sub-class feature
             Feat amuletImplementFeat = new Feat(ThaumaturgeFeatNames.AmuletImplement, ImplementDetails.AmuletInitiateBenefitFlavorText, "You gain the " + ImplementDetails.AmuletInitiateBenefitName + " reaction.\n\n{b}" + ImplementDetails.AmuletInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.AmuletInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            AddLevelTag(amuletImplementFeat);
             AddAmuletImplementLogic(amuletImplementFeat);
             yield return amuletImplementFeat;
 
             // Creates and adds the logic for the Bell Implement sub-class feature
             Feat bellImplementFeat = new Feat(ThaumaturgeFeatNames.BellImplement, ImplementDetails.BellInitiateBenefitFlavorText, "You gain the " + ImplementDetails.BellInitiateBenefitName + " reaction.\n\n{b}" + ImplementDetails.BellInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.BellInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            AddLevelTag(bellImplementFeat);
             AddBellImplementLogic(bellImplementFeat);
             yield return bellImplementFeat;
 
             // Creates and adds the logic for the Chalice Implement sub-class feature
             Feat chaliceImplementFeat = new Feat(ThaumaturgeFeatNames.ChaliceImplement, ImplementDetails.ChaliceInitiateBenefitFlavorText, "You gain the " + ImplementDetails.ChaliceInitiateBenefitName + " action.\n\n{b}" + ImplementDetails.ChaliceInitiateBenefitName + "{/b} {icon:Action}\n" + ImplementDetails.ChaliceInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            AddLevelTag(chaliceImplementFeat);
             AddChaliceImplementLogic(chaliceImplementFeat);
             yield return chaliceImplementFeat;
 
             // Creates and adds the logic for the Lantern Implement sub-class feature
             Feat lanternImplementFeat = new Feat(ThaumaturgeFeatNames.LanternImplement, ImplementDetails.LanternInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.LanternInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            AddLevelTag(lanternImplementFeat);
             AddLanternImplementLogic(lanternImplementFeat);
             yield return lanternImplementFeat;
 
             // Creates and adds the logic for the Mirror Implement sub-class feature
             Feat mirrorImplementFeat = new Feat(ThaumaturgeFeatNames.MirrorImplement, ImplementDetails.MirrorInitiateBenefitFlavorText, "You gain the " + ImplementDetails.MirrorInitiateBenefitName + " action.\n\n{b}" + ImplementDetails.MirrorInitiateBenefitName + "{/b} {icon:Action}\n" + ImplementDetails.MirrorInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            AddLevelTag(mirrorImplementFeat);
             AddMirrorImplementLogic(mirrorImplementFeat);
             yield return mirrorImplementFeat;
 
             // Creates and adds the logic for the Regalia Implement sub-class feature
             Feat regaliaImplementFeat = new Feat(ThaumaturgeFeatNames.RegaliaImplement, ImplementDetails.RegaliaInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.RegaliaInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            AddLevelTag(regaliaImplementFeat);
             AddRegaliaImplementLogic(regaliaImplementFeat);
             yield return regaliaImplementFeat;
 
             // Creates and adds the logic for the Tome Implement sub-class feature
             Feat tomeImplementFeat = new Feat(ThaumaturgeFeatNames.TomeImplement, ImplementDetails.TomeInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.TomeInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            AddLevelTag(tomeImplementFeat);
             AddTomeImplementLogic(tomeImplementFeat);
             yield return tomeImplementFeat;
 
             // Creates and adds the logic for the Wand Implement sub-class feature
             Feat wandImplementFeat = new Feat(ThaumaturgeFeatNames.WandImplement, ImplementDetails.WandInitiateBenefitFlavorText, "You gain the " + ImplementDetails.WandInitiateBenefitName + " activity.\n\n{b}" + ImplementDetails.WandInitiateBenefitName + "{/b} {icon:TwoActions}\n" + ImplementDetails.WandInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            AddLevelTag(wandImplementFeat);
             AddWandImplementLogic(wandImplementFeat);
             yield return wandImplementFeat;
 
             // Creates and adds the logic for the Weapon Implement sub-class feature
             Feat weaponImplementFeat = new Feat(ThaumaturgeFeatNames.WeaponImplement, ImplementDetails.WeaponInitiateBenefitFlavorText, "You gain the " + ImplementDetails.WeaponInitiateBenefitName + " reaction.\n\n{b}NOTE: The Weapon Implement will be applied to your first One-Handed weapon at the start of each encounter.{/b}\n\n{b}" + ImplementDetails.WeaponInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.WeaponInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            AddLevelTag(weaponImplementFeat);
             AddWeaponImplementLogic(weaponImplementFeat);
             yield return weaponImplementFeat;
 
@@ -272,6 +281,27 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             scrollEsotericaFeat.WithPrerequisite(ThaumaturgeFeatNames.ScrollThaumaturgy, "Requires Scroll Thaumaturgy");
             AddScrollEsotericaLogic(scrollEsotericaFeat);
             yield return scrollEsotericaFeat;
+
+            TrueFeat sympatheticVulnerabilitiesFeat = new TrueFeat(ThaumaturgeFeatNames.SympatheticVulnerabilities, 6, "When you apply your will to invoke a vulnerability, the result is more powerful, and the vulnerability ripples out in a web from your main target to affect a broader range of creatures.", "When you Exploit Vulnerability and target a mortal weakness, your Strikes trigger against any creature with that weakness. If you Exploit Vulnerability and apply a personal antithesis, your strikes apply that custom weakness to any other creatures of the exact same type.", [ThaumaturgeTraits.Thaumaturge]);
+            AddSympatheticVulnerabilitiesLogic(sympatheticVulnerabilitiesFeat);
+            yield return sympatheticVulnerabilitiesFeat;
+
+            TrueFeat profaneInsightFeat = new TrueFeat(ThaumaturgeFeatNames.ProfaneInsight, 6, "Your profound insight into your enemies means not just a blade can cut deep.", "You have a +2 circumstance bonus to checks to Demoralize the target of your Exploit Vulnerability.\n\nYou can repeatedly Demoalize the target of your Exploit Vulnerability during the same combat.", [ThaumaturgeTraits.Thaumaturge, Trait.Homebrew]);
+            AddProfaneInsightLogic(profaneInsightFeat);
+            yield return profaneInsightFeat;
+
+            TrueFeat cursedEffigyFeat = new TrueFeat(ThaumaturgeFeatNames.CursedEffigy, 8, "After your attack, you grab a bit of blood, cut hair, or other piece of the creature's body.", "{b}Requirements{/b} You have successful hit the target of your Exploit Vulnerability with a strike this turn.\n\nThe target takes a -2 status penalty to all saving throws from you, as long as they remain a target of your Exploit Vulnerability.", [ThaumaturgeTraits.Thaumaturge]);
+            cursedEffigyFeat.WithActionCost(1);
+            AddCursedEffigyLogic(cursedEffigyFeat);
+            yield return cursedEffigyFeat;
+
+            TrueFeat knowItAllFeat = new TrueFeat(ThaumaturgeFeatNames.KnowitAll, 8, "You are a know it all, especially when it pertains to your potential enemies.", "The DC of your Exploit Vulnerability checks is calcaulted as if the creature was one level lower.", [ThaumaturgeTraits.Thaumaturge, Trait.Homebrew]);
+            AddKnowItAllLogic(knowItAllFeat);
+            yield return knowItAllFeat;
+
+            TrueFeat magicalExploitsFeat = new TrueFeat(ThaumaturgeFeatNames.MagicalExploits, 8, "Even with magic, you are learning how to exploit a targets weakness.", "Attack spells you cast will trigger mortal weakness or personal antithesis if they deal damage.", [ThaumaturgeTraits.Thaumaturge, Trait.Homebrew]);
+            AddMagicalExploitsLogic(magicalExploitsFeat);
+            yield return magicalExploitsFeat;
         }
 
         /// <summary>
@@ -874,6 +904,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                         }
                                     }
 
+                                    foreach (Item item in owner.HeldItems)
+                                    {
+                                        Item mirrorItem = item.Duplicate();
+                                        if (item.HasTrait(ThaumaturgeTraits.Implement))
+                                        {
+                                            mirrorItem.Traits.Add(ThaumaturgeTraits.Implement);
+                                        }
+
+                                        mirrorClone.HeldItems.Add(mirrorItem);
+
+                                    }
+
                                     owner.Battle.SpawnCreature(mirrorClone, owner.OwningFaction, chosenTile);
 
                                     MirrorTrackingEffect ownersTrackingEffect = new MirrorTrackingEffect(owner, mirrorClone);
@@ -1328,14 +1370,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         weaponImplement.Traits.Add(ThaumaturgeTraits.Implement);
                         owner.AddQEffect(new QEffect("Implement's Interruption {icon:Reaction}", ImplementDetails.WeaponInitiateBenefitRulesText)
                         {
+                            Owner = owner,
                             Id = QEffectId.AttackOfOpportunity,
                             WhenProvoked = async (QEffect aooEffect, CombatAction provokingAction) =>
                             {
                                 Creature attacker = aooEffect.Owner;
                                 Creature provoker = provokingAction.Owner;
-                                if (attacker.PrimaryWeapon != null &&  attacker.QEffects.Any(qe => qe is ExploitEffect exploitEffect && exploitEffect.Target.BaseName == provoker.BaseName))
+                                if (attacker.PrimaryWeapon != null && attacker.QEffects.Any(qe => qe is ExploitEffect exploitEffect && exploitEffect.Target.BaseName == provoker.BaseName))
                                 {
-                                    if (attacker.Actions.CanTakeReaction() && await ThaumaturgeUtilities.HeldImplementOrSwap(Enums.ImplementIDs.Weapon, attacker, " since you have been provoked and can make an attack of opportunity", false))
+                                    MirrorTrackingEffect? pairedCreatureEffect = (MirrorTrackingEffect?)attacker.QEffects.FirstOrDefault(qe => qe is MirrorTrackingEffect mirrorTrackingEffect);
+                                    if (((attacker is not MirrorClone && attacker.Actions.CanTakeReaction()) || (pairedCreatureEffect != null && pairedCreatureEffect.PairedCreature.Actions.CanTakeReaction())) && await ThaumaturgeUtilities.HeldImplementOrSwap(Enums.ImplementIDs.Weapon, attacker, " since you have been provoked and can make an attack of opportunity", false))
                                     {
                                         CheckResult? strikeCheckResult = await CommonCombatActions.OfferAndMakeReactiveStrike(attacker, provoker, "{b}" + provoker.Name + "{/b} uses {b}" + provokingAction.Name + "{/b} which provokes.\nUse your reaction to make an attack of opportunity?", "*attack of opportunity*", 1);
                                         if (strikeCheckResult != null && strikeCheckResult == CheckResult.CriticalSuccess)
@@ -1345,7 +1389,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                                 provokingAction.Disrupted = true;
                                             }
                                         }
-                                        else if (strikeCheckResult == CheckResult.Failure && attacker.HasFeat(ThaumaturgeFeatNames.WeaponAdept) && attacker.PrimaryWeapon != null)
+                                        else if (strikeCheckResult == CheckResult.Failure && ((attacker is not MirrorClone && attacker.HasFeat(ThaumaturgeFeatNames.WeaponAdept) || (pairedCreatureEffect != null && pairedCreatureEffect.PairedCreature.HasFeat(ThaumaturgeFeatNames.WeaponAdept)))) && attacker.PrimaryWeapon != null)
                                         {
                                             List<DamageKind> damageTypes = attacker.PrimaryWeapon.DetermineDamageKinds();
                                             ExploitEffect? exploitEffect = (ExploitEffect?)attacker.QEffects.FirstOrDefault(qe => qe is ExploitEffect exploitEffect && exploitEffect.Target.BaseName == provoker.BaseName);
@@ -1355,6 +1399,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                             }
                                             DamageKind damageKindToUse = provoker.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(damageTypes);
                                             await CommonSpellEffects.DealDirectSplashDamage(CombatAction.CreateSimple(attacker, "Weapon Adept"), DiceFormula.FromText("1"), provoker, damageKindToUse);
+                                        }
+
+                                        if (attacker is MirrorClone && pairedCreatureEffect != null)
+                                        {
+                                            pairedCreatureEffect.PairedCreature.Actions.UseUpReaction();
                                         }
                                     }
                                 }
@@ -1504,6 +1553,36 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         }
                     }
                 };
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    Creature self = startOfCombat.Owner;
+                    List<Item> allItems = self.HeldItems.Concat(self.CarriedItems).ToList();
+                    foreach (Item implement in allItems.Where(item => item.HasTrait(ThaumaturgeTraits.Implement) && item.StoredItems.Count == 1))
+                    {
+                        Item scroll = implement.StoredItems[0];
+                        implement.StoredItems.Remove(scroll);
+                        ImplementAndHeldItem implementAndScroll = new ImplementAndHeldItem(implement, scroll, wasStoredItem: true);
+                        QEffect? matchingHeldScrollImplementEffect = self.QEffects.FirstOrDefault(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement && qe.Tag != null && qe.Tag is ImplementAndHeldItem implementAndHeldItem && implementAndHeldItem.Implement == implement);
+
+
+                        if (matchingHeldScrollImplementEffect != null && matchingHeldScrollImplementEffect.Tag != null && matchingHeldScrollImplementEffect.Tag is ImplementAndHeldItem previousImplementAndHeldItem)
+                        {
+                            Item previousScroll = previousImplementAndHeldItem.HeldItem;
+                            implementAndScroll.OriginalImplementName = previousImplementAndHeldItem.OriginalImplementName;
+                            self.CarriedItems.Add(previousScroll);
+                            self.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement && qe == matchingHeldScrollImplementEffect);
+                        }
+
+                        self.AddQEffect(new QEffect(ExpirationCondition.Never)
+                        {
+                            Id = ThaumaturgeQEIDs.HeldScrollAndImplement,
+                            Tag = implementAndScroll
+                        });
+
+                        implement.Illustration = implementAndScroll.Illustration;
+                        implement.Name = implementAndScroll.OriginalImplementName + " " + scroll.Name;
+                    }
+                };
                 self.EndOfCombat = async (QEffect endOfCombat, bool didWin) =>
                 {
                     if (didWin)
@@ -1513,9 +1592,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         {
                             if (scrollAndImplementEffect != null && scrollAndImplementEffect.Tag != null && scrollAndImplementEffect.Tag is ImplementAndHeldItem implementAndHeldItem)
                             {
-                                owner.CarriedItems.Add(implementAndHeldItem.HeldItem);
-                                owner.HeldItems.RemoveAll(item => item == implementAndHeldItem.Implement);
-                                owner.CarriedItems.RemoveAll(item => item == implementAndHeldItem.Implement);
+                                if (implementAndHeldItem.WasStoredItem)
+                                {
+                                    implementAndHeldItem.Implement.StoredItems.Add(implementAndHeldItem.HeldItem);
+                                }
+                                else
+                                {
+                                    owner.CarriedItems.Add(implementAndHeldItem.HeldItem);
+                                    owner.HeldItems.RemoveAll(item => item == implementAndHeldItem.Implement);
+                                    owner.CarriedItems.RemoveAll(item => item == implementAndHeldItem.Implement);
+                                }
                             }
                         }
                     }
@@ -1601,7 +1687,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 
                         foreach (QEffect heldItemAndImplementEffect in owner.QEffects.Where(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement))
                         {
-                            if (heldItemAndImplementEffect != null && heldItemAndImplementEffect.Tag != null && heldItemAndImplementEffect.Tag is ImplementAndHeldItem scrollAndImplement)
+                            if (heldItemAndImplementEffect != null && heldItemAndImplementEffect.Tag != null && heldItemAndImplementEffect.Tag is ImplementAndHeldItem scrollAndImplement && owner.HeldItems.Any(item => item == scrollAndImplement.Implement))
                             {
                                 Item scroll = scrollAndImplement.HeldItem;
                                 ScrollProperties scrollProperties = scroll.ScrollProperties;
@@ -2085,16 +2171,46 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                         {
                                             return "Already used 'Scroll Esoterica' today.";
                                         }
+                                        List<Item> implementAndHeldItems = owner.QEffects.Where(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement && qe.Tag is ImplementAndHeldItem implementAndHeldItem).Select(qe => ((ImplementAndHeldItem)qe.Tag).Implement).ToList();
+                                        if (!user.HasFreeHand && !owner.HeldItems.Any(item => item.HasTrait(ThaumaturgeTraits.Implement) && !implementAndHeldItems.Contains(item)))
+                                        {
+                                            return "No free hand or implement without a scroll";
+                                        }
 
                                         return null;
                                     }))
                                     .WithActionCost(0)
                                     .WithEffectOnSelf(async (Creature self) =>
                                     {
-                                        // TODO: Handle Implement Hand
                                         if (self.HasFreeHand)
                                         {
                                             self.AddHeldItem(item);
+                                        }
+
+                                        Item? implement = self.HeldItems.FirstOrDefault(item => item.HasTrait(ThaumaturgeTraits.Implement) && item.StoredItems.Count == 0);
+                                        if (implement != null)
+                                        {
+
+                                            ImplementAndHeldItem implementAndScroll = new ImplementAndHeldItem(implement, item, wasStoredItem: true);
+                                            QEffect? matchingHeldScrollImplementEffect = self.QEffects.FirstOrDefault(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement && qe.Tag != null && qe.Tag is ImplementAndHeldItem implementAndHeldItem && implementAndHeldItem.Implement == implement);
+
+
+                                            if (matchingHeldScrollImplementEffect != null && matchingHeldScrollImplementEffect.Tag != null && matchingHeldScrollImplementEffect.Tag is ImplementAndHeldItem previousImplementAndHeldItem)
+                                            {
+                                                Item previousScroll = previousImplementAndHeldItem.HeldItem;
+                                                implementAndScroll.OriginalImplementName = previousImplementAndHeldItem.OriginalImplementName;
+                                                self.CarriedItems.Add(previousScroll);
+                                                self.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement && qe == matchingHeldScrollImplementEffect);
+                                            }
+
+                                            self.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                            {
+                                                Id = ThaumaturgeQEIDs.HeldScrollAndImplement,
+                                                Tag = implementAndScroll
+                                            });
+
+                                            implement.Illustration = implementAndScroll.Illustration;
+                                            implement.Name = implementAndScroll.OriginalImplementName + " " + item.Name;
                                         }
 
                                         self.PersistentUsedUpResources.UsedUpActions.Add("Scroll Esoterica");
@@ -2112,6 +2228,145 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             });
         }
 
+        /// <summary>
+        /// Adds the logic for the Sympathetic Vulnerabilities class feat
+        /// </summary>
+        /// <param name="sympatheticVulnerabilitiesFeat">The Sympathetic Vulnerabilities feat object</param>
+        public static void AddSympatheticVulnerabilitiesLogic(Feat sympatheticVulnerabilitiesFeat)
+        {
+            sympatheticVulnerabilitiesFeat.WithPermanentQEffect("Your mortal weaknesses and personal antithesis apply to more creatures.", delegate (QEffect self)
+            {
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Profane Insight class feat
+        /// </summary>
+        /// <param name="profaneInsightFeat">The Profane Insight feat object</param>
+        public static void AddProfaneInsightLogic(Feat profaneInsightFeat)
+        {
+            profaneInsightFeat.WithPermanentQEffect("You gain a +2 circumstance bonus to Demoalize against your Exploit Vulnerability targets.", delegate (QEffect self)
+            {
+                self.BonusToSkillChecks = (Skill skill, CombatAction action, Creature? defender) =>
+                {
+                    if (action.ActionId == ActionId.Demoralize && defender != null && defender.QEffects.Any(qe => qe.Id == ThaumaturgeQEIDs.ExploitVulnerabilityTarget && qe.Tag is Creature source && source == action.Owner))
+                    {
+                        return new Bonus(2, BonusType.Circumstance, "Profane insight", true);
+                    }
+
+                    return null;
+                };
+                self.AfterYouTakeActionAgainstTarget = async (QEffect afterAction, CombatAction action, Creature defender, CheckResult result) =>
+                {
+                    if (action.ActionId == ActionId.Demoralize && defender.QEffects.Any(qe => qe.Id == ThaumaturgeQEIDs.ExploitVulnerabilityTarget && qe.Tag is Creature source && source == action.Owner))
+                    {
+                        defender.RemoveAllQEffects(qe => qe.Id == QEffectId.ImmunityToTargeting && qe.SourceAction != null && qe.SourceAction.ActionId == ActionId.Demoralize && qe.Source == afterAction.Owner);
+                    }
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Cursed Effigy class feat
+        /// </summary>
+        /// <param name="cursedEffigyFeat">The Cursed Effigy feat object</param>
+        public static void AddCursedEffigyLogic(Feat cursedEffigyFeat)
+        {
+            cursedEffigyFeat.WithPermanentQEffect("You can give the targets of your Exploit Vulnerability a -2 status penalty.", delegate (QEffect self)
+            {
+                self.AfterYouTakeActionAgainstTarget = async (QEffect afterAction, CombatAction action, Creature defender, CheckResult result) =>
+                {
+                    if (action.HasTrait(Trait.Strike))
+                    {
+                        QEffect? exploitTargetEffect = defender.QEffects.FirstOrDefault(qe => qe.Id == ThaumaturgeQEIDs.ExploitVulnerabilityTarget && qe.Tag is Creature source && source == action.Owner);
+                        if (exploitTargetEffect != null)
+                        {
+                            QEffect canUseCursedEffigy = new QEffect(ExpirationCondition.ExpiresAtEndOfSourcesTurn)
+                            {
+                                Id = ThaumaturgeQEIDs.CanUseCursedEffigy,
+                                Source = afterAction.Owner
+                            };
+
+                            exploitTargetEffect.WhenExpires += (QEffect qfExpires) =>
+                            {
+                                canUseCursedEffigy.ExpiresAt = ExpirationCondition.Immediately;
+                            };
+
+                            defender.AddQEffect(canUseCursedEffigy);
+                        }
+                    }
+                };
+                self.ProvideMainAction = (QEffect provideMainAction) =>
+                {
+                    Creature owner = provideMainAction.Owner;
+                    return new ActionPossibility(new CombatAction(owner, IllustrationName.GenericCombatManeuver, "Cursed Effight", [Trait.Curse], cursedEffigyFeat.RulesText, Target.Ranged(200)
+                        .WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                        {
+                            if (defender.QEffects.Any(qe => qe.Id == ThaumaturgeQEIDs.CanUseCursedEffigy && qe.Source != null && qe.Source == attacker))
+                            {
+                                return Usability.Usable;
+                            }
+
+                            return Usability.NotUsableOnThisCreature("Not valid");
+                        }))
+                        .WithActionCost(1)
+                        .WithEffectOnEachTarget(async (CombatAction action, Creature attacker, Creature defender, CheckResult result) =>
+                        {
+                            QEffect? exploitTargetEffect = defender.QEffects.FirstOrDefault(qe => qe.Id == ThaumaturgeQEIDs.ExploitVulnerabilityTarget && qe.Tag is Creature source && source == action.Owner);
+                            if (exploitTargetEffect != null)
+                            {
+                                QEffect savingThrowPenalty = new QEffect("Cursed Effigy", $"You have a -2 status penalty against saving throws from {attacker.Name}")
+                                {
+                                    Illustration = IllustrationName.GenericCombatManeuver,
+                                    Source = attacker,
+                                    BonusToDefenses = (QEffect penalty, CombatAction? action, Defense defense) =>
+                                    {
+                                        if (defense == Defense.Reflex || defense == Defense.Fortitude || defense == Defense.Will)
+                                        {
+                                            if (action != null && action.Owner == penalty.Source)
+                                            {
+                                                return new Bonus(-2, BonusType.Status, "Cursed Effigy", false);
+                                            }
+                                        }
+
+                                        return null;
+                                    }
+                                };
+
+                                exploitTargetEffect.WhenExpires += (QEffect qfExpires) =>
+                                {
+                                    savingThrowPenalty.ExpiresAt = ExpirationCondition.Immediately;
+                                };
+
+                                defender.AddQEffect(savingThrowPenalty);
+                            } 
+                        }));
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Know It All class feat
+        /// </summary>
+        /// <param name="knowItAllFeat">The Know It All feat object</param>
+        public static void AddKnowItAllLogic(Feat knowItAllFeat)
+        {
+            knowItAllFeat.WithPermanentQEffect("You can exploit vulnerabilities easier.", delegate (QEffect self)
+            {
+            });
+        }
+
+        /// <summary>
+        /// Adds the logic for the Magical Exploits class feat
+        /// </summary>
+        /// <param name="magicalExploitsFeat">The Magical Exploits feat object</param>
+        public static void AddMagicalExploitsLogic(Feat magicalExploitsFeat)
+        {
+            magicalExploitsFeat.WithPermanentQEffect("Attack spells trigger your weakness and antithesis.", delegate (QEffect self)
+            {
+            });
+        }
+
         private static void AddImplementEnsureLogic(Feat implementFeat)
         {
             implementFeat.WithOnSheet((character) =>
@@ -2121,6 +2376,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             implementFeat.WithOnCreature((character, creature) =>
             {
                 ThaumaturgeUtilities.EnsureCorrectImplements(character);
+            });
+        }
+
+        private static void AddLevelTag(Feat feat)
+        {
+            feat.WithOnSheet(values =>
+            {
+                string tagName = values.CurrentLevel > 1 ? "Second Implement" : "First Implement";
+                values.Tags[tagName] = feat.FeatName;
             });
         }
     }

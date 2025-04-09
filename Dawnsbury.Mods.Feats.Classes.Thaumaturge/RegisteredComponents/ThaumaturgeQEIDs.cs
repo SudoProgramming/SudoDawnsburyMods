@@ -97,5 +97,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Adept Regalia Tracker persistent QEffect ID
         /// </summary>
         public static readonly QEffectId AdeptRegaliaTracker = ModManager.RegisterEnumMember<QEffectId>("Adept Regalia QEID");
+
+        /// <summary>
+        /// The Can Use Cursed Effigy persistent QEffect ID
+        /// </summary>
+        public static readonly QEffectId CanUseCursedEffigy = ModManager.RegisterEnumMember<QEffectId>("Can Use Cursed Effigy QEID");
     }
 }

@@ -166,6 +166,31 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         public static readonly FeatName ScrollEsoterica = ModManager.RegisterFeatName("Scroll Esoterica", "Scroll Esoterica");
 
         /// <summary>
+        /// The Sympathetic Vulnerabilities class Feat
+        /// </summary>
+        public static readonly FeatName SympatheticVulnerabilities = ModManager.RegisterFeatName("Sympathetic Vulnerabilities", "Sympathetic Vulnerabilities");
+
+        /// <summary>
+        /// The Profane Insight class Feat
+        /// </summary>
+        public static readonly FeatName ProfaneInsight = ModManager.RegisterFeatName("Profane Insight", "Profane Insight");
+
+        /// <summary>
+        /// The Cursed Effigy class Feat
+        /// </summary>
+        public static readonly FeatName CursedEffigy = ModManager.RegisterFeatName("Cursed Effigy", "Cursed Effigy");
+
+        /// <summary>
+        /// The Know it All class Feat
+        /// </summary>
+        public static readonly FeatName KnowitAll = ModManager.RegisterFeatName("Know it All", "Know it All");
+
+        /// <summary>
+        /// The Magical Exploits class Feat
+        /// </summary>
+        public static readonly FeatName MagicalExploits = ModManager.RegisterFeatName("Magical Exploits", "Magical Exploits");
+
+        /// <summary>
         /// The Esoterica Seller class Feat
         /// </summary>
         public static readonly FeatName EsotericaSeller = ModManager.RegisterFeatName("Esoterica Seller", "Esoterica Seller");

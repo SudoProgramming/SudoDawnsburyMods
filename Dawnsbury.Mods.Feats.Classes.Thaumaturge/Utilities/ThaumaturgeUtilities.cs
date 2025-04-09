@@ -160,6 +160,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                         Id = ThaumaturgeQEIDs.UsedExploitVulnerability
                     });
                     bool skipAntithesis = false;
+                    bool applyToAll = attacker.HasFeat(ThaumaturgeFeatNames.SympatheticVulnerabilities);
                     if (result >= CheckResult.Success)
                     {
                         if (defender.WeaknessAndResistance.Weaknesses.Count(resistance => resistance.DamageKind != ThaumaturgeDamageKinds.PersonalAntithesis) > 0)
@@ -168,10 +169,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                             Resistance weakness = weaknesses[0];
                             if (weaknesses.Count > 1)
                             {
-                                ChoiceButtonOption selectedWeakness = await attacker.AskForChoiceAmongButtons(ThaumaturgeModdedIllustrations.ExploitVulnerability, "Which weakness would you like to exploit against all " + defender.BaseName + "?", weaknesses.Select(weakness => weakness.DamageKind.HumanizeTitleCase2()).ToArray());
+                                ChoiceButtonOption selectedWeakness = await attacker.AskForChoiceAmongButtons(ThaumaturgeModdedIllustrations.ExploitVulnerability, "Which weakness would you like to exploit against all " + (applyToAll ? "creatures with that weakness" : defender.BaseName) + "?", weaknesses.Select(weakness => $"{weakness.DamageKind.HumanizeTitleCase2()} {weakness.Value}").ToArray());
                                 weakness = weaknesses[selectedWeakness.Index];
                             }
-                            if (weakness.Value >= 2 + Math.Floor(attacker.Level / 2.0))
+
+                            int personalAntithesisValue = (int)(2 + Math.Floor(attacker.Level / 2.0));
+                            if (weakness.Value >= personalAntithesisValue || await attacker.AskForConfirmation(ThaumaturgeModdedIllustrations.ExploitVulnerability, $"The {weakness.DamageKind.HumanizeTitleCase2()} {weakness.Value} weakness is less than the {personalAntithesisValue} weakness you could apply with Personal Antithesis. Which would you like to use?", weakness.DamageKind.HumanizeTitleCase2(), "Personal Antithesis"))
                             {
                                 skipAntithesis = true;
                                 foreach (Creature creature in attacker.Battle.AllCreatures.Where(creature => !creature.FriendOf(attacker) && creature.BaseName == defender.BaseName))
@@ -185,7 +188,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                                         Tag = attacker
                                     });
                                 }
-                                attacker.AddQEffect(new ExploitEffect(defender, weakness: weakness));
+
+                                attacker.AddQEffect(new ExploitEffect(attacker, defender, weakness: weakness, applyToAll: applyToAll));
                             }
                         }
                     }
@@ -193,31 +197,44 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                     if (result >= CheckResult.Failure && !skipAntithesis)
                     {
                         int antithesisAmount = (int)(2 + Math.Floor(attacker.Level / 2.0));
-                        defender.AddQEffect(new QEffect(ExpirationCondition.Never)
+
+                        List<Creature> applyWeaknessTo = new List<Creature>() { defender };
+
+                        if (applyToAll)
                         {
-                            Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
-                            Tag = attacker,
-                            Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
-                            Name = "Exploited Vulnerability",
-                            Description = "Exploited Weakness by " + attacker.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
-                            StateCheck = (QEffect stateCheck) =>
+                            applyWeaknessTo.AddRange(attacker.Battle.AllCreatures.Where(creature => creature != defender && !creature.FriendOf(attacker) && creature.BaseName == defender.BaseName));
+                        }
+
+                        foreach (Creature applyWeakness in applyWeaknessTo)
+                        {
+                            applyWeakness.AddQEffect(new QEffect(ExpirationCondition.Never)
                             {
-                                Creature owner = stateCheck.Owner;
-                                if (owner.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget))
+                                Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
+                                Tag = attacker,
+                                Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
+                                Name = "Exploited Vulnerability",
+                                Description = "Exploited Weakness by " + attacker.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
+                                StateCheck = (QEffect stateCheck) =>
                                 {
-                                    if (!owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
+                                    Creature owner = stateCheck.Owner;
+                                    if (owner.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget))
                                     {
-                                        owner.WeaknessAndResistance.AddWeakness(ThaumaturgeDamageKinds.PersonalAntithesis, antithesisAmount);
+                                        if (!owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
+                                        {
+                                            owner.WeaknessAndResistance.AddWeakness(ThaumaturgeDamageKinds.PersonalAntithesis, antithesisAmount);
+                                        }
                                     }
-                                }
-                                else if (owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
+                                    else if (owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
                                     {
                                         owner.WeaknessAndResistance.Weaknesses.RemoveAll(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis);
                                     }
                                 }
                             });
-                            attacker.AddQEffect(new ExploitEffect(defender, antithesisAmount: antithesisAmount));
-                            }
+
+                        }
+                        
+                        attacker.AddQEffect(new ExploitEffect(attacker, defender, antithesisAmount: antithesisAmount, applyToAll: applyToAll));
+                    }
                     else if (result == CheckResult.CriticalFailure)
                     {
                         QEffect flatFooted = QEffect.FlatFooted("Exploit Vulnerability");
@@ -249,7 +266,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
         public static CalculatedNumber CalculateEsotericLoreDC(CombatAction action, Creature roller, Creature? defender)
         {
             Creature dcByLevelTarget = defender ?? roller;
-            return new CalculatedNumber(Checks.LevelBasedDC(dcByLevelTarget.Level), "DC by Level", new List<Bonus?>());
+            bool hasKnowItAll = roller.HasFeat(ThaumaturgeFeatNames.KnowitAll);
+            int dcLevel = hasKnowItAll ? dcByLevelTarget.Level -1 : dcByLevelTarget.Level;
+            string dcText = hasKnowItAll ? "DC by Level (Know it All)" : "DC by Level";
+            return new CalculatedNumber(Checks.LevelBasedDC(dcLevel), dcText, new List<Bonus?>());
         }
 
         public static int CalculateClassDC(Creature creature, Trait classTrait)
@@ -345,8 +365,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             foreach (ImplementIDs implementID in implementIDs)
             {
                 FeatName featName = LookupImplementFeatName(implementID);
-                List<FeatName> feats = character.AllFeatNames.ToList();
-                List<string> humanized = feats.Select(feat => feat.HumanizeTitleCase2()).ToList();
                 if (character.HasFeat(featName))
                 {
                     implementsToAdd.Add(implementID);
@@ -384,7 +402,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             foreach (int level in levels)
             {
                 Inventory inventory = character.Sheet.InventoriesByLevel[level];
-                AddImplementIntoInventory(inventory, implement);
+
+                if (level >= 5 || (character.Tags["First Implement"] is FeatName firstImplementFeatName && firstImplementFeatName == LookupImplementFeatName(implement.ImplementID)))
+                {
+                    AddImplementIntoInventory(inventory, implement);
+                }
             }
         }
 
@@ -479,17 +501,40 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 
         private static void RemoveImplementFromInventory(Inventory inventory, ItemName implementName)
         {
+            Item? GetScroll(Item implement)
+            {
+                if (implement.StoredItems.Count == 1)
+                {
+                    return implement.StoredItems[0];
+                }
+
+                return null;
+            }
+
+            Item? scrollToAdd = null;
             if (inventory.RightHand?.BaseItemName == implementName)
             {
+                scrollToAdd = GetScroll(inventory.RightHand);
                 inventory.RightHand = null;
             }
             else if (inventory.LeftHand?.BaseItemName == implementName)
             {
+                scrollToAdd = GetScroll(inventory.LeftHand);
                 inventory.LeftHand = null;
             }
             else
             {
+                Item? possibleImplement = inventory.Backpack.FirstOrDefault(item => item != null && item.BaseItemName == implementName);
+                if (possibleImplement != null)
+                {
+                    scrollToAdd = GetScroll(possibleImplement);
+                }
                 inventory.Backpack.RemoveAll(item => item != null && item.BaseItemName == implementName);
+            }
+
+            if (scrollToAdd != null)
+            {
+                inventory.AddAtEndOfBackpack(scrollToAdd);
             }
         }
 

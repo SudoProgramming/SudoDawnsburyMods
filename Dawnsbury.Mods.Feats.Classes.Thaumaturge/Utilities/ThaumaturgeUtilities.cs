@@ -169,12 +169,22 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                             Resistance weakness = weaknesses[0];
                             if (weaknesses.Count > 1)
                             {
-                                ChoiceButtonOption selectedWeakness = await attacker.AskForChoiceAmongButtons(ThaumaturgeModdedIllustrations.ExploitVulnerability, "Which weakness would you like to exploit against all " + (applyToAll ? "creatures with that weakness" : defender.BaseName) + "?", weaknesses.Select(weakness => $"{weakness.DamageKind.HumanizeTitleCase2()} {weakness.Value}").ToArray());
+                                ChoiceButtonOption selectedWeakness = await attacker.AskForChoiceAmongButtons(ThaumaturgeModdedIllustrations.ExploitVulnerability, "Which weakness would you like to exploit against all " + (applyToAll ? "creatures with that weakness" : defender.BaseName) + "?", weaknesses.Where(weak => weak is not ResistanceToAll).Select(weakness =>
+                                    {
+                                        if (weakness is SpecialResistance specialWeakness)
+                                        {
+                                            return $"{specialWeakness.Name} {specialWeakness.Value}";
+                                        }
+                                        else
+                                        {
+                                            return $"{weakness.DamageKind.HumanizeTitleCase2()} {weakness.Value}";
+                                        }
+                                    }).ToArray());
                                 weakness = weaknesses[selectedWeakness.Index];
                             }
 
                             int personalAntithesisValue = (int)(2 + Math.Floor(attacker.Level / 2.0));
-                            if (weakness.Value >= personalAntithesisValue || await attacker.AskForConfirmation(ThaumaturgeModdedIllustrations.ExploitVulnerability, $"The {weakness.DamageKind.HumanizeTitleCase2()} {weakness.Value} weakness is less than the {personalAntithesisValue} weakness you could apply with Personal Antithesis. Which would you like to use?", weakness.DamageKind.HumanizeTitleCase2(), "Personal Antithesis"))
+                            if (weakness.Value >= personalAntithesisValue || await attacker.AskForConfirmation(ThaumaturgeModdedIllustrations.ExploitVulnerability, $"The {(weakness is SpecialResistance spec ? spec.Name : weakness.DamageKind.HumanizeLowerCase2())} {weakness.Value} weakness is less than the {personalAntithesisValue} weakness you could apply with Personal Antithesis. Which would you like to use?", (weakness is SpecialResistance spe ? spe.Name : weakness.DamageKind.HumanizeLowerCase2()), "Personal Antithesis"))
                             {
                                 skipAntithesis = true;
                                 foreach (Creature creature in attacker.Battle.AllCreatures.Where(creature => !creature.FriendOf(attacker) && creature.BaseName == defender.BaseName))
@@ -184,7 +194,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                                         Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
                                         Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
                                         Name = "Exploited Vulnerability",
-                                        Description = "Exploited Weakness by " + attacker.Name + " - " + weakness.DamageKind.HumanizeTitleCase2() + " " + weakness.Value,
+                                        Description = "Exploited Weakness by " + attacker.Name + " - " + (weakness is SpecialResistance changed ? changed.Name : weakness.DamageKind.HumanizeLowerCase2()) + " " + weakness.Value,
                                         Tag = attacker
                                     });
                                 }

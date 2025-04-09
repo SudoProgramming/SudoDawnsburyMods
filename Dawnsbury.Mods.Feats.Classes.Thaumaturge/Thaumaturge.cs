@@ -16,6 +16,7 @@ using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Core;
 using Dawnsbury.Core.Mechanics.Damage;
 using Dawnsbury.Core.Mechanics.Enumerations;
+using Dawnsbury.Core.Mechanics.Rules;
 using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Mechanics.Treasure;
@@ -166,7 +167,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             //// Creates the class selection feat for the Thaumaturge
             yield return new ClassSelectionFeat(ThaumaturgeFeatNames.ThaumaturgeClass, "The world is full of the unexplainable: ancient magic, dead gods, and even stranger things. In response, you've scavenged the best parts of every magical tradition and built up a collection of esoterica—a broken holy relic here, a sprig of mistletoe there—that you can use to best any creature by exploiting their weaknesses and vulnerabilities. The mystic implement you carry is both badge and weapon, its symbolic weight helping you bargain with and subdue the supernatural. Every path to power has its restrictions and costs, but you turn them all to your advantage. You're a thaumaturge, and you work wonders.",
                 ThaumaturgeTraits.Thaumaturge, new EnforcedAbilityBoost(Ability.Charisma), 8,
-                [Trait.Reflex, Trait.Simple, Trait.Martial, Trait.LightArmor, Trait.MediumArmor, Trait.Unarmed, Trait.UnarmoredDefense],
+                [Trait.Reflex, Trait.Simple, Trait.Martial, Trait.LightArmor, Trait.MediumArmor, Trait.Unarmed, Trait.UnarmoredDefense, Trait.Arcana, Trait.Nature, Trait.Occultism, Trait.Religion],
                 [Trait.Perception, Trait.Fortitude, Trait.Will],
                 3,
                 "{b}1. Esoteric Lore{/b} You become trained in a special lore skill that can used to Exploit Vulnerability. This is a charisma-based skill. {i}(You add your Charisma modifier to checks using this skill.){/i}\n\n" +
@@ -1388,18 +1389,38 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                         else if (strikeCheckResult == CheckResult.Failure && ((attacker is not MirrorClone && attacker.HasFeat(ThaumaturgeFeatNames.WeaponAdept) || (pairedCreatureEffect != null && pairedCreatureEffect.PairedCreature.HasFeat(ThaumaturgeFeatNames.WeaponAdept)))) && attacker.PrimaryWeapon != null)
                                         {
                                             List<DamageKind> damageTypes = attacker.PrimaryWeapon.DetermineDamageKinds();
+                                            SpecialResistance? specialWeakness = null;
                                             QEffect? exploitEffect = attacker.QEffects.FirstOrDefault(qe => (qe is ExploitEffect exploitEffect && exploitEffect.Target.BaseName == provoker.BaseName) || (qe is QEffectClone clonedEffect && clonedEffect.OriginalEffect is ExploitEffect clonedExploitEffect && clonedExploitEffect.Target.BaseName == provoker.BaseName));
 
                                             if (exploitEffect != null && exploitEffect is ExploitEffect actualExploitEffect)
                                             {
-                                                damageTypes.Add(actualExploitEffect.ExploitedDamageKind);
+                                                if (actualExploitEffect.ExploitedWeakness is SpecialResistance specialWeak)
+                                                {
+                                                    specialWeakness = specialWeak;
+                                                }
+                                                else
+                                                {
+                                                    damageTypes.Add(actualExploitEffect.ExploitedWeakness.DamageKind);
+                                                }
                                             }
                                             else if (exploitEffect != null && exploitEffect is QEffectClone clonedEffect && clonedEffect.OriginalEffect is ExploitEffect clonedExploitEffect)
                                             {
-                                                damageTypes.Add(clonedExploitEffect.ExploitedDamageKind);
+                                                if (clonedExploitEffect.ExploitedWeakness is SpecialResistance specialWeak)
+                                                {
+                                                    specialWeakness = specialWeak;
+                                                }
+                                                else
+                                                {
+                                                    damageTypes.Add(clonedExploitEffect.ExploitedWeakness.DamageKind);
+                                                }
                                             }
                                             DamageKind damageKindToUse = provoker.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(damageTypes);
-                                            await CommonSpellEffects.DealDirectSplashDamage(CombatAction.CreateSimple(attacker, "Weapon Adept"), DiceFormula.FromText("1"), provoker, damageKindToUse);
+                                            CombatAction simpleAction = CombatAction.CreateSimple(attacker, "Weapon Adept");
+                                            if (specialWeakness != null)
+                                            {
+                                                simpleAction.Name += $" ({specialWeakness.Name} {specialWeakness.Value} included)";
+                                            }
+                                            await CommonSpellEffects.DealDirectSplashDamage(simpleAction, DiceFormula.FromText(specialWeakness != null ? $"{1 + specialWeakness.Value}" : "1"), provoker, damageKindToUse);
                                         }
 
                                         if (attacker is MirrorClone && pairedCreatureEffect != null)
@@ -1836,6 +1857,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             instructiveStrike.Traits.Add(Trait.Basic);
                         }
                         instructiveStrike.ActionId = ThaumaturgeActionIDs.InstructiveStrike;
+                        instructiveStrike.Description = StrikeRules.CreateBasicStrikeDescription3(instructiveStrike.StrikeModifiers, additionalSuccessText: "You can immediately attempt a check to Exploit Vulnerability on the target.", additionalCriticalSuccessText: "You gain a +2 circumstance bonus to that check.");
                         return instructiveStrike;
                     }
 

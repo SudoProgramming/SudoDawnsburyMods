@@ -114,7 +114,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             yield return wandImplementFeat;
 
             // Creates and adds the logic for the Weapon Implement sub-class feature
-            Feat weaponImplementFeat = new Feat(ThaumaturgeFeatNames.WeaponImplement, ImplementDetails.WeaponInitiateBenefitFlavorText, "You gain the " + ImplementDetails.WeaponInitiateBenefitName + " reaction.\n\n{b}NOTE: The Weapon Implement will be applied to your first One-Handed weapon at the start of each encounter.{/b}\n\n{b}" + ImplementDetails.WeaponInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.WeaponInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            Feat weaponImplementFeat = new Feat(ThaumaturgeFeatNames.WeaponImplement, ImplementDetails.WeaponInitiateBenefitFlavorText, "{b}IMPORANT{/b} You must drag the 'Weapon Implement' onto the weapon you wish to make your implement.\n\nYou gain the " + ImplementDetails.WeaponInitiateBenefitName + " reaction.\n\n{b}NOTE: Only the first weapon with the weapon implement attached will become an implement at the start of each encounter.{/b}\n\n{b}" + ImplementDetails.WeaponInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.WeaponInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddLevelTag(weaponImplementFeat);
             AddWeaponImplementLogic(weaponImplementFeat);
             yield return weaponImplementFeat;
@@ -1058,13 +1058,101 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="tomeImplementFeat">The Tome Implement feat object</param>
         public static void AddTomeImplementLogic(Feat tomeImplementFeat)
         {
+            AddImplementEnsureLogic(tomeImplementFeat);
             tomeImplementFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
             {
-                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome First Extra Skill", "Tome First Extra Skill", sheet.CurrentLevel, (feat => feat is SkillSelectionFeat)));
-                sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Second Extra Skill", "Tome Second Extra Skill", sheet.CurrentLevel, (feat => feat is SkillSelectionFeat)));
+                sheet.AddSelectionOption(new MultipleFeatSelectionOption("TomeTrainedSkills", "Trained Tome Skills", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat is SkillSelectionFeat, 2));
+                //sheet.AddAtLevel(3, (CalculatedCharacterSheetValues character) =>
+                //{
+                //    sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome1stExpertSkill", "1st Expert Tome Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat.FeatGroup == FeatGroup.SkillExpertise));
+                //});
+                //sheet.AddAtLevel(5, (CalculatedCharacterSheetValues character) =>
+                //{
+                //    sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome2ndExpertSkill", "2nd Expert Tome Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat.FeatGroup == FeatGroup.SkillExpertise));
+                //});
+                //sheet.AddAtLevel(7, (CalculatedCharacterSheetValues character) =>
+                //{
+                //    if (sheet.HasFeat(ThaumaturgeFeatNames.TomeAdept))
+                //    {
+                //        sheet.AddSelectionOption(new SingleFeatSelectionOption("TomeMasterSkill", "Master Tome Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat.FeatGroup == FeatGroup.SkillMastery));
+                //    }
+                //});
+
+
+                //if (sheet.HasFeat(ThaumaturgeFeatNames.TomeAdept) && sheet.Sheet.MaximumLevel >= 7)
+                //{
+                //    sheet.AddSelectionOption(new SingleFeatSelectionOption("TomeMasterSkill", "Master Tome Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat.FeatGroup == FeatGroup.SkillMastery));
+                //    sheet.AddSelectionOption(new SingleFeatSelectionOption("TomeExpertSkill", "Expert Tome Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat.FeatGroup == FeatGroup.SkillExpertise));
+                //}
+                //else if (sheet.CurrentLevel >= 5)
+                //{
+                //    sheet.AddSelectionOption(new MultipleFeatSelectionOption("TomeExpertSkills", "Expert Tome Skills", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat.FeatGroup == FeatGroup.SkillExpertise, 2));
+                //}
+                //else if (sheet.CurrentLevel >= 3)
+                //{
+                //    sheet.AddSelectionOption(new SingleFeatSelectionOption("TomeExpertSkill", "Expert Tome Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat.FeatGroup == FeatGroup.SkillExpertise));
+                //    sheet.AddSelectionOption(new SingleFeatSelectionOption("TomeTrainedSkill", "Trained Tome Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat is SkillSelectionFeat));
+                //}
+                //else
+                //{
+                //    sheet.AddSelectionOption(new MultipleFeatSelectionOption("TomeTrainedSkills", "Trained Tome Skills", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat is SkillSelectionFeat, 2));
+                //}
+                //    sheet.AddSelectionOption(new SingleFeatSelectionOption("TomeFirstSkill", "1st Tome Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) =>
+                //    {
+                //        if (sheet.HasFeat(ThaumaturgeFeatNames.TomeAdept) && sheet.CurrentLevel >= 7)
+                //        {
+                //            return feat.FeatGroup == FeatGroup.SkillMastery;
+                //        }
+                //        else if (sheet.CurrentLevel >= 5)
+                //        {
+                //            return feat.FeatGroup == FeatGroup.SkillExpertise;
+                //        }
+                //        else if (sheet.CurrentLevel >= 3)
+                //        {
+                //            return feat.FeatGroup == FeatGroup.SkillExpertise;
+                //        }
+                //        else
+                //        {
+                //            return feat is SkillSelectionFeat;
+                //        }
+                //    }));
+
+                //sheet.AddSelectionOption(new SingleFeatSelectionOption("TomeSecondSkill", "2nd Tome Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) =>
+                //{
+                //    if (sheet.CurrentLevel >= 5)
+                //    {
+                //        return feat.FeatGroup == FeatGroup.SkillExpertise;
+                //    }
+                //    else
+                //    {
+                //        return feat is SkillSelectionFeat;
+                //    }
+                //}));
+
+                //sheet.AddSelectionOption(new MultipleFeatSelectionOption("TomeSkills", "Tome skills", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) =>
+                //{
+                //    if (sheet.HasFeat(ThaumaturgeFeatNames.TomeAdept) && sheet.CurrentLevel >= 7)
+                //    {
+                //        return feat is SkillIncreaseFeat;
+                //    }
+                //    else if (sheet.CurrentLevel >= 5)
+                //    {
+                //        return feat is SkillIncreaseFeat;
+                //    }
+                //    else if (sheet.CurrentLevel >= 3)
+                //    {
+                //        return feat.FeatGroup == FeatGroup.SkillExpertise;
+                //    }
+                //    else
+                //    {
+                //        return feat is SkillSelectionFeat;
+                //    }
+                //}, 2));
+
+                //sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome First Extra Skill", "Tome First Extra Skill", sheet.CurrentLevel, (feat => feat is SkillSelectionFeat)));
+                //sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Second Extra Skill", "Tome Second Extra Skill", sheet.CurrentLevel, (feat => feat is SkillSelectionFeat)));
                 //sheet.AddSkillIncreaseOption(sheet.CurrentLevel > 3 ? sheet.CurrentLevel : 3);
                 //sheet.AddSkillIncreaseOption(5);
-                ThaumaturgeUtilities.EnsureCorrectImplements(sheet);
             };
             tomeImplementFeat.WithPermanentQEffect(ImplementDetails.TomeInitiateBenefitName + " - Improved Exploit Vulnerability and extra skills", delegate (QEffect self) {
             });
@@ -1076,10 +1164,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="tomeAdeptFeat">The Tome Adept feat object</param>
         public static void AddTomeAdeptLogic(Feat tomeAdeptFeat)
         {
-            tomeAdeptFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
-            {
-                sheet.AddSkillIncreaseOption(7);
-            };
             tomeAdeptFeat.WithPermanentQEffect("You may exploit vulnerability at the start of your turn as a free action, and if you succeed you gain a +1 circumstance bonus to attack rolls against them.", delegate (QEffect self)
             {
                 self.StartOfYourPrimaryTurn = async (QEffect qfStartOfTurn, Creature owner) =>
@@ -1124,11 +1208,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="wandImplementFeat">The Wand Implement feat object</param>
         public static void AddWandImplementLogic(Feat wandImplementFeat)
         {
+            AddImplementEnsureLogic(wandImplementFeat);
             wandImplementFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
             {
                 List<FeatName> wandFeatNames = new List<FeatName>() { ThaumaturgeFeatNames.ColdWand, ThaumaturgeFeatNames.ElectricityWand, ThaumaturgeFeatNames.FireWand } ;
                 sheet.AddSelectionOption(new SingleFeatSelectionOption("Thaumaturge Wand Type", "Wand", sheet.CurrentLevel, feat => wandFeatNames.Contains(feat.FeatName)));
-                ThaumaturgeUtilities.EnsureCorrectImplements(sheet);
             };
             wandImplementFeat.WithPermanentQEffect(ImplementDetails.WandInitiateBenefitName + " - Flind magic with your wand", delegate (QEffect self)
             {
@@ -1358,10 +1442,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 self.StartOfCombat = async (QEffect startOfCombat) =>
                 {
                     Creature owner = startOfCombat.Owner;
-                    Item? weaponImplement = owner.HeldItems.FirstOrDefault(item => item != null && item.WeaponProperties != null && !item.HasTrait(Trait.TwoHanded));
+                    Item? weaponImplement = owner.HeldItems.FirstOrDefault(item => item.HasTrait(ThaumaturgeTraits.WeaponImplement));
                     if (weaponImplement == null)
                     {
-                        weaponImplement = owner.CarriedItems.FirstOrDefault(item => item != null && item.WeaponProperties != null && !item.HasTrait(Trait.TwoHanded));
+                        weaponImplement = owner.CarriedItems.FirstOrDefault(item => item.HasTrait(ThaumaturgeTraits.WeaponImplement));
                     }
 
                     if (weaponImplement != null)

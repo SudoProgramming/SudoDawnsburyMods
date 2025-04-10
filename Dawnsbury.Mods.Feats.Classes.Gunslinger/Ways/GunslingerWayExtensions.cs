@@ -83,65 +83,45 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
             // Adds a permanent effect for the Reloading Strike action
             drifterFeat.WithPermanentQEffect("Reload and melee Strike", delegate (QEffect self)
             {
-                self.ProvideMainAction = (reloadingStrikeShotEffect) =>
+                self.ProvideStrikeModifier = (Item item) =>
                 {
-                    // Collects the Strikes owner and if they have any ranged and melee options that meet the action requirements. If they don't return null to hide the action.
-                    Creature owner = reloadingStrikeShotEffect.Owner;
-                    Item? ranged = owner.HeldItems.FirstOrDefault(item => FirearmUtilities.IsItemFirearmOrCrossbow(item) && (!FirearmUtilities.IsItemLoaded(item) || FirearmUtilities.IsMultiAmmoWeaponReloadable(item)) && item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.TwoHanded));
-                    Item? melee = owner.HeldItems.FirstOrDefault(item => item.HasTrait(Trait.Melee) && !item.HasTrait(Trait.TwoHanded));
-                    if (ranged == null || (melee == null && !owner.HasFreeHand))
+                    if (item.HasTrait(Trait.Melee))
                     {
-                        return null;
+                        Creature owner = self.Owner;
+                        Item? rangedWeapon = owner.HeldItems.FirstOrDefault(heldItem => FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && !FirearmUtilities.IsItemLoaded(heldItem));
+                        CombatAction reloadingStrike = owner.CreateStrike(item);
+                        reloadingStrike.Name = $"Reloading Strike";
+                        reloadingStrike.WithActionCost(1);
+                        reloadingStrike.Illustration = new SideBySideIllustration(item.Illustration, rangedWeapon?.Illustration ?? IllustrationName.GenericCombatManeuver);
+                        reloadingStrike.Item = rangedWeapon;
+                        reloadingStrike.Description = StrikeRules.CreateBasicStrikeDescription3(reloadingStrike.StrikeModifiers, prologueText: "Reload your weapon, this does not trigger reactions.");
+                        reloadingStrike.StrikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>
+                        {
+                            if (rangedWeapon != null)
+                            {
+                                await FirearmUtilities.AwaitReloadItem(attacker, rangedWeapon, true);
+                            }
+                        };
+
+                        // Checks if the item needs to be reloaded
+                        ((CreatureTarget)reloadingStrike.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                        {
+                            Item? itemToReload = owner.HeldItems.FirstOrDefault(heldItem => FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && !FirearmUtilities.IsItemLoaded(heldItem));
+                            if (itemToReload == null)
+                            {
+                                return Usability.NotUsable("No item to reload");
+                            }
+                            else if (owner.HeldItems.Count(item => !item.HasTrait(FirearmTraits.Bayonet) && FirearmUtilities.IsItemFirearmOrCrossbow(item)) != 1)
+                            {
+                                return Usability.NotUsable("No melee weapon, bayonet, or freehand.");
+                            }
+                            return Usability.Usable;
+                        });
+
+                        return reloadingStrike;
                     }
-                    if (melee == null)
-                    {
-                        melee = owner.UnarmedStrike;
-                    }
 
-                    int distanceAllowed = (melee.HasTrait(Trait.Reach)) ? 2 : 1;
-
-                    // Creates and returns the action with all desired restrictions
-                    return new ActionPossibility(new CombatAction(reloadingStrikeShotEffect.Owner, new SideBySideIllustration(ranged.Illustration, melee != null ? melee.Illustration : IllustrationName.Fist), "Reloading Strike", [Trait.Basic], driftersWay.SlingersReloadRulesText.Substring(driftersWay.SlingersReloadRulesText.IndexOf('\n') + 1), Target.Self()
-                    .WithAdditionalRestriction(self => self.Battle != null && self.Battle.AllCreatures.Count(creature => self.DistanceTo(creature) <= distanceAllowed && creature != self && !self.FriendOf(creature)) > 0 ? null : "No valid melee targets."))
-                    .WithActionCost(1).WithItem(ranged)
-                    .WithEffectOnEachTarget(async (CombatAction action, Creature attacker, Creature defender, CheckResult result) =>
-                    {
-                        // Collects action possibilities for the Strike subaction.
-                        List<Option> options = new List<Option>();
-                        if (melee != null)
-                        {
-                            GameLoop.AddDirectUsageOnCreatureOptions(attacker.CreateStrike(melee).WithActionCost(0), options, true);
-                        }
-                        else
-                        {
-                            foreach (Item unarmedItem in owner.MeleeWeapons.Where(possibleUnarmedItem => possibleUnarmedItem.HasTrait(Trait.Unarmed)))
-                            {
-                                GameLoop.AddDirectUsageOnCreatureOptions(owner.CreateStrike(unarmedItem).WithActionCost(0), options, true);
-                            }
-                        }
-
-                        // If there are possible melee actions, prompt for choice then strike, otherwise strike with the only option.
-                        if (options.Count != 0)
-                        {
-                            Option chosenStrike = options[0];
-                            if (options.Count >= 2)
-                            {
-                                chosenStrike = (await owner.Battle.SendRequest(new AdvancedRequest(owner, "Choose a creature to Strike.", options)
-                                {
-                                    TopBarText = "Choose a creature to Strike.",
-                                    TopBarIcon = melee != null ? melee.Illustration : IllustrationName.Fist
-                                })).ChosenOption;
-                            }
-
-                            if (chosenStrike != null && chosenStrike is not CancelOption)
-                            {
-                                await chosenStrike.Action();
-                            }
-                        }
-
-                        // Reload item
-                        await FirearmUtilities.AwaitReloadItem(attacker, ranged);
-                    }));
+                    return null;
                 };
             });
         }

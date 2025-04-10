@@ -63,17 +63,16 @@ namespace Dawnsbury.Mods.Items.Firearms.Utilities
         /// </summary>
         /// <param name="self">The creature weilding the item</param>
         /// <param name="item">The item being reloaded</param>
-        public static async Task AwaitReloadItem(Creature self, Item item)
+        public static async Task AwaitReloadItem(Creature self, Item item, bool noReactionTriggers = false)
         {
             if (item.HasTrait(FirearmTraits.DoubleBarrel))
             {
                 item.EphemeralItemProperties.AmmunitionLeftInMagazine++;
                 item.EphemeralItemProperties.NeedsReload = false;
-
             }
             else
             {
-                await self.CreateReload(item).WithActionCost(0).WithItem(item).AllExecute();
+                await self.CreateReload(item).WithExtraTrait(Trait.DoesNotProvoke).WithActionCost(0).WithItem(item).AllExecute();
             }
         }
 

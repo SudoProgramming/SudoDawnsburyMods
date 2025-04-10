@@ -92,7 +92,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                         CombatAction reloadingStrike = owner.CreateStrike(item);
                         reloadingStrike.Name = $"Reloading Strike";
                         reloadingStrike.WithActionCost(1);
-                        reloadingStrike.Illustration = new SideBySideIllustration(item.Illustration, rangedWeapon?.Illustration ?? IllustrationName.GenericCombatManeuver);
+                        reloadingStrike.Illustration = (rangedWeapon != null) ? new SideBySideIllustration(item.Illustration, rangedWeapon.Illustration) : item.Illustration;
                         reloadingStrike.Item = rangedWeapon;
                         reloadingStrike.Description = StrikeRules.CreateBasicStrikeDescription3(reloadingStrike.StrikeModifiers, prologueText: "Reload your weapon, this does not trigger reactions.");
                         reloadingStrike.StrikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>

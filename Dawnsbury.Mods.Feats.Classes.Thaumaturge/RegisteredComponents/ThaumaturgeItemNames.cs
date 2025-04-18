@@ -54,7 +54,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
 
         public static readonly ItemName WeaponImplementChoice = ModManager.RegisterNewItemIntoTheShop("Weapon Implement", itemName =>
         {
-            return new Item(itemName, ThaumaturgeModdedIllustrations.ExploitVulnerability, "Weapon Implement", 0, 1)
+            return new Item(itemName, ThaumaturgeModdedIllustrations.ExploitVulnerability, "Weapon Implement", 1, 0, Trait.DoNotAddToShop)
                 .WithRuneProperties(new RuneProperties("implement", ThaumaturgeRuneKind.WeaponImplement, "The weapon Implement for a Thaumaturge", "Drag onto a one handed weapon to turn it into a Weapon Implement. (NOTE: At the start of an encounter only the first item with this on it will become an implement. Having multiple on weapons will not work.)", item =>
                 {
                     item.Traits.Add(ThaumaturgeTraits.WeaponImplement);

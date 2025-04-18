@@ -146,6 +146,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                 {
                     return acquiredEffect;
                 }
+                else if (acquiredEffect.Id == QEffectId.Unconscious)
+                {
+                    if (!(this.Owner is MirrorClone))
+                    {
+                        CloneDeathTile = PairedCreature.Occupies;
+                    }
+
+                    OnUnconscious?.Invoke(this.Owner);
+                }
                 else if (acquiredEffect is not QEffectClone)
                 {
                     QEffect forSelf = new QEffectClone(acquiredEffect);
@@ -214,9 +223,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             {
                 if (!(self is MirrorClone))
                 {
-                    await self.ChooseWhichVersionIsReal(pairedCreature.Occupies);
-                    PairedCreature.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.MirrorTracking);
-                    self.Battle.RemoveCreatureFromGame(pairedCreature);
+                    if (self.Battle.AllCreatures.Contains(PairedCreature))
+                    {
+                        await self.ChooseWhichVersionIsReal(pairedCreature.Occupies);
+                        PairedCreature.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.MirrorTracking);
+                        self.Battle.RemoveCreatureFromGame(pairedCreature);
+                    }
+
                     self.RemoveAllQEffects(qe => qe.Id == ThaumaturgeQEIDs.MirrorTracking);
                 }
             };

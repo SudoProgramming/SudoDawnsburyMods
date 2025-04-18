@@ -16,7 +16,7 @@ namespace Dawnsbury.Mods.Items.Firearms.Utilities
         /// Determines if the item is a firearm or a crossbow
         /// </summary>
         /// <param name="item">The item being checked</param>
-        /// <returns>True if the item is a firearm or crossbow and false otherwise</returns>
+        /// <returns>True if the item is a firearm or crossbow and false otherwise</returns> 
         public static bool IsItemFirearmOrCrossbow(Item item, bool checkIfItsLoaded = false)
         {
             if (item.HasTrait(Trait.Firearm) || item.HasTrait(Trait.Crossbow))

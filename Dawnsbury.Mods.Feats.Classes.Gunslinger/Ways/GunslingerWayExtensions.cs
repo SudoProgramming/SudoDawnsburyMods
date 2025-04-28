@@ -83,65 +83,45 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
             // Adds a permanent effect for the Reloading Strike action
             drifterFeat.WithPermanentQEffect("Reload and melee Strike", delegate (QEffect self)
             {
-                self.ProvideMainAction = (reloadingStrikeShotEffect) =>
+                self.ProvideStrikeModifier = (Item item) =>
                 {
-                    // Collects the Strikes owner and if they have any ranged and melee options that meet the action requirements. If they don't return null to hide the action.
-                    Creature owner = reloadingStrikeShotEffect.Owner;
-                    Item? ranged = owner.HeldItems.FirstOrDefault(item => FirearmUtilities.IsItemFirearmOrCrossbow(item) && (!FirearmUtilities.IsItemLoaded(item) || FirearmUtilities.IsMultiAmmoWeaponReloadable(item)) && item.HasTrait(Trait.Ranged) && !item.HasTrait(Trait.TwoHanded));
-                    Item? melee = owner.HeldItems.FirstOrDefault(item => item.HasTrait(Trait.Melee) && !item.HasTrait(Trait.TwoHanded));
-                    if (ranged == null || (melee == null && !owner.HasFreeHand))
+                    if (item.HasTrait(Trait.Melee))
                     {
-                        return null;
+                        Creature owner = self.Owner;
+                        Item? rangedWeapon = owner.HeldItems.FirstOrDefault(heldItem => FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && !FirearmUtilities.IsItemLoaded(heldItem));
+                        CombatAction reloadingStrike = owner.CreateStrike(item);
+                        reloadingStrike.Name = $"Reloading Strike";
+                        reloadingStrike.WithActionCost(1);
+                        reloadingStrike.Illustration = (rangedWeapon != null) ? new SideBySideIllustration(item.Illustration, rangedWeapon.Illustration) : item.Illustration;
+                        reloadingStrike.Item = rangedWeapon;
+                        reloadingStrike.Description = StrikeRules.CreateBasicStrikeDescription3(reloadingStrike.StrikeModifiers, prologueText: "Reload your weapon, this does not trigger reactions.");
+                        reloadingStrike.StrikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>
+                        {
+                            if (rangedWeapon != null)
+                            {
+                                await FirearmUtilities.AwaitReloadItem(attacker, rangedWeapon, true);
+                            }
+                        };
+
+                        // Checks if the item needs to be reloaded
+                        ((CreatureTarget)reloadingStrike.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                        {
+                            Item? itemToReload = owner.HeldItems.FirstOrDefault(heldItem => FirearmUtilities.IsItemFirearmOrCrossbow(heldItem) && !FirearmUtilities.IsItemLoaded(heldItem));
+                            if (itemToReload == null)
+                            {
+                                return Usability.NotUsable("No item to reload");
+                            }
+                            else if (owner.HeldItems.Count(item => FirearmUtilities.IsItemFirearmOrCrossbow(item)) > 1)
+                            {
+                                return Usability.NotUsable("You can't have two firearms held.");
+                            }
+                            return Usability.Usable;
+                        });
+
+                        return reloadingStrike;
                     }
-                    if (melee == null)
-                    {
-                        melee = owner.UnarmedStrike;
-                    }
 
-                    int distanceAllowed = (melee.HasTrait(Trait.Reach)) ? 2 : 1;
-
-                    // Creates and returns the action with all desired restrictions
-                    return new ActionPossibility(new CombatAction(reloadingStrikeShotEffect.Owner, new SideBySideIllustration(ranged.Illustration, melee != null ? melee.Illustration : IllustrationName.Fist), "Reloading Strike", [Trait.Basic], driftersWay.SlingersReloadRulesText.Substring(driftersWay.SlingersReloadRulesText.IndexOf('\n') + 1), Target.Self()
-                    .WithAdditionalRestriction(self => self.Battle != null && self.Battle.AllCreatures.Count(creature => self.DistanceTo(creature) <= distanceAllowed && creature != self && !self.FriendOf(creature)) > 0 ? null : "No valid melee targets."))
-                    .WithActionCost(1).WithItem(ranged)
-                    .WithEffectOnEachTarget(async (CombatAction action, Creature attacker, Creature defender, CheckResult result) =>
-                    {
-                        // Collects action possibilities for the Strike subaction.
-                        List<Option> options = new List<Option>();
-                        if (melee != null)
-                        {
-                            GameLoop.AddDirectUsageOnCreatureOptions(attacker.CreateStrike(melee).WithActionCost(0), options, true);
-                        }
-                        else
-                        {
-                            foreach (Item unarmedItem in owner.MeleeWeapons.Where(possibleUnarmedItem => possibleUnarmedItem.HasTrait(Trait.Unarmed)))
-                            {
-                                GameLoop.AddDirectUsageOnCreatureOptions(owner.CreateStrike(unarmedItem).WithActionCost(0), options, true);
-                            }
-                        }
-
-                        // If there are possible melee actions, prompt for choice then strike, otherwise strike with the only option.
-                        if (options.Count != 0)
-                        {
-                            Option chosenStrike = options[0];
-                            if (options.Count >= 2)
-                            {
-                                chosenStrike = (await owner.Battle.SendRequest(new AdvancedRequest(owner, "Choose a creature to Strike.", options)
-                                {
-                                    TopBarText = "Choose a creature to Strike.",
-                                    TopBarIcon = melee != null ? melee.Illustration : IllustrationName.Fist
-                                })).ChosenOption;
-                            }
-
-                            if (chosenStrike != null && chosenStrike is not CancelOption)
-                            {
-                                await chosenStrike.Action();
-                            }
-                        }
-
-                        // Reload item
-                        await FirearmUtilities.AwaitReloadItem(attacker, ranged);
-                    }));
+                    return null;
                 };
             });
         }
@@ -158,15 +138,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
             {
                 self.StartOfCombat = async (startOfCombat) =>
                 {
-                    if (startOfCombat.Owner.HasEffect(QEffectId.Prone) && await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Crawl as a free action?", "Yes"))
-                    {
-                        await startOfCombat.Owner.StepAsync("Choose where to crawl.", true, true);
-                    }
-
                     // Prompts for reaction, then has the user select a tile closer to the enemy then strides towards it.
-                    else if (await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Stride as a free action towards a creature?", "Yes"))
+                    if (await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Stride as a free action towards a creature?", "Yes"))
                     {
-                        Tile? tileToStrideTo = await GetTileCloserToEnemy(startOfCombat.Owner, "Stride towards the selected enemy or right-click to cancel.");
+                        Tile? tileToStrideTo = await GetTileCloserToEnemy(startOfCombat.Owner, "Stride towards the selected enemy or right-click to cancel.", startOfCombat.Owner.HasEffect(QEffectId.Prone));
                         if (tileToStrideTo != null)
                         {
                             await startOfCombat.Owner.MoveTo(tileToStrideTo, null, new MovementStyle()
@@ -290,7 +265,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                 {
                     if (await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Step up to 10 ft as a free action?", "Yes"))
                     {
-                        Tile? tileToStepTo = await GetStepableTileWithinRange(startOfCombat.Owner, "Choose which tile to step to or right-click to cancel.", 2);
+                        Tile? tileToStepTo = await GetStepableTileWithinRange(startOfCombat.Owner, "Choose which tile to step to or right-click to cancel.", startOfCombat.Owner.HasEffect(QEffectId.Prone) ? 1 : 2);
                         if (tileToStepTo != null)
                         {
                             await startOfCombat.Owner.MoveTo(tileToStepTo, null, new MovementStyle()
@@ -336,10 +311,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             bool canTakeCover = !self.HasEffect(QEffectId.TakingCover);
 
                             CombatAction takeCoverAction = CommonCombatActions.TakeCover(self);
-                            takeCoverAction.WithEffectOnSelf(async (self) =>
+                            takeCoverAction.StrikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>
                             {
-                                await FirearmUtilities.AwaitReloadItem(self, item);
-                            });
+                                await FirearmUtilities.AwaitReloadItem(attacker, item);
+                            };
 
                             takeCoverAction.ActionCost = 1;
                             takeCoverAction.Item = item;
@@ -363,16 +338,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             raconteursReloadSection.AddPossibility(takeCoverPossibility);
 
                             CombatAction hideAction = CommonCombatActions.CreateHide(self);
-                            hideAction.WithEffectOnEachTarget(async (CombatAction action, Creature attacker, Creature defender, CheckResult result) =>
-                            {
-                                await FirearmUtilities.AwaitReloadItem(self, item);
-                            });
 
                             hideAction.ActionCost = 1;
                             hideAction.Item = item;
                             hideAction.Name = "Covered Reload (Hide)";
                             hideAction.Illustration = new SideBySideIllustration(item.Illustration, hideAction.Illustration);
                             hideAction.Description = "Interact to reload and then attempt a Stealth check to Hide.\n\n" + hideAction.Description;
+                            hideAction.WithEffectOnSelf(async (Creature innerSelf) =>
+                            {
+                                await FirearmUtilities.AwaitReloadItem(innerSelf, item);
+                            });
 
                             if (hideAction.Target != null && hideAction.Target is SelfTarget hideTarget)
                             {
@@ -534,6 +509,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                     return Usability.Usable;
                                 });
                                 StrikeModifiers strikeModifiers = clearAPathAction.StrikeModifiers;
+                                strikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>
+                                {
+                                    await FirearmUtilities.AwaitReloadItem(attacker, item);
+                                };
                                 strikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.Immediately)
                                 {
                                     BonusToSkillChecks = (Skill skill, CombatAction action, Creature? target) =>
@@ -545,10 +524,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                         return null;
                                     }
                                 };
-                                clearAPathAction.WithEffectOnSelf(async (self) =>
-                                {
-                                    await FirearmUtilities.AwaitReloadItem(self, item);
-                                });
 
                                 return new ActionPossibility(clearAPathAction);
                             },
@@ -625,7 +600,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         /// <param name="self">The creature being used to compare distance</param>
         /// <param name="messageString">The user prompt message</param>
         /// <returns>The selected tile or null</returns>
-        public static async Task<Tile?> GetTileCloserToEnemy(Creature self, string messageString)
+        public static async Task<Tile?> GetTileCloserToEnemy(Creature self, string messageString, bool isCrawling)
         {
             // Determines the starting tile, all enemy tiles and initatlizes the options list
             Tile startingTile = self.Occupies;
@@ -639,7 +614,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                 {
                     MovementStyle movementStyle = new MovementStyle()
                     {
-                        MaximumSquares = self.Speed
+                        MaximumSquares = isCrawling ? 1 : self.Speed
                     };
                     PathfindingDescription pathfindingDescription = new PathfindingDescription()
                     {
@@ -652,6 +627,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                         options.Add(new TileOption(tile, "Tile (" + tile.X + "," + tile.Y + ")", null, (AIUsefulness)int.MinValue, true));
                     }
                 }
+            }
+
+            if (options.Count == 0)
+            {
+                await self.Battle.AskForConfirmation(self, IllustrationName.WarpStep, "There are no enemies visible, so you can not stride.", "Understood", "Lame, but ok");
+                return null;
             }
 
             // Adds a Cancel Option

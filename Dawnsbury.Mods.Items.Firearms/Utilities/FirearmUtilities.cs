@@ -16,7 +16,7 @@ namespace Dawnsbury.Mods.Items.Firearms.Utilities
         /// Determines if the item is a firearm or a crossbow
         /// </summary>
         /// <param name="item">The item being checked</param>
-        /// <returns>True if the item is a firearm or crossbow and false otherwise</returns>
+        /// <returns>True if the item is a firearm or crossbow and false otherwise</returns> 
         public static bool IsItemFirearmOrCrossbow(Item item, bool checkIfItsLoaded = false)
         {
             if (item.HasTrait(Trait.Firearm) || item.HasTrait(Trait.Crossbow))
@@ -63,17 +63,16 @@ namespace Dawnsbury.Mods.Items.Firearms.Utilities
         /// </summary>
         /// <param name="self">The creature weilding the item</param>
         /// <param name="item">The item being reloaded</param>
-        public static async Task AwaitReloadItem(Creature self, Item item)
+        public static async Task AwaitReloadItem(Creature self, Item item, bool noReactionTriggers = false)
         {
             if (item.HasTrait(FirearmTraits.DoubleBarrel))
             {
                 item.EphemeralItemProperties.AmmunitionLeftInMagazine++;
                 item.EphemeralItemProperties.NeedsReload = false;
-
             }
             else
             {
-                await self.CreateReload(item).WithActionCost(0).WithItem(item).AllExecute();
+                await self.CreateReload(item).WithExtraTrait(Trait.DoesNotProvoke).WithActionCost(0).WithItem(item).AllExecute();
             }
         }
 

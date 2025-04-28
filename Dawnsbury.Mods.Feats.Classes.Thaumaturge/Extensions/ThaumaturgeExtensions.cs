@@ -7,6 +7,7 @@ using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Tiles;
+using Dawnsbury.IO;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities;
 using Microsoft.Xna.Framework;
@@ -178,6 +179,19 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions
             // If this is not the mirror flaa unconscious and unsubscribe from the mirror
             if (!(self is MirrorClone))
             {
+                if (Settings.Instance.DropItemsWhenKnockedOut)
+                {
+                    foreach (var heldItem in self.HeldItems.ToList())
+                    {
+                        if (heldItem.Grapplee == null)
+                        {
+                            self.DropItem(heldItem);
+                        }
+                    }
+
+                    self.HeldItems.RemoveAll(itm => itm.Grapplee == null);
+                }
+
                 self.FallUnconscious();
                 pairedCreature.UnsubscribeToAll(self);
             }

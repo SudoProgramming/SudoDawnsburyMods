@@ -1,5 +1,6 @@
 ﻿using Dawnsbury.Audio;
 using Dawnsbury.Auxiliary;
+using Dawnsbury.Campaign.Encounters;
 using Dawnsbury.Campaign.Path;
 using Dawnsbury.Core;
 using Dawnsbury.Core.CharacterBuilder;
@@ -114,7 +115,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             yield return wandImplementFeat;
 
             // Creates and adds the logic for the Weapon Implement sub-class feature
-            Feat weaponImplementFeat = new Feat(ThaumaturgeFeatNames.WeaponImplement, ImplementDetails.WeaponInitiateBenefitFlavorText, "You gain the " + ImplementDetails.WeaponInitiateBenefitName + " reaction.\n\n{b}NOTE: The Weapon Implement will be applied to your first One-Handed weapon at the start of each encounter.{/b}\n\n{b}" + ImplementDetails.WeaponInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.WeaponInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            Feat weaponImplementFeat = new Feat(ThaumaturgeFeatNames.WeaponImplement, ImplementDetails.WeaponInitiateBenefitFlavorText, "{b}IMPORANT{/b} You must drag the 'Weapon Implement' onto the weapon you wish to make your implement.\n\nYou gain the " + ImplementDetails.WeaponInitiateBenefitName + " reaction.\n\n{b}NOTE: Only the first weapon with the weapon implement attached will become an implement at the start of each encounter.{/b}\n\n{b}" + ImplementDetails.WeaponInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.WeaponInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
             AddLevelTag(weaponImplementFeat);
             AddWeaponImplementLogic(weaponImplementFeat);
             yield return weaponImplementFeat;
@@ -149,7 +150,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddRegaliaAdeptLogic(regaliaAdeptFeat);
             yield return regaliaAdeptFeat;
 
-            Feat tomeAdeptFeat = new Feat(ThaumaturgeFeatNames.TomeAdept, "In addition to the initiate benefits, your tome inscribes insights into creatures that you can use to strike them down.", "While holding your tome, at the start of your turn each round, you may attempt a check to Exploit Vulnerability a creature of your choice. If this check succeeds, you gain a +1 circumstance bonus to your next attack roll against that creature before the start of your next turn.\n\nYou gain an additional skill increase feat.", [ThaumaturgeTraits.AdeptImplement], null);
+            Feat tomeAdeptFeat = new Feat(ThaumaturgeFeatNames.TomeAdept, "In addition to the initiate benefits, your tome inscribes insights into creatures that you can use to strike them down.", "While holding your tome, at the start of your turn each round, you may attempt a check to Exploit Vulnerability a creature of your choice. If this check succeeds, you gain a +1 circumstance bonus to your next attack roll against that creature before the start of your next turn.\n\nYou gain an additional skill increase.", [ThaumaturgeTraits.AdeptImplement], null);
             tomeAdeptFeat.WithPrerequisite((CalculatedCharacterSheetValues sheet) => sheet.HasFeat(ThaumaturgeFeatNames.TomeImplement), "Requires the Tome Implement");
             AddTomeAdeptLogic(tomeAdeptFeat);
             yield return tomeAdeptFeat;
@@ -905,6 +906,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                     foreach (Item item in owner.HeldItems)
                                     {
                                         Item mirrorItem = item.Duplicate();
+                                        mirrorItem.Traits.Add(Trait.HandEphemeral);
                                         if (item.HasTrait(ThaumaturgeTraits.Implement))
                                         {
                                             mirrorItem.Traits.Add(ThaumaturgeTraits.Implement);
@@ -1058,12 +1060,37 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="tomeImplementFeat">The Tome Implement feat object</param>
         public static void AddTomeImplementLogic(Feat tomeImplementFeat)
         {
+            AddImplementEnsureLogic(tomeImplementFeat);
             tomeImplementFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
             {
+                // Daily Prep failed approach
+                //sheet.AddSelectionOption(new MultipleFeatSelectionOption("TomeTrainedSkills", "Trained Tome Skills", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat is SkillSelectionFeat, 2));
+                ////sheet.AddAtLevel(3, (CalculatedCharacterSheetValues character) =>
+                ////{
+                ////    sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome1stExpertSkill", "1st Expert Tome Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat.FeatGroup == FeatGroup.SkillExpertise));
+                ////});
+                ////sheet.AddAtLevel(5, (CalculatedCharacterSheetValues character) =>
+                ////{
+                ////    sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome2ndExpertSkill", "2nd Expert Tome Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat.FeatGroup == FeatGroup.SkillExpertise));
+                ////});
+                ////sheet.AddAtLevel(7, (CalculatedCharacterSheetValues character) =>
+                ////{
+                ////    if (sheet.HasFeat(ThaumaturgeFeatNames.TomeAdept))
+                ////    {
+                ////        sheet.AddSelectionOption(new SingleFeatSelectionOption("TomeMasterSkill", "Master Tome Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (Feat feat) => feat.FeatGroup == FeatGroup.SkillMastery));
+                ////    }
+                ////});
+
                 sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome First Extra Skill", "Tome First Extra Skill", sheet.CurrentLevel, (feat => feat is SkillSelectionFeat)));
                 sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Second Extra Skill", "Tome Second Extra Skill", sheet.CurrentLevel, (feat => feat is SkillSelectionFeat)));
-                //sheet.AddSkillIncreaseOption(sheet.CurrentLevel > 3 ? sheet.CurrentLevel : 3);
-                //sheet.AddSkillIncreaseOption(5);
+                sheet.AddAtLevel(3, (CalculatedCharacterSheetValues character) =>
+                {
+                    AddTomeSkillIncreaseOption(character, "TomeLvl3Skill", 3);
+                });
+                sheet.AddAtLevel(5, (CalculatedCharacterSheetValues character) =>
+                {
+                    AddTomeSkillIncreaseOption(character, "TomeLvl5Skill", 5);
+                });
             };
             tomeImplementFeat.WithPermanentQEffect(ImplementDetails.TomeInitiateBenefitName + " - Improved Exploit Vulnerability and extra skills", delegate (QEffect self) {
             });
@@ -1077,7 +1104,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         {
             tomeAdeptFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
             {
-                sheet.AddSkillIncreaseOption(7);
+                AddTomeSkillIncreaseOption(sheet, "TomeLvl7Skill", sheet.CurrentLevel);
             };
             tomeAdeptFeat.WithPermanentQEffect("You may exploit vulnerability at the start of your turn as a free action, and if you succeed you gain a +1 circumstance bonus to attack rolls against them.", delegate (QEffect self)
             {
@@ -1123,11 +1150,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="wandImplementFeat">The Wand Implement feat object</param>
         public static void AddWandImplementLogic(Feat wandImplementFeat)
         {
+            AddImplementEnsureLogic(wandImplementFeat);
             wandImplementFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
             {
                 List<FeatName> wandFeatNames = new List<FeatName>() { ThaumaturgeFeatNames.ColdWand, ThaumaturgeFeatNames.ElectricityWand, ThaumaturgeFeatNames.FireWand } ;
                 sheet.AddSelectionOption(new SingleFeatSelectionOption("Thaumaturge Wand Type", "Wand", sheet.CurrentLevel, feat => wandFeatNames.Contains(feat.FeatName)));
-                ThaumaturgeUtilities.EnsureCorrectImplements(sheet);
             };
             wandImplementFeat.WithPermanentQEffect(ImplementDetails.WandInitiateBenefitName + " - Flind magic with your wand", delegate (QEffect self)
             {
@@ -1234,7 +1261,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             }
 
                             bool holdingWand = ThaumaturgeUtilities.AnyHeldImplementsMatchID(Enums.ImplementIDs.Wand, owner);
-                            CombatAction flingMagicAction = new CombatAction(self.Owner, wandIllustration, $"Fling Magic  ({wandDamageKind.HumanizeTitleCase2()})", wandTraits.ToArray(), (holdingWand ? string.Empty : "{b}{Red}Swap to Wand{/Red}{/b}\n\n") + ImplementDetails.WandInitiateBenefitRulesText, Target.RangedCreature(wandRange)
+                            CombatAction flingMagicAction = new CombatAction(self.Owner, wandIllustration, $"Fling Magic  ({wandDamageKind.HumanizeTitleCase2()})", wandTraits.ToArray(), (holdingWand ? string.Empty : "{b}{Red}Swap to Wand{/Red}{/b}\n\n") + ImplementDetails.WandInitiateBenefitRulesText, Target.Ranged(wandRange)
                                 .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
                                 {
                                     if (!ThaumaturgeUtilities.IsCreatureHoldingOrCarryingImplement(Enums.ImplementIDs.Wand, self.Owner))
@@ -1260,7 +1287,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 }
                             });
 
-                            CombatAction boostedFlingMagicAction = new CombatAction(self.Owner, wandIllustration, $"Boosted Fling Magic ({wandDamageKind.HumanizeTitleCase2()})", wandTraits.ToArray(), (holdingWand ? string.Empty : "{b}{Red}Swap to Wand{/Red}{/b}\n\n") + ImplementDetails.WandInitiateBenefitRulesText, Target.RangedCreature(wandRange)
+                            CombatAction boostedFlingMagicAction = new CombatAction(self.Owner, wandIllustration, $"Boosted Fling Magic ({wandDamageKind.HumanizeTitleCase2()})", wandTraits.ToArray(), (holdingWand ? string.Empty : "{b}{Red}Swap to Wand{/Red}{/b}\n\n") + ImplementDetails.WandInitiateBenefitRulesText, Target.Ranged(wandRange)
                                 .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
                                 {
                                     if (owner.HasEffect(ThaumaturgeQEIDs.BoostedWandUsed))
@@ -1357,10 +1384,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 self.StartOfCombat = async (QEffect startOfCombat) =>
                 {
                     Creature owner = startOfCombat.Owner;
-                    Item? weaponImplement = owner.HeldItems.FirstOrDefault(item => item != null && item.WeaponProperties != null && !item.HasTrait(Trait.TwoHanded));
+                    Item? weaponImplement = owner.HeldItems.FirstOrDefault(item => item.HasTrait(ThaumaturgeTraits.WeaponImplement));
                     if (weaponImplement == null)
                     {
-                        weaponImplement = owner.CarriedItems.FirstOrDefault(item => item != null && item.WeaponProperties != null && !item.HasTrait(Trait.TwoHanded));
+                        weaponImplement = owner.CarriedItems.FirstOrDefault(item => item.HasTrait(ThaumaturgeTraits.WeaponImplement));
                     }
 
                     if (weaponImplement != null)
@@ -1962,7 +1989,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     CombatAction divineDisharmonyAction = new CombatAction(owner, ThaumaturgeModdedIllustrations.DivineDisharmony, "Divine Disharmony", [Trait.Divine, Trait.Enchantment, Trait.Manipulate, Trait.Basic, ThaumaturgeTraits.Thaumaturge], divineDisharmonyFeat.RulesText,Target.RangedCreature(12));
                     divineDisharmonyAction.WithActionCost(1);
                     divineDisharmonyAction.WithActionId(ThaumaturgeActionIDs.DivineDisharmony);
-                    divineDisharmonyAction.WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Deception, Skill.Intimidation), Checks.DefenseDC(Defense.Will)));
+                    divineDisharmonyAction.WithActiveRollSpecification(new ActiveRollSpecification(TaggedChecks.SkillCheck(Skill.Deception, Skill.Intimidation), Checks.DefenseDC(Defense.Will)));
                     divineDisharmonyAction.WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
                     {
                         if (result >= CheckResult.Success)
@@ -2409,6 +2436,60 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 string tagName = values.CurrentLevel > 1 ? "Second Implement" : "First Implement";
                 values.Tags[tagName] = feat.FeatName;
             });
+        }
+
+        private static void AddTomeSkillIncreaseOption(CalculatedCharacterSheetValues sheet, string key, int level)
+        {
+            sheet.AddSelectionOption(new SingleFeatSelectionOption(key, "Tome Skill increase", level, delegate (Feat ft)
+            {
+                if (ft is SkillSelectionFeat)
+                {
+                    return true;
+                }
+
+                SkillIncreaseFeat skillIncreaseFeat = ft as SkillIncreaseFeat;
+                if (skillIncreaseFeat != null)
+                {
+                    if (!sheet.AllFeats.Any((Feat ft2) => ft2 is SkillSelectionFeat skillSelectionFeat && skillIncreaseFeat.Skill == skillSelectionFeat.Skill))
+                    {
+                        return false;
+                    }
+
+                    if (skillIncreaseFeat.TargetProficiency == Proficiency.Expert)
+                    {
+                        return true;
+                    }
+
+                    if (level < 7)
+                    {
+                        return false;
+                    }
+
+                    if (!sheet.AllFeats.Any((Feat ft2) => ft2 is SkillIncreaseFeat skillIncreaseFeat3 && skillIncreaseFeat3.TargetProficiency == Proficiency.Expert && skillIncreaseFeat.Skill == skillIncreaseFeat3.Skill))
+                    {
+                        return false;
+                    }
+
+                    if (skillIncreaseFeat.TargetProficiency == Proficiency.Master)
+                    {
+                        return true;
+                    }
+
+                    if (level < 15)
+                    {
+                        return false;
+                    }
+
+                    if (!sheet.AllFeats.Any((Feat ft2) => ft2 is SkillIncreaseFeat skillIncreaseFeat2 && skillIncreaseFeat2.TargetProficiency == Proficiency.Master && skillIncreaseFeat.Skill == skillIncreaseFeat2.Skill))
+                    {
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }).WithIsOptional());
         }
     }
 }

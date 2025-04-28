@@ -1162,7 +1162,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     {
                         // Creates the action and handles the success results of the actions
                         CombatAction pistolTwirlAction = new CombatAction(self.Owner, new SideBySideIllustration(item.Illustration, IllustrationName.Feint), "Pistol Twirl", [Trait.Basic], pistolTwirlFeat.RulesText, Target.Ranged(item.WeaponProperties.RangeIncrement)).WithActionCost(1).WithItem(item)
-                        .WithActiveRollSpecification(new ActiveRollSpecification(Checks.SkillCheck(Skill.Deception), Checks.DefenseDC(Defense.Perception)))
+                        .WithActiveRollSpecification(new ActiveRollSpecification(TaggedChecks.SkillCheck(Skill.Deception), Checks.DefenseDC(Defense.Perception)))
                         .WithEffectOnEachTarget(async delegate (CombatAction pistolTwirl, Creature attacker, Creature defender, CheckResult result)
                         {
                             switch (result)
@@ -1808,14 +1808,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         snipersAimAction.Illustration = new SideBySideIllustration(item.Illustration, IllustrationName.GenericCombatManeuver);
                         snipersAimAction.Item = item;
                         snipersAimAction.Description = StrikeRules.CreateBasicStrikeDescription2(snipersAimAction.StrikeModifiers, additionalAttackRollText: "You gain a +2 circumstance bonus to this Strike's attack roll and ignore the target's concealment. If you're using a kickback firearm, you will take no circumstance penalty if you do not meet the Strength requirement.");
-                        snipersAimAction.StrikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.Ephemeral)
-                        {
-                            BonusToAttackRolls = (QEffect bonusToAttack, CombatAction action, Creature? target) =>
-                            {
-                                return new Bonus(2, BonusType.Circumstance, "Sniper's Aim", true);
-                            },
-
-                        };
+                        snipersAimAction.StrikeModifiers.AdditionalBonusesToAttackRoll = [new Bonus(2, BonusType.Circumstance, "Sniper's Aim")];
 
                         // Checks if the item needs to be reloaded
                         ((CreatureTarget)snipersAimAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>

@@ -186,6 +186,47 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents
         public static readonly FeatName WayOfTheVanguard = ModManager.RegisterFeatName("Way of the Vanguard", "Way of the Vanguard");
 
         /// <summary>
+        /// The Way of the Drifter Dedication Feat Name
+        /// </summary>
+        public static readonly FeatName WayOfTheDrifterDedication = ModManager.RegisterFeatName("Way of the Drifter Dedication", "Way of the Drifter Dedication");
+
+        /// <summary>
+        /// The Way of the Pistolero Dedication Feat Name
+        /// </summary>
+        public static readonly FeatName WayOfThePistoleroDedication = ModManager.RegisterFeatName("Way of the Pistolero Dedication", "Way of the Pistolero Dedication");
+
+        /// <summary>
+        /// Pistolero Dedication Deception
+        /// </summary>
+        public static readonly FeatName PistoleroDedicationDeception = ModManager.RegisterFeatName("Pistolero Dedication Deception", "Pistolero Dedication Deception");
+
+        /// <summary>
+        /// Pistolero Dedication Intimidation
+        /// </summary>
+        public static readonly FeatName PistoleroDedicationIntimidation = ModManager.RegisterFeatName("Pistolero Dedication Intimidation", "Pistolero Dedication Intimidation");
+
+        /// <summary>
+        /// The Way of the Sniper Dedication Feat Name
+        /// </summary>
+        public static readonly FeatName WayOfTheSniperDedication = ModManager.RegisterFeatName("Way of the Sniper Dedication", "Way of the Sniper Dedication");
+
+        ///// <summary>
+        ///// The Way of the Triggerbrand Dedication Feat Name
+        ///// TODO: Add Combination Weapons and this Subclass
+        ///// </summary>
+        //public static readonly FeatName WayOfTheTriggerbrandDedication = ModManager.RegisterFeatName("Way of the Triggerbrand Dedication", "Way of the Triggerbrand Dedication");
+
+        /// <summary>
+        /// The Way of the Vanguard Dedication Feat Name
+        /// </summary>
+        public static readonly FeatName WayOfTheVanguardDedication = ModManager.RegisterFeatName("Way of the Vanguard Dedication", "Way of the Vanguard Dedication");
+
+        /// <summary>
+        /// The archetype's Slinger's Readiness Feat Name
+        /// </summary>
+        public static readonly FeatName SlingersReadiness = ModManager.RegisterFeatName("Slinger's Readiness", "Slinger's Readiness");
+
+        /// <summary>
         /// A technical feat for rolling Stealth for Initiative as a Sniper Gunslinger
         /// </summary>
         public static readonly FeatName GunslingerSniperStealthInitiative = ModManager.RegisterFeatName("Gunslinger Sniper Stealth Init", "Stealth for Initiative");

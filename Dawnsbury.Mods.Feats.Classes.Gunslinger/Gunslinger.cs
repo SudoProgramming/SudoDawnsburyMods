@@ -6,6 +6,7 @@ using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.CharacterBuilder.AbilityScores;
 using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
+using Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb.Archetypes;
 using Dawnsbury.Core.CharacterBuilder.Selections.Options;
 using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Core.Coroutines.Options;
@@ -25,12 +26,14 @@ using Dawnsbury.Core.Roller;
 using Dawnsbury.Core.Tiles;
 using Dawnsbury.Display;
 using Dawnsbury.Display.Illustrations;
+using Dawnsbury.Display.Text;
 using Dawnsbury.Modding;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.Enums;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways;
 using Dawnsbury.Mods.Items.Firearms.RegisteredComponents;
 using Dawnsbury.Mods.Items.Firearms.Utilities;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
@@ -91,6 +94,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
                 {
                     sheet.SetProficiency(FirearmTraits.AdvancedCrossbow, Proficiency.Master);
+                });
+
+            yield return new Feat(GunslingerFeatNames.PistoleroDedicationDeception, "The way of the Pistolero.", "You become trained in Deception.", [GunslingerTraits.PistoleroSkillChoice], null)
+                .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
+                {
+                    sheet.TrainInThisOrSubstitute(Skill.Deception);
+                });
+
+            yield return new Feat(GunslingerFeatNames.PistoleroDedicationIntimidation, "The way of the Pistolero.", "You become trained in Intimidation.", [GunslingerTraits.PistoleroSkillChoice], null)
+                .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
+                {
+                    sheet.TrainInThisOrSubstitute(Skill.Intimidation);
                 });
 
             // Creates and adds the logic for the Singular Expertise class feature
@@ -312,6 +327,74 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             bulletSplit.WithActionCost(1);
             AddBulletSplitLogic(bulletSplit);
             yield return bulletSplit;
+
+            // Dedication and Archetype
+            Feat drifterDedication = new Feat(GunslingerFeatNames.WayOfTheDrifterDedication, "The way of the Drifter.", "You become trained in Acrobatics.", [], null)
+                .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
+                {
+                    sheet.TrainInThisOrSubstitute(Skill.Acrobatics);
+                });
+            Feat pistoleroDedication = new Feat(GunslingerFeatNames.WayOfThePistoleroDedication, "The way of the Pistolero.", "You become trained in Deception.", [], null)
+                .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
+                {
+                    sheet.TrainInThisOrSubstitute(Skill.Deception);
+                    sheet.AddSelectionOptionRightNow(new SingleFeatSelectionOption("PistoleroDedicationSkill", "Pistolero Skill Choice", -1, (Feat ft) => ft.HasTrait(GunslingerTraits.PistoleroSkillChoice)));
+                });
+            Feat sniperDedication = new Feat(GunslingerFeatNames.WayOfTheSniperDedication, "The way of the Sniper.", "You become trained in Stealth.", [], null)
+                .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
+                {
+                    sheet.TrainInThisOrSubstitute(Skill.Stealth);
+                });
+            Feat vanguardDedication = new Feat(GunslingerFeatNames.WayOfTheVanguardDedication, "The way of the Vanguard.", "You become trained in Athletics.", [], null)
+                .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
+                {
+                    sheet.TrainInThisOrSubstitute(Skill.Athletics);
+                });
+
+            yield return ArchetypeFeats.CreateMulticlassDedication(GunslingerTraits.Gunslinger, "You excel in using specific types of ranged weapons.", "You have familiarity with martial crossbows and firearms, treating them as simple weapons for the purposes of proficiency. You become trained in gunslinger class DC.\n\nChoose a gunslinger way. You become trained in your way's associated skill; if you were already trained in this skill, you become trained in a skill of your choice. You don't gain any other abilities from your choice of way.",[drifterDedication, pistoleroDedication, sniperDedication, vanguardDedication])
+                .WithDemandsAbility14(Ability.Dexterity)
+                .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
+                {
+                    sheet.Proficiencies.AddProficiencyAdjustment((List<Trait> traits) => traits.Contains(Trait.Martial) && (traits.Contains(Trait.Firearm) || traits.Contains(Trait.Crossbow)), Trait.Simple);
+                    sheet.SetProficiency(GunslingerTraits.Gunslinger, Proficiency.Trained);
+                });
+
+            Feat slingersReadiness = new TrueFeat(GunslingerFeatNames.SlingersReadiness, 6, "You've learned a gunslinger's tricks for staking out your territory in a fight.", "You gain the initial deed for the way you selected with Gunslinger's Dedication.", [])
+                .WithAvailableAsArchetypeFeat(GunslingerTraits.Gunslinger);
+            slingersReadiness.WithRulesTextCreator((CharacterSheet sheet) =>
+            {
+                CalculatedCharacterSheetValues values = sheet.Calculated;
+
+                if (values.HasFeat(GunslingerFeatNames.WayOfTheDrifterDedication))
+                {
+                    return wayOfTheDrifter.InitialDeedRulesText;
+                }
+                else if (values.HasFeat(GunslingerFeatNames.WayOfThePistoleroDedication))
+                {
+                    return wayOfThePistolero.InitialDeedRulesText;
+                }
+                else if (values.HasFeat(GunslingerFeatNames.WayOfTheSniperDedication))
+                {
+                    return wayOfTheSniper.InitialDeedRulesText;
+                }
+                else if (values.HasFeat(GunslingerFeatNames.WayOfTheVanguardDedication))
+                {
+                    return wayOfTheVanguard.InitialDeedRulesText;
+                }
+
+                return null;
+            });
+            GunslingerWayExtensions.AddDrifersIntoTheFrayLogic(slingersReadiness, true);
+            GunslingerWayExtensions.AddPistolerosTenPacesLogic(slingersReadiness, true);
+            GunslingerWayExtensions.AddSnipersOneShotOneKillLogic(slingersReadiness, true);
+            GunslingerWayExtensions.AddVanguardLivingFortificationLogic(slingersReadiness, true);
+
+            yield return slingersReadiness;
+
+            foreach (Feat feat in ArchetypeFeats.CreateBasicAndAdvancedMulticlassFeatGrantingArchetypeFeats(GunslingerTraits.Gunslinger, "Shooting"))
+            {
+                yield return feat;
+            }
         }
 
         /// <summary>

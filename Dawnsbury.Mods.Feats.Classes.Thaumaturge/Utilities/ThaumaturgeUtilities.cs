@@ -76,7 +76,17 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 
         public static async Task<bool> HeldImplementOrSwap(ImplementIDs implementID, Creature owner, string promptText = "", bool ignoreSingleImplementPrompt = true)
         {
-            return AnyHeldImplementsMatchID(implementID, owner) || await HandleImplementPromptAndSwap(implementID, owner, ignoreSingleImplementPrompt, promptText);
+            if (AnyHeldImplementsMatchID(implementID, owner))
+            {
+                return true;
+            }
+
+            if (owner.Level >= 5 && !Thaumaturge.HasDedicationFeat(owner))
+            {
+                return await HandleImplementPromptAndSwap(implementID, owner, ignoreSingleImplementPrompt, promptText);
+            }
+
+            return false;
         }
 
         public static async Task<bool> HandleImplementPromptAndSwap(ImplementIDs implementID, Creature owner, bool ignoreSingleImplementPrompt, string promptText = "")

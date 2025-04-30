@@ -1219,15 +1219,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             {
                 if (!isDedication || sheet.HasFeat(ThaumaturgeFeatNames.TomeImplementDedication))
                 {
-                    sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome First Extra Skill", "Tome First Extra Skill", sheet.CurrentLevel, (feat => feat is SkillSelectionFeat)));
-                    sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Second Extra Skill", "Tome Second Extra Skill", sheet.CurrentLevel, (feat => feat is SkillSelectionFeat)));
+                    sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome First Extra Skill", "Tome First Extra Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (feat => feat is SkillSelectionFeat)));
+                    sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Second Extra Skill", "Tome Second Extra Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (feat => feat is SkillSelectionFeat)));
                     sheet.AddAtLevel(3, (CalculatedCharacterSheetValues character) =>
                     {
-                        AddTomeSkillIncreaseOption(character, "TomeLvl3Skill", 3);
+                        AddTomeSkillIncreaseOption(character, "TomeLvl3Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL);
                     });
                     sheet.AddAtLevel(5, (CalculatedCharacterSheetValues character) =>
                     {
-                        AddTomeSkillIncreaseOption(character, "TomeLvl5Skill", 5);
+                        AddTomeSkillIncreaseOption(character, "TomeLvl5Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL);
                     });
                 }
             });
@@ -1814,7 +1814,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             {
                                 if (implementAndHeldItem.WasStoredItem)
                                 {
-                                    implementAndHeldItem.Implement.StoredItems.Add(implementAndHeldItem.HeldItem);
+                                    if (implementAndHeldItem.Implement.StoredItems.Count == 0)
+                                    {
+                                        implementAndHeldItem.Implement.StoredItems.Add(implementAndHeldItem.HeldItem);
+                                    }
                                 }
                                 else
                                 {
@@ -2667,7 +2670,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             }).WithIsOptional());
         }
 
-        private static bool HasDedicationFeat(Creature owner)
+        public static bool HasDedicationFeat(Creature owner)
         {
             List<FeatName> dedicationFeats = new List<FeatName>() { ThaumaturgeFeatNames.AmuletImplementDedication, ThaumaturgeFeatNames.BellImplementDedication, ThaumaturgeFeatNames.ChaliceImplementDedication, ThaumaturgeFeatNames.LanternImplementDedication, ThaumaturgeFeatNames.MirrorImplementDedication, ThaumaturgeFeatNames.RegaliaImplementDedication, ThaumaturgeFeatNames.TomeImplementDedication, ThaumaturgeFeatNames.WandImplementDedication, ThaumaturgeFeatNames.WeaponImplementDedication };
             return dedicationFeats.Any(feat => owner.HasFeat(feat));

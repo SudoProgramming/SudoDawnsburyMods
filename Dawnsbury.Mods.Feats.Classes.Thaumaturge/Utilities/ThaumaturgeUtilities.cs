@@ -121,18 +121,17 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             return false;
         }
 
-        public static CombatAction CreateExploitVulnerabilityAction(Creature owner)
+        public static CombatAction CreateExploitVulnerabilityAction(Creature owner, bool isGlimpse)
         {
             CombatAction exploitVulnerabilityAction = new CombatAction(
                 owner,
                 ThaumaturgeModdedIllustrations.ExploitVulnerability,
-                "Exploit Vulnerability",
+                !isGlimpse ? "Exploit Vulnerability" : "Glimpse Vulnerability",
                 [Trait.Manipulate, Trait.Basic, Trait.UnaffectedByConcealment, ThaumaturgeTraits.Thaumaturge],
-                "{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement.\nYou scour your experiences and learning to identify something that might repel your foe. You retrieve an object from your esoterica with the appropriate supernatural qualities, then use your implement to stoke the remnants of its power into a blaze. Select a creature you can see and attempt an Esoteric Lore check against a standard DC for its level, as you retrieve the right object from your esoterica and use your implement to empower it. You gain the following effects until you Exploit Vulnerabilities again.\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn.",
+                "{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement.\n" + (!isGlimpse ? "Select a creature you can see and attempt an Esoteric Lore check against a standard DC for its level, as you retrieve the right object from your esoterica and use your implement to empower it. You gain the following effects until you Exploit Vulnerabilities again.\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn." : "Select a creature you can see. Until you Glimpse Vulnerability again, that target gains weakness 2 against your unarmed and weapon Strikes."),
                 Target.Ranged(100)
                 .WithAdditionalConditionOnTargetCreature((attacker, defender) => attacker.HasEffect(ThaumaturgeQEIDs.UsedExploitVulnerability) ? Usability.NotUsable("Already Exploited Vulnerability this turn") : Usability.Usable))
                 .WithActionId(ThaumaturgeActionIDs.ExploitVulnerability)
-                .WithActiveRollSpecification(new ActiveRollSpecification(ThaumaturgeUtilities.RollEsotericLore, ThaumaturgeUtilities.CalculateEsotericLoreDC))
                 .WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
                 {
                     // Clear all old Exploit Vulnerabilities
@@ -161,9 +160,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                     });
                     bool skipAntithesis = false;
                     bool applyToAll = attacker.HasFeat(ThaumaturgeFeatNames.SympatheticVulnerabilities);
-                    if (result >= CheckResult.Success)
+                    if (!isGlimpse && result >= CheckResult.Success)
                     {
-                        if (defender.WeaknessAndResistance.Weaknesses.Count(resistance => resistance.DamageKind != ThaumaturgeDamageKinds.PersonalAntithesis) > 0)
+                        if (defender.WeaknessAndResistance.Weaknesses.Count(resistance => resistance.DamageKind != ThaumaturgeDamageKinds.PersonalAntithesis && resistance.DamageKind != ThaumaturgeDamageKinds.GlimpseVulnerability) > 0)
                         {
                             List<Resistance> weaknesses = ThaumaturgeUtilities.GetHighestWeaknesses(defender);
                             Resistance weakness = weaknesses[0];
@@ -199,14 +198,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                                     });
                                 }
 
-                                attacker.AddQEffect(new ExploitEffect(attacker, defender, weakness: weakness, applyToAll: applyToAll));
+                                attacker.AddQEffect(new ExploitEffect(attacker, defender, isGlimpse, weakness: weakness, applyToAll: applyToAll));
                             }
                         }
                     }
                     // Add CLear Logic on Reuse
-                    if (result >= CheckResult.Failure && !skipAntithesis)
+                    if (isGlimpse || (result >= CheckResult.Failure && !skipAntithesis))
                     {
-                        int antithesisAmount = (int)(2 + Math.Floor(attacker.Level / 2.0));
+                        int antithesisAmount = !isGlimpse ? (int)(2 + Math.Floor(attacker.Level / 2.0)) : 2;
+                        DamageKind damageKind = !isGlimpse ? ThaumaturgeDamageKinds.PersonalAntithesis : ThaumaturgeDamageKinds.GlimpseVulnerability;
 
                         List<Creature> applyWeaknessTo = new List<Creature>() { defender };
 
@@ -223,35 +223,40 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                                 Tag = attacker,
                                 Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
                                 Name = "Exploited Vulnerability",
-                                Description = "Exploited Weakness by " + attacker.Name + " - " + ThaumaturgeDamageKinds.PersonalAntithesis.HumanizeTitleCase2() + " " + antithesisAmount,
+                                Description = "Exploited Weakness by " + attacker.Name + " - " + damageKind.HumanizeTitleCase2() + " " + antithesisAmount,
                                 StateCheck = (QEffect stateCheck) =>
                                 {
                                     Creature owner = stateCheck.Owner;
                                     if (owner.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget))
                                     {
-                                        if (!owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
+                                        if (!owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == damageKind))
                                         {
-                                            owner.WeaknessAndResistance.AddWeakness(ThaumaturgeDamageKinds.PersonalAntithesis, antithesisAmount);
+                                            owner.WeaknessAndResistance.AddWeakness(damageKind, antithesisAmount);
                                         }
                                     }
-                                    else if (owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis))
+                                    else if (owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == damageKind))
                                     {
-                                        owner.WeaknessAndResistance.Weaknesses.RemoveAll(weakness => weakness.DamageKind == ThaumaturgeDamageKinds.PersonalAntithesis);
+                                        owner.WeaknessAndResistance.Weaknesses.RemoveAll(weakness => weakness.DamageKind == damageKind);
                                     }
                                 }
                             });
 
                         }
                         
-                        attacker.AddQEffect(new ExploitEffect(attacker, defender, antithesisAmount: antithesisAmount, applyToAll: applyToAll));
+                        attacker.AddQEffect(new ExploitEffect(attacker, defender, isGlimpse, antithesisAmount: antithesisAmount, applyToAll: applyToAll));
                     }
-                    else if (result == CheckResult.CriticalFailure)
+                    else if (!isGlimpse && result == CheckResult.CriticalFailure)
                     {
                         QEffect flatFooted = QEffect.FlatFooted("Exploit Vulnerability");
                         flatFooted.ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn;
                         attacker.AddQEffect(flatFooted);
                     }
                 });
+
+            if (!isGlimpse)
+            {
+                exploitVulnerabilityAction.WithActiveRollSpecification(new ActiveRollSpecification(ThaumaturgeUtilities.RollEsotericLore, ThaumaturgeUtilities.CalculateEsotericLoreDC));
+            }
 
             return exploitVulnerabilityAction;
         }
@@ -296,28 +301,28 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             return 10 + creature.Abilities.Get(creature.Abilities.KeyAbility) + creature.Proficiencies.Get(classTrait).ToNumber(creature.ProficiencyLevel);
         }
 
-        public static FeatName LookupImplementFeatName(ImplementIDs implementID)
+        public static FeatName LookupImplementFeatName(ImplementIDs implementID, bool isDedication)
         {
             switch(implementID)
             {
                 case ImplementIDs.Amulet:
-                    return ThaumaturgeFeatNames.AmuletImplement;
+                    return !isDedication ? ThaumaturgeFeatNames.AmuletImplement : ThaumaturgeFeatNames.AmuletImplementDedication;
                 case ImplementIDs.Bell:
-                    return ThaumaturgeFeatNames.BellImplement;
+                    return !isDedication ? ThaumaturgeFeatNames.BellImplement : ThaumaturgeFeatNames.BellImplementDedication;
                 case ImplementIDs.Chalice:
-                    return ThaumaturgeFeatNames.ChaliceImplement;
+                    return !isDedication ? ThaumaturgeFeatNames.ChaliceImplement : ThaumaturgeFeatNames.ChaliceImplementDedication;
                 case ImplementIDs.Lantern:
-                    return ThaumaturgeFeatNames.LanternImplement;
+                    return !isDedication ? ThaumaturgeFeatNames.LanternImplement : ThaumaturgeFeatNames.LanternImplementDedication;
                 case ImplementIDs.Mirror:
-                    return ThaumaturgeFeatNames.MirrorImplement;
+                    return !isDedication ? ThaumaturgeFeatNames.MirrorImplement : ThaumaturgeFeatNames.MirrorImplementDedication;
                 case ImplementIDs.Regalia:
-                    return ThaumaturgeFeatNames.RegaliaImplement;
+                    return !isDedication ? ThaumaturgeFeatNames.RegaliaImplement : ThaumaturgeFeatNames.RegaliaImplementDedication;
                 case ImplementIDs.Tome:
-                    return ThaumaturgeFeatNames.TomeImplement;
+                    return !isDedication ? ThaumaturgeFeatNames.TomeImplement : ThaumaturgeFeatNames.TomeImplementDedication;
                 case ImplementIDs.Wand:
-                    return ThaumaturgeFeatNames.WandImplement;
+                    return !isDedication ? ThaumaturgeFeatNames.WandImplement : ThaumaturgeFeatNames.WandImplementDedication;
                 case ImplementIDs.Weapon:
-                    return ThaumaturgeFeatNames.WeaponImplement;
+                    return !isDedication ? ThaumaturgeFeatNames.WeaponImplement : ThaumaturgeFeatNames.WeaponImplementDedication;
                 default:
                     throw new InvalidOperationException("Implement ID is not supported: " + implementID);
             }
@@ -375,7 +380,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             }
         }
 
-        public static void EnsureCorrectImplements(CalculatedCharacterSheetValues character, bool delete = false)
+        public static void EnsureCorrectImplements(CalculatedCharacterSheetValues character, bool isDedication, bool delete = false)
         {
             ImplementIDs[] implementIDs = [ImplementIDs.Amulet, ImplementIDs.Bell, ImplementIDs.Chalice, ImplementIDs.Lantern, ImplementIDs.Mirror, ImplementIDs.Regalia, ImplementIDs.Tome, ImplementIDs.Wand, ImplementIDs.Weapon];
             List<ImplementIDs> implementsToAdd = new List<ImplementIDs>();
@@ -383,7 +388,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 
             foreach (ImplementIDs implementID in implementIDs)
             {
-                FeatName featName = LookupImplementFeatName(implementID);
+                FeatName featName = LookupImplementFeatName(implementID, isDedication);
                 if (character.HasFeat(featName))
                 {
                     implementsToAdd.Add(implementID);
@@ -412,11 +417,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             {
                 if (implementID != ImplementIDs.Weapon)
                 {
-                    AddImplement(character, CreateImplement(implementID), LookupImplementFeatName(implementID));
+                    AddImplement(character, CreateImplement(implementID), LookupImplementFeatName(implementID, isDedication));
                 }
                 else
                 {
-                    AddImplement(character, Items.CreateNew(ThaumaturgeItemNames.WeaponImplementChoice), LookupImplementFeatName(implementID));
+                    AddImplement(character, Items.CreateNew(ThaumaturgeItemNames.WeaponImplementChoice), LookupImplementFeatName(implementID, isDedication));
                 }
             }
         }
@@ -434,7 +439,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
 
                 if (level == 1 || inventory.LeftHand != null || inventory.RightHand != null || inventory.Backpack.Count != 0)
                 {
-                    if (level >= 5 || (character.Tags.ContainsKey("First Implement") && character.Tags["First Implement"] is FeatName firstImplementFeatName && firstImplementFeatName == implementFeatName))
+                    if (level >= 5 || (character.Tags.ContainsKey("First Implement") && character.Tags["First Implement"] is FeatName firstImplementFeatName && firstImplementFeatName == implementFeatName) || (character.Tags.ContainsKey("Dedication Implement") && character.Tags["Dedication Implement"] is FeatName dedicationImplement && dedicationImplement == implementFeatName))
                     {
                         AddImplementIntoInventory(inventory, implement);
                     }

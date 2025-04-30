@@ -209,5 +209,55 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Cold selection for the Wand Implement
         /// </summary>
         public static readonly FeatName ColdWand = ModManager.RegisterFeatName("Cold Wand", "Cold Wand");
+
+        /// <summary>
+        /// The Amulet Implement Dedication
+        /// </summary>
+        public static readonly FeatName AmuletImplementDedication = ModManager.RegisterFeatName("Amulet Implement Dedication", "Amulet");
+
+        /// <summary>
+        /// The Bell Implement Dedication
+        /// </summary>
+        public static readonly FeatName BellImplementDedication = ModManager.RegisterFeatName("Bell Implement Dedication", "Bell");
+
+        /// <summary>
+        /// The Chalice Implement Dedication
+        /// </summary>
+        public static readonly FeatName ChaliceImplementDedication = ModManager.RegisterFeatName("Chalice Implement Dedication", "Chalice");
+
+        /// <summary>
+        /// The Lantern Implement Dedication
+        /// </summary>
+        public static readonly FeatName LanternImplementDedication = ModManager.RegisterFeatName("Lantern Implement Dedication", "Lantern");
+
+        /// <summary>
+        /// The Mirror Implement Dedication
+        /// </summary>
+        public static readonly FeatName MirrorImplementDedication = ModManager.RegisterFeatName("Mirror Implement Dedication", "Mirror");
+
+        /// <summary>
+        /// The Regalia Implement Dedication
+        /// </summary>
+        public static readonly FeatName RegaliaImplementDedication = ModManager.RegisterFeatName("Regalia Implement Dedication", "Regalia");
+
+        /// <summary>
+        /// The Tome Implement Dedication
+        /// </summary>
+        public static readonly FeatName TomeImplementDedication = ModManager.RegisterFeatName("Tome Implement Dedication", "Tome");
+
+        /// <summary>
+        /// The Wand Implement Dedication
+        /// </summary>
+        public static readonly FeatName WandImplementDedication = ModManager.RegisterFeatName("Wand Implement Dedication", "Wand");
+
+        /// <summary>
+        /// The Weapon Implement Dedication
+        /// </summary>
+        public static readonly FeatName WeaponImplementDedication = ModManager.RegisterFeatName("Weapon Implement Dedication", "Weapon");
+
+        /// <summary>
+        /// The Implement Initiate Archetype feat
+        /// </summary>
+        public static readonly FeatName ImplementInitiate = ModManager.RegisterFeatName("Implement Initiate", "Implement Initiate");
     }
 }

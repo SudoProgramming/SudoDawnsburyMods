@@ -37,7 +37,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 }
                 else if (storedItem.ScrollProperties == null)
                 {
-                    return "Only Scrolls";
+                    return "Implements can hold a single scroll for the 'Scroll Thaumaturgy' feat. Normal item swapping isn't allowed.";
                 }
 
                 return null;

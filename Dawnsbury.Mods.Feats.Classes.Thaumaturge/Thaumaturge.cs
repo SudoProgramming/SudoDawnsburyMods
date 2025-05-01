@@ -152,7 +152,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             AddRegaliaAdeptLogic(regaliaAdeptFeat);
             yield return regaliaAdeptFeat;
 
-            Feat tomeAdeptFeat = new Feat(ThaumaturgeFeatNames.TomeAdept, "In addition to the initiate benefits, your tome inscribes insights into creatures that you can use to strike them down.", "While holding your tome, at the start of your turn each round, you may attempt a check to Exploit Vulnerability a creature of your choice. If this check succeeds, you gain a +1 circumstance bonus to your next attack roll against that creature before the start of your next turn.\n\nYou gain an additional skill increase.", [ThaumaturgeTraits.AdeptImplement], null);
+            Feat tomeAdeptFeat = new Feat(ThaumaturgeFeatNames.TomeAdept, "In addition to the initiate benefits, your tome inscribes insights into creatures that you can use to strike them down.", "While holding your tome, at the start of your turn each round, you may attempt a check to Exploit Vulnerability a creature of your choice. If this check succeeds, you gain a +1 circumstance bonus to your next attack roll against that creature before the start of your next turn.\n\nWhen you gain temporary skill proficiencies during your daily preparations, one is at expert proficiency and the other at master proficiency.", [ThaumaturgeTraits.AdeptImplement], null);
             tomeAdeptFeat.WithPrerequisite((CalculatedCharacterSheetValues sheet) => sheet.HasFeat(ThaumaturgeFeatNames.TomeImplement), "Requires the Tome Implement");
             AddTomeAdeptLogic(tomeAdeptFeat);
             yield return tomeAdeptFeat;
@@ -166,6 +166,20 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             weaponAdeptFeat.WithPrerequisite((CalculatedCharacterSheetValues sheet) => sheet.HasFeat(ThaumaturgeFeatNames.WeaponImplement), "Requires the Weapon Implement");
             AddWeaponAdeptLogic(weaponAdeptFeat);
             yield return weaponAdeptFeat;
+
+            foreach (Feat feat in AddTomeSkillFeats())
+            {
+                yield return feat;
+            }
+
+            Feat tomePrimarySkill = new Feat(ThaumaturgeFeatNames.TomePrimarySkill, string.Empty, string.Empty, [], null);
+            Feat tomeSecondarySkill = new Feat(ThaumaturgeFeatNames.TomeSecondarySkill, string.Empty, string.Empty, [], null);
+
+            AddTomeSkillLogic(tomePrimarySkill, true);
+            AddTomeSkillLogic(tomeSecondarySkill, false);
+
+            yield return tomePrimarySkill;
+            yield return tomeSecondarySkill;
 
             //// Creates the class selection feat for the Thaumaturge
             yield return new ClassSelectionFeat(ThaumaturgeFeatNames.ThaumaturgeClass, "The world is full of the unexplainable: ancient magic, dead gods, and even stranger things. In response, you've scavenged the best parts of every magical tradition and built up a collection of esoterica—a broken holy relic here, a sprig of mistletoe there—that you can use to best any creature by exploiting their weaknesses and vulnerabilities. The mystic implement you carry is both badge and weapon, its symbolic weight helping you bargain with and subdue the supernatural. Every path to power has its restrictions and costs, but you turn them all to your advantage. You're a thaumaturge, and you work wonders.",
@@ -1219,16 +1233,19 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             {
                 if (!isDedication || sheet.HasFeat(ThaumaturgeFeatNames.TomeImplementDedication))
                 {
-                    sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome First Extra Skill", "Tome First Extra Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (feat => feat is SkillSelectionFeat)));
-                    sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Second Extra Skill", "Tome Second Extra Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (feat => feat is SkillSelectionFeat)));
-                    sheet.AddAtLevel(3, (CalculatedCharacterSheetValues character) =>
-                    {
-                        AddTomeSkillIncreaseOption(character, "TomeLvl3Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL);
-                    });
-                    sheet.AddAtLevel(5, (CalculatedCharacterSheetValues character) =>
-                    {
-                        AddTomeSkillIncreaseOption(character, "TomeLvl5Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL);
-                    });
+                    sheet.GrantFeat(ThaumaturgeFeatNames.TomePrimarySkill);
+                    sheet.GrantFeat(ThaumaturgeFeatNames.TomeSecondarySkill);
+
+                    //sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome First Extra Skill", "Tome First Extra Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (feat => feat is SkillSelectionFeat)));
+                    //sheet.AddSelectionOption(new SingleFeatSelectionOption("Tome Second Extra Skill", "Tome Second Extra Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (feat => feat is SkillSelectionFeat)));
+                    //sheet.AddAtLevel(3, (CalculatedCharacterSheetValues character) =>
+                    //{
+                    //    AddTomeSkillIncreaseOption(character, "TomeLvl3Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL);
+                    //});
+                    //sheet.AddAtLevel(5, (CalculatedCharacterSheetValues character) =>
+                    //{
+                    //    AddTomeSkillIncreaseOption(character, "TomeLvl5Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL);
+                    //});
                 }
             });
 
@@ -1249,10 +1266,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         /// <param name="tomeAdeptFeat">The Tome Adept feat object</param>
         public static void AddTomeAdeptLogic(Feat tomeAdeptFeat)
         {
-            tomeAdeptFeat.OnSheet = (CalculatedCharacterSheetValues sheet) =>
-            {
-                AddTomeSkillIncreaseOption(sheet, "TomeLvl7Skill", sheet.CurrentLevel);
-            };
             tomeAdeptFeat.WithPermanentQEffect("You may exploit vulnerability at the start of your turn as a free action, and if you succeed you gain a +1 circumstance bonus to attack rolls against them.", delegate (QEffect self)
             {
                 self.StartOfYourPrimaryTurn = async (QEffect qfStartOfTurn, Creature owner) =>
@@ -2614,6 +2627,171 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 }
                 values.Tags[tagName] = feat.FeatName;
             });
+        }
+        private static void AddTomeSkillLogic(Feat skillFeat, bool isPrimary)
+        {
+            Trait traitNeeded = isPrimary ? ThaumaturgeTraits.PrimaryTomeSkill : ThaumaturgeTraits.SecondaryTomeSkill;
+            skillFeat.WithOnSheet((CalculatedCharacterSheetValues sheet) =>
+            {
+                sheet.AddSelectionOption(new SingleFeatSelectionOption($"Tome{(isPrimary ? "Primary" : "Secondary")}Skill", $"Tome {(isPrimary ? "Primary" : "Secondary")} Skill", SelectionOption.MORNING_PREPARATIONS_LEVEL, (feat => feat.HasTrait(ThaumaturgeTraits.TomeSkill) && feat.HasTrait(traitNeeded))));
+            });
+        }
+
+        private static IEnumerable<Feat> AddTomeSkillFeats()
+        {
+            Dictionary<Skill, Tuple<FeatName, FeatName, FeatName>> skillFeatLookup = new Dictionary<Skill, Tuple<FeatName, FeatName, FeatName>>()
+            {
+                { Skill.Acrobatics, Tuple.Create(FeatName.Acrobatics, FeatName.ExpertAcrobatics, FeatName.MasterAcrobatics) },
+                { Skill.Arcana, Tuple.Create(FeatName.Arcana, FeatName.ExpertArcana, FeatName.MasterArcana) },
+                { Skill.Athletics, Tuple.Create(FeatName.Athletics, FeatName.ExpertAthletics, FeatName.MasterAthletics) },
+                { Skill.Crafting, Tuple.Create(FeatName.Crafting, FeatName.ExpertCrafting, FeatName.MasterCrafting) },
+                { Skill.Deception, Tuple.Create(FeatName.Deception, FeatName.ExpertDeception, FeatName.MasterDeception) },
+                { Skill.Diplomacy, Tuple.Create(FeatName.Diplomacy, FeatName.ExpertDiplomacy, FeatName.MasterDiplomacy) },
+                { Skill.Intimidation, Tuple.Create(FeatName.Intimidation, FeatName.ExpertIntimidation, FeatName.MasterIntimidation) },
+                { Skill.Medicine, Tuple.Create(FeatName.Medicine, FeatName.ExpertMedicine, FeatName.MasterMedicine) },
+                { Skill.Nature, Tuple.Create(FeatName.Nature, FeatName.ExpertNature, FeatName.MasterNature) },
+                { Skill.Occultism, Tuple.Create(FeatName.Occultism, FeatName.ExpertOccultism, FeatName.MasterOccultism) },
+                { Skill.Performance, Tuple.Create(FeatName.Performance, FeatName.ExpertPerformance, FeatName.MasterPerformance) },
+                { Skill.Religion, Tuple.Create(FeatName.Religion, FeatName.ExpertReligion, FeatName.MasterReligion) },
+                { Skill.Society, Tuple.Create(FeatName.Society, FeatName.ExpertSociety, FeatName.MasterSociety) },
+                { Skill.Stealth, Tuple.Create(FeatName.Stealth, FeatName.ExpertStealth, FeatName.MasterStealth) },
+                { Skill.Survival, Tuple.Create(FeatName.Survival, FeatName.ExpertSurvival, FeatName.MasterSurvival) },
+                { Skill.Thievery, Tuple.Create(FeatName.Thievery, FeatName.ExpertThievery, FeatName.MasterThievery) }
+            };
+
+            string[] skillTypes = ["Primary", "Secondary"];
+            foreach (string skillType in skillTypes)
+            {
+                foreach (Skill skill in Skills.AllSkills)
+                {
+                    Trait skillTrait = Skills.SkillToTrait(skill);
+                    bool isPrimary = skillType == "Primary";
+                    string skillName = skill.ToStringOrTechnical();
+                    List<Trait> skillTraits = [ThaumaturgeTraits.TomeSkill];
+                    if (isPrimary)
+                    {
+                        skillTraits.Add(ThaumaturgeTraits.PrimaryTomeSkill);
+                    }
+                    else
+                    {
+                        skillTraits.Add(ThaumaturgeTraits.SecondaryTomeSkill);
+                    }
+                    yield return new Feat(ModManager.RegisterFeatName($"TomeTrait{skillType}Option{skillName}", skillName), Skills.GetSkillDescription(skill), skillName,  skillTraits, null)
+                        .WithRulesTextCreator((CharacterSheet sheet) =>
+                        {
+                            CalculatedCharacterSheetValues values = sheet.Calculated;
+
+                            string additionalPrimaryExplination = $"\n\n{{b}}Level 1:{{/b}} Trained in {skillName}\n{{b}}Level 3:{{/b}} Expert in {skillName}\n{{b}}Level 7:{{/b}} If you have 'Tome Adept' you are Master in {skillName}";
+                            string additionalSecondaryExplination = $"\n\n{{b}}Level 1:{{/b}} Trained in {skillName}\n{{b}}Level 5:{{/b}} Expert in {skillName}";
+
+                            if (isPrimary)
+                            {
+                                if (values.CurrentLevel < 3)
+                                {
+                                    return $"You become trained in {skillName}. This will automatically advance to Expert at level 3." + additionalPrimaryExplination;
+                                }
+                                else if (values.CurrentLevel < 5 || (values.CurrentLevel >= 5 && !values.HasFeat(ThaumaturgeFeatNames.TomeAdept)))
+                                {
+                                    return $"You become an Expert in {skillName}. This will automatically advance to Master if you take the Tome Adept at level 7." + additionalPrimaryExplination;
+                                }
+                                else if (values.CurrentLevel >= 7 && values.HasFeat(ThaumaturgeFeatNames.TomeAdept))
+                                {
+                                    return $"You become an Master in {skillName}." + additionalPrimaryExplination;
+                                }
+
+                                return null;
+                            }
+                            else
+                            {
+                                if (values.CurrentLevel < 5)
+                                {
+                                    return $"You become trained in {skillName}. This will automatically advance to Expert at level 5." + additionalSecondaryExplination;
+                                }
+                                else if (values.CurrentLevel >= 5)
+                                {
+                                    return $"You become an Expert in {skillName}." + additionalSecondaryExplination;
+                                }
+
+                                return null;
+                            }
+                        })
+                        .WithEquivalent((CalculatedCharacterSheetValues sheet) =>
+                        {
+                            FeatName? equivalentFeatName = null;
+                            if (isPrimary)
+                            {
+                                if (sheet.CurrentLevel < 3)
+                                {
+                                    equivalentFeatName = skillFeatLookup[skill].Item1;
+                                }
+                                else if (sheet.CurrentLevel < 5 || (sheet.CurrentLevel >= 5 && !sheet.HasFeat(ThaumaturgeFeatNames.TomeAdept)))
+                                {
+                                    equivalentFeatName = skillFeatLookup[skill].Item2;
+                                }
+                                else if (sheet.CurrentLevel >= 7 && sheet.HasFeat(ThaumaturgeFeatNames.TomeAdept))
+                                {
+                                    equivalentFeatName = skillFeatLookup[skill].Item3;
+                                }
+                            }
+                            else
+                            {
+                                if (sheet.CurrentLevel < 5)
+                                {
+                                    equivalentFeatName = skillFeatLookup[skill].Item1;
+                                }
+                                else if (sheet.CurrentLevel >= 5)
+                                {
+                                    equivalentFeatName = skillFeatLookup[skill].Item2;
+                                }
+                            }
+
+                            string oppositeSkillType = isPrimary ? "Secondary" : "Primary";
+                            return sheet.AllFeats.Any(feat =>
+                            {
+                                return feat.FeatName.ToStringOrTechnical() == $"TomeTrait{oppositeSkillType}Option{skillName}" ||
+                                    (equivalentFeatName != null && feat.FeatName == equivalentFeatName);
+                            });
+                        })
+                        .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
+                        {
+                            Proficiency desiredProficiency = Proficiency.Untrained;
+                            if (isPrimary)
+                            {
+                                if (sheet.CurrentLevel < 3)
+                                {
+                                    desiredProficiency = Proficiency.Trained;
+                                }
+                                else if (sheet.CurrentLevel < 5 || (sheet.CurrentLevel >= 5 && !sheet.HasFeat(ThaumaturgeFeatNames.TomeAdept)))
+                                {
+                                    desiredProficiency = Proficiency.Expert;
+                                }
+                                else if (sheet.CurrentLevel >= 7 && sheet.HasFeat(ThaumaturgeFeatNames.TomeAdept))
+                                {
+                                    desiredProficiency = Proficiency.Master;
+                                }
+                            }
+                            else
+                            {
+                                if (sheet.CurrentLevel < 5)
+                                {
+                                    desiredProficiency = Proficiency.Trained;
+                                }
+                                else if (sheet.CurrentLevel >= 5)
+                                {
+                                    desiredProficiency = Proficiency.Expert;
+                                }
+                            }
+
+                            sheet.SetProficiency(skillTrait, desiredProficiency);
+                        })
+                        .WithOnCreature((sheet, cr) =>
+                        {
+                            cr.Skills.Set(skill, sheet.FinalAbilityScores.TotalModifier(Skills.GetSkillAbility(skill)) + sheet.GetProficiency(skillTrait).ToNumber(cr.Level));
+                        });
+
+
+                }
+            }
         }
 
         private static void AddTomeSkillIncreaseOption(CalculatedCharacterSheetValues sheet, string key, int level)

@@ -259,5 +259,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Implement Initiate Archetype feat
         /// </summary>
         public static readonly FeatName ImplementInitiate = ModManager.RegisterFeatName("Implement Initiate", "Implement Initiate");
+
+        /// <summary>
+        /// Tome Primary Skill feat
+        /// </summary>
+        public static readonly FeatName TomePrimarySkill = ModManager.RegisterFeatName("Tome Primary Skill", "Tome Primary Skill");
+
+        /// <summary>
+        /// Tome Secondary Skill feat
+        /// </summary>
+        public static readonly FeatName TomeSecondarySkill = ModManager.RegisterFeatName("Tome Secondary Skill", "Tome Secondary Skill");
     }
 }

@@ -2794,60 +2794,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             }
         }
 
-        private static void AddTomeSkillIncreaseOption(CalculatedCharacterSheetValues sheet, string key, int level)
-        {
-            sheet.AddSelectionOption(new SingleFeatSelectionOption(key, "Tome Skill increase", level, delegate (Feat ft)
-            {
-                if (ft is SkillSelectionFeat)
-                {
-                    return true;
-                }
-
-                SkillIncreaseFeat skillIncreaseFeat = ft as SkillIncreaseFeat;
-                if (skillIncreaseFeat != null)
-                {
-                    if (!sheet.AllFeats.Any((Feat ft2) => ft2 is SkillSelectionFeat skillSelectionFeat && skillIncreaseFeat.Skill == skillSelectionFeat.Skill))
-                    {
-                        return false;
-                    }
-
-                    if (skillIncreaseFeat.TargetProficiency == Proficiency.Expert)
-                    {
-                        return true;
-                    }
-
-                    if (level < 7)
-                    {
-                        return false;
-                    }
-
-                    if (!sheet.AllFeats.Any((Feat ft2) => ft2 is SkillIncreaseFeat skillIncreaseFeat3 && skillIncreaseFeat3.TargetProficiency == Proficiency.Expert && skillIncreaseFeat.Skill == skillIncreaseFeat3.Skill))
-                    {
-                        return false;
-                    }
-
-                    if (skillIncreaseFeat.TargetProficiency == Proficiency.Master)
-                    {
-                        return true;
-                    }
-
-                    if (level < 15)
-                    {
-                        return false;
-                    }
-
-                    if (!sheet.AllFeats.Any((Feat ft2) => ft2 is SkillIncreaseFeat skillIncreaseFeat2 && skillIncreaseFeat2.TargetProficiency == Proficiency.Master && skillIncreaseFeat.Skill == skillIncreaseFeat2.Skill))
-                    {
-                        return false;
-                    }
-
-                    return true;
-                }
-
-                return false;
-            }).WithIsOptional());
-        }
-
         public static bool HasDedicationFeat(Creature owner)
         {
             List<FeatName> dedicationFeats = new List<FeatName>() { ThaumaturgeFeatNames.AmuletImplementDedication, ThaumaturgeFeatNames.BellImplementDedication, ThaumaturgeFeatNames.ChaliceImplementDedication, ThaumaturgeFeatNames.LanternImplementDedication, ThaumaturgeFeatNames.MirrorImplementDedication, ThaumaturgeFeatNames.RegaliaImplementDedication, ThaumaturgeFeatNames.TomeImplementDedication, ThaumaturgeFeatNames.WandImplementDedication, ThaumaturgeFeatNames.WeaponImplementDedication };

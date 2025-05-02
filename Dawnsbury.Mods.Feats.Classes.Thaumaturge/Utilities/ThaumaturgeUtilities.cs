@@ -596,26 +596,27 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             }));
         }
 
-        private static void AddImplementIntoInventory(Inventory inventory, Item implement)
+        private static bool AddImplementIntoInventory(Inventory inventory, Item implement)
         {
             if (implement.BaseItemName == ThaumaturgeItemNames.WeaponImplementChoice && 
                 ((inventory.LeftHand?.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName) ?? false) || 
                 (inventory.RightHand?.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName) ?? false) || 
                 inventory.Backpack.Any(item => item?.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName) ?? false)))
             {
+                return false;
             }
             else if (implement.BaseItemName == ThaumaturgeItemNames.WeaponImplementChoice && 
                 (inventory.LeftHand?.StoredItems.Any(item => item.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName)) ?? false) || 
                 (inventory.RightHand?.StoredItems.Any(item => item.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName)) ?? false) ||
                 inventory.Backpack.Any(item => item?.StoredItems.Any(item => item.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName)) ?? false))
             {
-
+                return false;
             }
             else if ((inventory.LeftHand?.StoredItems.Any(item => item.BaseItemName == implement.BaseItemName) ?? false)||
                 (inventory.RightHand?.StoredItems.Any(item => item.BaseItemName == implement.BaseItemName) ?? false) ||
                 (inventory.Backpack.Any(item => item?.StoredItems.Any(item => item.BaseItemName == implement.BaseItemName) ?? false)))
             {
-
+                return false;
             }
             else if ((inventory.LeftHand == null || inventory.LeftHand.BaseItemName != implement.BaseItemName) && (inventory.RightHand == null || inventory.RightHand.BaseItemName != implement.BaseItemName) && !inventory.Backpack.Any(item => item != null && item.BaseItemName == implement.BaseItemName))
             {
@@ -634,7 +635,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                         inventory.AddAtEndOfBackpack(implement);
                     }
                 }
+
+                return true;
             }
+
+            return false;
         }
 
         private static void RemoveImplementFromInventory(Inventory inventory, ItemName implementName, bool skipDeletingIfScroll = true)

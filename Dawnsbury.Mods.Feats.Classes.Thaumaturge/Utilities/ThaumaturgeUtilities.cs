@@ -406,10 +406,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                 else
                 {
                     implementsToRemove.Add(implementID);
-                    //if (delete)
-                    //{
-                    //    implementsToRemove.Add(implementID);
-                    //}
                 }
             }
 
@@ -421,23 +417,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                 }
             }
 
-            //if (delete)
-            //{
-            //    foreach (ImplementIDs implementID in implementsToRemove)
-            //    {
-            //        if (implementID != ImplementIDs.Weapon)
-            //        {
-            //            RemoveImplement(character, GetImplementBaseItemName(implementID));
-            //        }
-            //    }
-            //}
-
             foreach (ImplementIDs implementID in implementsToAdd)
             {
                 if (implementID != ImplementIDs.Weapon)
                 {
-                    //Implement implement = CreateImplement(implementID);
-                    //implement.SetScrollThaumaturgyModification(character.HasFeat(ThaumaturgeFeatNames.ScrollThaumaturgy));
                     AddImplement(character, CreateImplement(implementID), LookupImplementFeatName(implementID, isDedication));
                 }
                 else
@@ -521,26 +504,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             {
                 Inventory inventory = character.Sheet.InventoriesByLevel[level];
                 RemoveImplementFromInventory(inventory, implementName);
-
-                //if (level == 1 || inventory.LeftHand != null || inventory.RightHand != null || inventory.Backpack.Count != 0)
-                //{
-                //    if (level >= 5 || (character.Tags.ContainsKey("First Implement") && character.Tags["First Implement"] is FeatName firstImplementFeatName && firstImplementFeatName == implementFeatName) || (character.Tags.ContainsKey("Dedication Implement") && character.Tags["Dedication Implement"] is FeatName dedicationImplement && dedicationImplement == implementFeatName))
-                //    {
-                //        RemoveImplementFromInventory(campaignInventory, implementName);
-                //    }
-                //}
             }
-
-
-            //int[] levels = character.Sheet.InventoriesByLevel.Keys.ToArray();
-            //Inventory campaignInventory = character.Sheet.CampaignInventory;
-            //RemoveImplementFromInventory(campaignInventory, implementName);
-
-            //foreach (int level in levels)
-            //{
-            //    Inventory inventory = character.Sheet.InventoriesByLevel[level];
-            //    RemoveImplementFromInventory(inventory, implementName);
-            //}
         }
 
         public static CombatAction CreateSeek(Creature owner, IllustrationName illustrationName, string name, AreaTarget areaTarget, int actionCost = 1)

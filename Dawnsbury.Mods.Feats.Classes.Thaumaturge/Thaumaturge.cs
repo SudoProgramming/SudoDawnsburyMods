@@ -258,7 +258,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             yield return rootToLifeFeat;
 
             // Creates and adds the logic for the Scroll Thaumaturgy feat
-            TrueFeat scrollThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Your multidisciplinary study of magic means you know how to activate the magic in scrolls with ease.", "You can activate scrolls of any magical tradition, using your thaumaturge class DC for the scroll's DC, rather than a particular spell DC. You can draw and activate scrolls with the same hand holding an implement.", [ThaumaturgeTraits.Thaumaturge]);
+            TrueFeat scrollThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.ScrollThaumaturgy, 1, "Your multidisciplinary study of magic means you know how to activate the magic in scrolls with ease.", "{b}MOD NOTE: YOU CAN DRAG A SCROLL ONTO AN IMPLEMENT DURING THE EQUIPMENT SCRENE WITH THIS FEAT TO HOLD A SCROLL IN THE SAME HAND AS YOUR IMPLEMENT.{/b}\n\nYou can activate scrolls of any magical tradition, using your thaumaturge class DC for the scroll's DC, rather than a particular spell DC. You can draw and activate scrolls with the same hand holding an implement.", [ThaumaturgeTraits.Thaumaturge]);
             AddScrollThaumaturgyLogic(scrollThaumaturgyFeat);
             yield return scrollThaumaturgyFeat;
 

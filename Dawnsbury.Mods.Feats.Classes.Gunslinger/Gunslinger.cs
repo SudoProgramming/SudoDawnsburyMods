@@ -1150,7 +1150,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddSwordAndPistolLogic(TrueFeat swordAndPistolFeat)
         {
             // Adds a permanent Effect that will adjust depending on if you attacked in melee or ranged with appropiate weapons
-            swordAndPistolFeat.WithPermanentQEffect("After melee Strikes the target is debuffed against ranged Strikes, and after ranged Strikes the enemey is debuffed against melee Strikes.", delegate (QEffect self)
+            swordAndPistolFeat.WithPermanentQEffect("After melee Strikes the target is debuffed against ranged Strikes, and after ranged Strikes the enemy is debuffed against melee Strikes.", delegate (QEffect self)
             {
                 self.BeforeYourActiveRoll = async (QEffect addingEffects, CombatAction action, Creature defender) =>
                 {

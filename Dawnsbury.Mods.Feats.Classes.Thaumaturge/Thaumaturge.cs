@@ -205,8 +205,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 {
                     sheet.AddFeat(exploitVulnerabilityFeat, null);
                     sheet.AddFeat(implementsEmpowermentFeat, null);
-                    sheet.AddSelectionOption(new SingleFeatSelectionOption("FirstImplement", "First Implement", 1, (Feat ft) => ft.HasTrait(ThaumaturgeTraits.Implement)));
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("ThaumaturgeFeat1", "Thaumaturge feat", 1, (Feat ft) => ft.HasTrait(ThaumaturgeTraits.Thaumaturge)));
+                    sheet.AddSelectionOption(new SingleFeatSelectionOption("FirstImplement", "First Implement", 1, (Feat ft) => ft.HasTrait(ThaumaturgeTraits.Implement)));
                     sheet.SetProficiency(ThaumaturgeTraits.Thaumaturge, Proficiency.Trained);
                     sheet.AddAtLevel(3, delegate (CalculatedCharacterSheetValues values)
                     {

@@ -390,7 +390,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             }
         }
 
-        public static void EnsureCorrectImplements(CalculatedCharacterSheetValues character, bool isDedication, bool delete = false)
+        public static void EnsureCorrectImplements(CalculatedCharacterSheetValues character, bool isDedication)//, bool delete = false)
         {
             ImplementIDs[] implementIDs = [ImplementIDs.Amulet, ImplementIDs.Bell, ImplementIDs.Chalice, ImplementIDs.Lantern, ImplementIDs.Mirror, ImplementIDs.Regalia, ImplementIDs.Tome, ImplementIDs.Wand, ImplementIDs.Weapon];
             List<ImplementIDs> implementsToAdd = new List<ImplementIDs>();
@@ -405,34 +405,87 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                 }
                 else
                 {
-                    if (delete)
-                    {
-                        implementsToRemove.Add(implementID);
-                    }
+                    implementsToRemove.Add(implementID);
+                    //if (delete)
+                    //{
+                    //    implementsToRemove.Add(implementID);
+                    //}
                 }
             }
 
-            if (delete)
+            foreach (ImplementIDs implementID in implementsToRemove)
             {
-                foreach (ImplementIDs implementID in implementsToRemove)
+                if (implementID != ImplementIDs.Weapon)
                 {
-                    if (implementID != ImplementIDs.Weapon)
-                    {
-                        RemoveImplement(character, GetImplementBaseItemName(implementID));
-                    }
+                    RemoveImplement(character, GetImplementBaseItemName(implementID));
                 }
             }
+
+            //if (delete)
+            //{
+            //    foreach (ImplementIDs implementID in implementsToRemove)
+            //    {
+            //        if (implementID != ImplementIDs.Weapon)
+            //        {
+            //            RemoveImplement(character, GetImplementBaseItemName(implementID));
+            //        }
+            //    }
+            //}
 
             foreach (ImplementIDs implementID in implementsToAdd)
             {
                 if (implementID != ImplementIDs.Weapon)
                 {
+                    //Implement implement = CreateImplement(implementID);
+                    //implement.SetScrollThaumaturgyModification(character.HasFeat(ThaumaturgeFeatNames.ScrollThaumaturgy));
                     AddImplement(character, CreateImplement(implementID), LookupImplementFeatName(implementID, isDedication));
                 }
                 else
                 {
                     AddImplement(character, Items.CreateNew(ThaumaturgeItemNames.WeaponImplementChoice), LookupImplementFeatName(implementID, isDedication));
                 }
+            }
+
+            UpdateAllImplementsForPossibleScrolls(character);
+        }
+
+        private static void UpdateAllImplementsForPossibleScrolls(CalculatedCharacterSheetValues character)
+        {
+            bool shouldUpdate(Item item)
+            {
+                return item.HasTrait(ThaumaturgeTraits.Implement) && !item.HasTrait(ThaumaturgeTraits.WeaponImplement);
+            }
+
+            void UpdateImplement(Inventory inventory)
+            {
+                bool hasScrollThaumaturgy = character.HasFeat(ThaumaturgeFeatNames.ScrollThaumaturgy);
+
+                if (inventory.RightHand != null && shouldUpdate(inventory.RightHand))
+                {
+                    Implement.SetStores(inventory.RightHand, hasScrollThaumaturgy);
+                }
+                if (inventory.LeftHand != null && shouldUpdate(inventory.LeftHand))
+                {
+                    Implement.SetStores(inventory.LeftHand, hasScrollThaumaturgy);
+                }
+                foreach (Item? item in inventory.Backpack)
+                {
+                    if (item != null && shouldUpdate(item))
+                    {
+                        Implement.SetStores(item, hasScrollThaumaturgy);
+                    }
+                }
+            }
+
+            // Add Implement to Sheet
+            int[] levels = character.Sheet.InventoriesByLevel.Keys.ToArray();
+            Inventory campaignInventory = character.Sheet.CampaignInventory;
+            UpdateImplement(campaignInventory);
+
+            foreach (int level in levels)
+            {
+                Inventory inventory = character.Sheet.InventoriesByLevel[level];
+                UpdateImplement(inventory);
             }
         }
 
@@ -468,7 +521,26 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             {
                 Inventory inventory = character.Sheet.InventoriesByLevel[level];
                 RemoveImplementFromInventory(inventory, implementName);
+
+                //if (level == 1 || inventory.LeftHand != null || inventory.RightHand != null || inventory.Backpack.Count != 0)
+                //{
+                //    if (level >= 5 || (character.Tags.ContainsKey("First Implement") && character.Tags["First Implement"] is FeatName firstImplementFeatName && firstImplementFeatName == implementFeatName) || (character.Tags.ContainsKey("Dedication Implement") && character.Tags["Dedication Implement"] is FeatName dedicationImplement && dedicationImplement == implementFeatName))
+                //    {
+                //        RemoveImplementFromInventory(campaignInventory, implementName);
+                //    }
+                //}
             }
+
+
+            //int[] levels = character.Sheet.InventoriesByLevel.Keys.ToArray();
+            //Inventory campaignInventory = character.Sheet.CampaignInventory;
+            //RemoveImplementFromInventory(campaignInventory, implementName);
+
+            //foreach (int level in levels)
+            //{
+            //    Inventory inventory = character.Sheet.InventoriesByLevel[level];
+            //    RemoveImplementFromInventory(inventory, implementName);
+            //}
         }
 
         public static CombatAction CreateSeek(Creature owner, IllustrationName illustrationName, string name, AreaTarget areaTarget, int actionCost = 1)
@@ -547,7 +619,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             }
             else if ((inventory.LeftHand == null || inventory.LeftHand.BaseItemName != implement.BaseItemName) && (inventory.RightHand == null || inventory.RightHand.BaseItemName != implement.BaseItemName) && !inventory.Backpack.Any(item => item != null && item.BaseItemName == implement.BaseItemName))
             {
-                if (inventory.RightHand == null && implement.ItemName != ThaumaturgeItemNames.WeaponImplementChoice)
+                if (inventory.RightHand == null && implement.ItemName != ThaumaturgeItemNames.WeaponImplementChoice && (inventory.LeftHand == null || !inventory.LeftHand.HasTrait(Trait.TwoHanded)))
                 {
                     inventory.RightHand = implement;
                 }
@@ -565,7 +637,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             }
         }
 
-        private static void RemoveImplementFromInventory(Inventory inventory, ItemName implementName)
+        private static void RemoveImplementFromInventory(Inventory inventory, ItemName implementName, bool skipDeletingIfScroll = true)
         {
             Item? GetScroll(Item implement)
             {
@@ -577,25 +649,40 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                 return null;
             }
 
+            bool hasStoredItems(Item item)
+            {
+                return item.StoredItems.Count > 0;
+            }
+
             Item? scrollToAdd = null;
             if (inventory.RightHand?.BaseItemName == implementName)
             {
-                scrollToAdd = GetScroll(inventory.RightHand);
-                inventory.RightHand = null;
+                Item rightHand = inventory.RightHand;
+                bool storedItems = hasStoredItems(rightHand);
+                if (!storedItems || !skipDeletingIfScroll)
+                {
+                    scrollToAdd = GetScroll(rightHand);
+                    inventory.RightHand = null;
+                }
             }
             else if (inventory.LeftHand?.BaseItemName == implementName)
             {
-                scrollToAdd = GetScroll(inventory.LeftHand);
-                inventory.LeftHand = null;
+                Item leftHand = inventory.LeftHand;
+                bool storedItems = hasStoredItems(leftHand);
+                if (!storedItems || !skipDeletingIfScroll)
+                {
+                    scrollToAdd = GetScroll(leftHand);
+                    inventory.LeftHand = null;
+                }
             }
             else
             {
                 Item? possibleImplement = inventory.Backpack.FirstOrDefault(item => item != null && item.BaseItemName == implementName);
-                if (possibleImplement != null)
+                if (possibleImplement != null && (!hasStoredItems(possibleImplement) || !skipDeletingIfScroll))
                 {
                     scrollToAdd = GetScroll(possibleImplement);
                 }
-                inventory.Backpack.RemoveAll(item => item != null && item.BaseItemName == implementName);
+                inventory.Backpack.RemoveAll(item => item != null && item.BaseItemName == implementName && (!hasStoredItems(item) || !skipDeletingIfScroll));
             }
 
             if (scrollToAdd != null)

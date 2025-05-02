@@ -1,4 +1,7 @@
-﻿using Dawnsbury.Core.Creatures;
+﻿using System;
+using System.Linq;
+using Dawnsbury.Core.CharacterBuilder;
+using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Mechanics.Enumerations;
 using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Display.Illustrations;
@@ -29,19 +32,30 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         {
             this.ImplementID = implementID;
             this.Description = description;
-            this.WithStoresItem((Item implement, Item storedItem) =>
-            {
-                if (implement.StoredItems.Count >= 1)
-                {
-                    return "Already holding a scroll";
-                }
-                else if (storedItem.ScrollProperties == null)
-                {
-                    return "Implements can hold a single scroll for the 'Scroll Thaumaturgy' feat. Normal item swapping isn't allowed.";
-                }
+        }
 
-                return null;
-            });
+        public static void SetStores(Item item, bool hasScrollThaumaturgy)
+        {
+            if (hasScrollThaumaturgy && item.StoresItem == null)
+            {
+                item.WithStoresItem((Item implement, Item storedItem) =>
+                {
+                    if (implement.StoredItems.Count >= 1)
+                    {
+                        return "Already holding a scroll";
+                    }
+                    else if (storedItem.ScrollProperties == null)
+                    {
+                        return "Implements can hold a single scroll with your 'Scroll Thaumaturgy' feat. Normal item swapping isn't allowed if you have this feat.";
+                    }
+
+                    return null;
+                });
+            }
+            else if (!hasScrollThaumaturgy && item.StoredItems != null && item.StoredItems.Count == 0)
+            {
+                item.StoresItem = null;
+            }
         }
     }
 }

@@ -153,14 +153,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                 StartOfYourPrimaryTurn = async (QEffect startOfTurn, Creature owner) =>
                                 {
                                     // Prompts for reaction, then has the user select a tile closer to the enemy then strides towards it.
-                                    if (await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Stride as a free action towards a creature?", "Yes"))
+                                    if (await owner.Battle.AskForConfirmation(owner, IllustrationName.FreeAction, "Stride as a free action towards a creature?", "Yes"))
                                     {
-                                        Tile? tileToStrideTo = await GetTileCloserToEnemy(startOfCombat.Owner, "Stride towards the selected enemy or right-click to cancel.", startOfCombat.Owner.HasEffect(QEffectId.Prone));
+                                        Tile? tileToStrideTo = await GetTileCloserToEnemy(owner, "Stride towards the selected enemy or right-click to cancel.", owner.HasEffect(QEffectId.Prone));
                                         if (tileToStrideTo != null)
                                         {
-                                            await startOfCombat.Owner.MoveTo(tileToStrideTo, null, new MovementStyle()
+                                            await owner.MoveTo(tileToStrideTo, null, new MovementStyle()
                                             {
-                                                MaximumSquares = startOfCombat.Owner.Speed,
+                                                MaximumSquares = owner.Speed,
                                             });
                                         }
                                     }
@@ -296,12 +296,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             {
                                 StartOfYourPrimaryTurn = async (QEffect startOfTurn, Creature owner) =>
                                 {
-                                    if (await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Step up to 10 ft as a free action?", "Yes"))
+                                    if (await owner.Battle.AskForConfirmation(owner, IllustrationName.FreeAction, "Step up to 10 ft as a free action?", "Yes"))
                                     {
-                                        Tile? tileToStepTo = await GetStepableTileWithinRange(startOfCombat.Owner, "Choose which tile to step to or right-click to cancel.", startOfCombat.Owner.HasEffect(QEffectId.Prone) ? 1 : 2);
+                                        Tile? tileToStepTo = await GetStepableTileWithinRange(owner, "Choose which tile to step to or right-click to cancel.", owner.HasEffect(QEffectId.Prone) ? 1 : 2);
                                         if (tileToStepTo != null)
                                         {
-                                            await startOfCombat.Owner.MoveTo(tileToStepTo, null, new MovementStyle()
+                                            await owner.MoveTo(tileToStepTo, null, new MovementStyle()
                                             {
                                                 MaximumSquares = 2,
                                                 PermitsStep = true

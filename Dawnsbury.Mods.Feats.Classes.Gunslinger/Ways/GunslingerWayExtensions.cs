@@ -367,10 +367,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             hideAction.Name = "Covered Reload (Hide)";
                             hideAction.Illustration = new SideBySideIllustration(item.Illustration, hideAction.Illustration);
                             hideAction.Description = "Interact to reload and then attempt a Stealth check to Hide.\n\n" + hideAction.Description;
-                            hideAction.WithEffectOnSelf(async (Creature innerSelf) =>
+                            hideAction.EffectOnChosenTargets += async delegate (CombatAction hideAction, Creature user, ChosenTargets target)
                             {
-                                await FirearmUtilities.AwaitReloadItem(innerSelf, item);
-                            });
+                                await FirearmUtilities.AwaitReloadItem(user, item);
+                            };
 
                             if (hideAction.Target != null && hideAction.Target is SelfTarget hideTarget)
                             {

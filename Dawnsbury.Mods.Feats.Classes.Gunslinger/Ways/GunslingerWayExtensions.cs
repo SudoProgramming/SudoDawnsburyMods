@@ -308,6 +308,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                             });
                                         }
                                     }
+
+                                    startOfTurn.ExpiresAt = ExpirationCondition.Immediately;
                                 }
                             });
                         },

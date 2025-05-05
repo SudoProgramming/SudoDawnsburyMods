@@ -2,6 +2,7 @@
 using Dawnsbury.Auxiliary;
 using Dawnsbury.Core;
 using Dawnsbury.Core.Animations.Movement;
+using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.CharacterBuilder.Feats;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
 using Dawnsbury.Core.CharacterBuilder.Selections.Options;
@@ -23,6 +24,7 @@ using Dawnsbury.Core.Roller;
 using Dawnsbury.Core.Tiles;
 using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Modding;
+using Dawnsbury.Mods.Feats.Classes.Gunslinger.Enums;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents;
 using Dawnsbury.Mods.Items.Firearms.RegisteredComponents;
 using Dawnsbury.Mods.Items.Firearms.Utilities;
@@ -133,24 +135,42 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         public static void WithDrifersIntoTheFrayLogic(this GunslingerWay driftersWay)
         {
             Feat drifterFeat = driftersWay.Feat;
-            // Adds a permanent start of combat effect where you can stride to a tile closer to an enemy
-            drifterFeat.WithPermanentQEffect("Stride as free action on Initiative", delegate (QEffect self)
+            AddDrifersIntoTheFrayLogic(drifterFeat);
+        }
+
+        public static void AddDrifersIntoTheFrayLogic(Feat drifterFeat, bool asDedication = false)
+        {
+            drifterFeat.WithOnCreature((CalculatedCharacterSheetValues sheet, Creature self) =>
             {
-                self.StartOfCombat = async (startOfCombat) =>
+                if (!asDedication || sheet.HasFeat(GunslingerFeatNames.WayOfTheDrifterDedication))
                 {
-                    // Prompts for reaction, then has the user select a tile closer to the enemy then strides towards it.
-                    if (await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Stride as a free action towards a creature?", "Yes"))
+                    self.AddQEffect(new QEffect(drifterFeat.BaseName, "Stride as free action on Initiative")
                     {
-                        Tile? tileToStrideTo = await GetTileCloserToEnemy(startOfCombat.Owner, "Stride towards the selected enemy or right-click to cancel.", startOfCombat.Owner.HasEffect(QEffectId.Prone));
-                        if (tileToStrideTo != null)
+                        StartOfCombat = async (startOfCombat) =>
                         {
-                            await startOfCombat.Owner.MoveTo(tileToStrideTo, null, new MovementStyle()
+                            startOfCombat.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
                             {
-                                MaximumSquares = startOfCombat.Owner.Speed,
+                                StartOfYourPrimaryTurn = async (QEffect startOfTurn, Creature owner) =>
+                                {
+                                    // Prompts for reaction, then has the user select a tile closer to the enemy then strides towards it.
+                                    if (await owner.Battle.AskForConfirmation(owner, IllustrationName.FreeAction, "Stride as a free action towards a creature?", "Yes"))
+                                    {
+                                        Tile? tileToStrideTo = await GetTileCloserToEnemy(owner, "Stride towards the selected enemy or right-click to cancel.", owner.HasEffect(QEffectId.Prone));
+                                        if (tileToStrideTo != null)
+                                        {
+                                            await owner.MoveTo(tileToStrideTo, null, new MovementStyle()
+                                            {
+                                                MaximumSquares = owner.Speed,
+                                            });
+                                        }
+                                    }
+
+                                    startOfTurn.ExpiresAt = ExpirationCondition.Immediately;
+                                }
                             });
                         }
-                    }
-                };
+                    });
+                }
             });
         }
 
@@ -258,28 +278,47 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         public static void WithPistolerosTenPacesLogic(this GunslingerWay pistoleroWay)
         {
             Feat pistoleroFeat = pistoleroWay.Feat;
+            AddPistolerosTenPacesLogic(pistoleroFeat);
+        }
+
+        public static void AddPistolerosTenPacesLogic(Feat pistoleroFeat, bool asDedication = false)
+        {
             // Adds a permanent bonus to initiative and a start of combat stide with no reaction of 10 ft.
-            pistoleroFeat.WithPermanentQEffect("Step 10 ft on Initiative", delegate (QEffect self)
+            pistoleroFeat.WithOnCreature((CalculatedCharacterSheetValues sheet, Creature self) =>
             {
-                self.StartOfCombat = async (startOfCombat) =>
+                if (!asDedication || sheet.HasFeat(GunslingerFeatNames.WayOfThePistoleroDedication))
                 {
-                    if (await startOfCombat.Owner.Battle.AskForConfirmation(startOfCombat.Owner, IllustrationName.FreeAction, "Step up to 10 ft as a free action?", "Yes"))
+                    self.AddQEffect(new QEffect(pistoleroFeat.BaseName, "Step 10 ft on Initiative")
                     {
-                        Tile? tileToStepTo = await GetStepableTileWithinRange(startOfCombat.Owner, "Choose which tile to step to or right-click to cancel.", startOfCombat.Owner.HasEffect(QEffectId.Prone) ? 1 : 2);
-                        if (tileToStepTo != null)
+                        StartOfCombat = async (startOfCombat) =>
                         {
-                            await startOfCombat.Owner.MoveTo(tileToStepTo, null, new MovementStyle()
+                            startOfCombat.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
                             {
-                                MaximumSquares = 2,
-                                PermitsStep = true
+                                StartOfYourPrimaryTurn = async (QEffect startOfTurn, Creature owner) =>
+                                {
+                                    if (await owner.Battle.AskForConfirmation(owner, IllustrationName.FreeAction, "Step up to 10 ft as a free action?", "Yes"))
+                                    {
+                                        Tile? tileToStepTo = await GetStepableTileWithinRange(owner, "Choose which tile to step to or right-click to cancel.", owner.HasEffect(QEffectId.Prone) ? 1 : 2);
+                                        if (tileToStepTo != null)
+                                        {
+                                            await owner.MoveTo(tileToStepTo, null, new MovementStyle()
+                                            {
+                                                MaximumSquares = 2,
+                                                PermitsStep = true
+                                            });
+                                        }
+                                    }
+
+                                    startOfTurn.ExpiresAt = ExpirationCondition.Immediately;
+                                }
                             });
+                        },
+                        BonusToInitiative = (bonusToInitiative) =>
+                        {
+                            return new Bonus(2, BonusType.Untyped, "Ten Paces", true);
                         }
-                    }
-                };
-                self.BonusToInitiative = (bonusToInitiative) =>
-                {
-                    return new Bonus(2, BonusType.Untyped, "Ten Paces", true);
-                };
+                    });
+                }
             });
         }
 
@@ -344,10 +383,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             hideAction.Name = "Covered Reload (Hide)";
                             hideAction.Illustration = new SideBySideIllustration(item.Illustration, hideAction.Illustration);
                             hideAction.Description = "Interact to reload and then attempt a Stealth check to Hide.\n\n" + hideAction.Description;
-                            hideAction.WithEffectOnSelf(async (Creature innerSelf) =>
+                            hideAction.EffectOnChosenTargets += async delegate (CombatAction hideAction, Creature user, ChosenTargets target)
                             {
-                                await FirearmUtilities.AwaitReloadItem(innerSelf, item);
-                            });
+                                await FirearmUtilities.AwaitReloadItem(user, item);
+                            };
 
                             if (hideAction.Target != null && hideAction.Target is SelfTarget hideTarget)
                             {
@@ -356,6 +395,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                     if (FirearmUtilities.IsItemLoaded(item) && !FirearmUtilities.IsMultiAmmoWeaponReloadable(item))
                                     {
                                         return "Item is already loaded";
+                                    }
+                                    else if (!restrictionOwner.Battle.AllCreatures.Any(cr => cr.EnemyOf(restrictionOwner) && cr.Occupies.FogOfWar != FogOfWar.Blackened && HiddenRules.CountsAsHavingCoverOrConcealment(restrictionOwner, cr)))
+                                    {
+                                        return "You don't have cover or concealment from any enemy.";
                                     }
                                     return null;
                                 });
@@ -389,77 +432,96 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         public static void WithSnipersOneShotOneKillLogic(this GunslingerWay sniperWay)
         {
             Feat sniperFeat = sniperWay.Feat;
+            AddSnipersOneShotOneKillLogic(sniperFeat);
+        }
+
+        public static void AddSnipersOneShotOneKillLogic(Feat sniperFeat, bool asDedication = false)
+        {
             // Adds a choice between rolling Stealth or Perception for initiative
-            sniperFeat.WithOnSheet((character) =>
+            sniperFeat.WithOnSheet((CalculatedCharacterSheetValues sheet) =>
             {
-                character.AddSelectionOption(new SingleFeatSelectionOption("Sniper Initiative Choice", "Sniper Initiative", 1, feat => feat.FeatName == GunslingerFeatNames.GunslingerSniperStealthInitiative || feat.FeatName == GunslingerFeatNames.GunslingerSniperPerceptionInitiative));
+                if (!asDedication || sheet.HasFeat(GunslingerFeatNames.WayOfTheSniperDedication))
+                {
+                    // Adds a choice between rolling Stealth or Perception for initiative
+                    sheet.AddSelectionOption(new SingleFeatSelectionOption("Sniper Initiative Choice", "Sniper Initiative", SelectionOption.PRECOMBAT_PREPARATIONS_LEVEL, feat => feat.FeatName == GunslingerFeatNames.GunslingerSniperStealthInitiative || feat.FeatName == GunslingerFeatNames.GunslingerSniperPerceptionInitiative));
+                }
             });
 
             // Adds a permanent bonus to initiaitve bonus/penalty depending on your stealth. And the start of combat effect for hiding and dealing more damage.
-            sniperFeat.WithPermanentQEffect("Can roll Stealth as Initiative and gain 1d6 percision on first Strike", delegate (QEffect self)
+            sniperFeat.WithOnCreature((CalculatedCharacterSheetValues sheet, Creature self) =>
             {
-                self.StartOfCombat = async (startOfCombat) =>
+                if (!asDedication || sheet.HasFeat(GunslingerFeatNames.WayOfTheSniperDedication))
                 {
-                    // If you are rolling stealth for initiative effects have to be applied
-                    if (self.Owner.HasFeat(GunslingerFeatNames.GunslingerSniperStealthInitiative))
+                    self.AddQEffect(new QEffect(sniperFeat.BaseName, "Can roll Stealth as Initiative and gain 1d6 percision on first Strike")
                     {
-                        // Handles the hiding on stealth initiative rolls
-                        int stealthDC = self.Owner.Initiative;
-                        foreach (Creature enemy in self.Owner.Battle.AllCreatures.Where(creature => !self.Owner.FriendOf(creature) && HiddenRules.HasCoverOrConcealment(self.Owner, creature) && creature.Initiative < stealthDC))
+                        StartOfCombat = async (startOfCombat) =>
                         {
-                            self.Owner.DetectionStatus.HiddenTo.Add(enemy);
-                        }
-
-                        self.Owner.Battle.Log(self.Owner.Name + " has rolled Stealth for initiative" + (self.Owner.DetectionStatus.EnemiesYouAreHiddenFrom.Count() > 0 ? "and is hidden to:\n" + string.Join(",", self.Owner.DetectionStatus.EnemiesYouAreHiddenFrom) : "."));
-
-                        // If a Firearm or Crossbow is held the bonus damage is applied
-                        if (startOfCombat.Owner.HeldItems.Any(item => FirearmUtilities.IsItemFirearmOrCrossbow(item)))
-                        {
-                            startOfCombat.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
+                            // If you are rolling stealth for initiative effects have to be applied
+                            if (startOfCombat.Owner.HasFeat(GunslingerFeatNames.GunslingerSniperStealthInitiative))
                             {
-                                Id = GunslingerQEIDs.OneShotOneKill,
-                                AddExtraWeaponDamage = (item) =>
+                                string coverText = string.Empty;
+                                if (!startOfCombat.Owner.Battle.AllCreatures.Any(cr => cr.EnemyOf(startOfCombat.Owner) && cr.Occupies.FogOfWar != FogOfWar.Blackened && HiddenRules.CountsAsHavingCoverOrConcealment(startOfCombat.Owner, cr)))
                                 {
-                                    if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && item.WeaponProperties != null)
-                                    {
-                                        QEffect? oneShotOneKillEffect = startOfCombat.Owner.QEffects.FirstOrDefault(qe => qe.Id == GunslingerQEIDs.OneShotOneKill);
-                                        if (oneShotOneKillEffect != null)
-                                        {
-                                            oneShotOneKillEffect.ExpiresAt = ExpirationCondition.Immediately;
-                                        }
-
-                                        return (DiceFormula.FromText("1d6", "One Shot, One Kill"), item.WeaponProperties.DamageKind);
-                                    }
-
-                                    return null;
-                                },
-                                AfterYouTakeAction = async (QEffect afterAction, CombatAction action) =>
-                                {
-                                    QEffect? oneShotOneKillEffect = startOfCombat.Owner.QEffects.FirstOrDefault(qe => qe.Id == GunslingerQEIDs.OneShotOneKill);
-                                    if (oneShotOneKillEffect != null && oneShotOneKillEffect.ExpiresAt == ExpirationCondition.Immediately)
-                                    {
-                                        afterAction.Owner.RemoveAllQEffects(qe => qe.Id == GunslingerQEIDs.OneShotOneKill);
-                                    }
+                                    coverText = ". You don't have cover or concealment from any enemy, so no stealth was applied";
                                 }
-                            });
-                        }
-                    }
-                };
 
-                // Adds a bonus/penalty depending on the difference between Stealth and Perception
-                self.BonusToInitiative = (bonusToInitiative) =>
-                {
-                    if (self.Owner.HasFeat(GunslingerFeatNames.GunslingerSniperStealthInitiative))
-                    {
-                        int stealthAndPerceptionDifference = self.Owner.Skills.Get(Skill.Stealth) - self.Owner.Perception;
-                        if (stealthAndPerceptionDifference != 0)
+                                // Handles the hiding on stealth initiative rolls
+                                int stealthDC = startOfCombat.Owner.Initiative;
+                                foreach (Creature enemy in startOfCombat.Owner.Battle.AllCreatures.Where(creature => !startOfCombat.Owner.FriendOf(creature) && HiddenRules.HasCoverOrConcealment(startOfCombat.Owner, creature) && creature.Initiative < stealthDC))
+                                {
+                                    startOfCombat.Owner.DetectionStatus.HiddenTo.Add(enemy);
+                                }
+
+                                startOfCombat.Owner.Battle.Log(startOfCombat.Owner.Name + " has rolled Stealth for initiative" + coverText + (startOfCombat.Owner.DetectionStatus.EnemiesYouAreHiddenFrom.Count() > 0 ? "and is hidden to:\n" + string.Join(",", startOfCombat.Owner.DetectionStatus.EnemiesYouAreHiddenFrom) : "."));
+
+                                // If a Firearm or Crossbow is held the bonus damage is applied
+                                if (startOfCombat.Owner.HeldItems.Any(item => FirearmUtilities.IsItemFirearmOrCrossbow(item)))
+                                {
+                                    startOfCombat.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
+                                    {
+                                        Id = GunslingerQEIDs.OneShotOneKill,
+                                        AddExtraWeaponDamage = (item) =>
+                                        {
+                                            if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && item.WeaponProperties != null)
+                                            {
+                                                QEffect? oneShotOneKillEffect = startOfCombat.Owner.QEffects.FirstOrDefault(qe => qe.Id == GunslingerQEIDs.OneShotOneKill);
+                                                if (oneShotOneKillEffect != null)
+                                                {
+                                                    oneShotOneKillEffect.ExpiresAt = ExpirationCondition.Immediately;
+                                                }
+
+                                                return (DiceFormula.FromText("1d6", "One Shot, One Kill"), item.WeaponProperties.DamageKind);
+                                            }
+
+                                            return null;
+                                        },
+                                        AfterYouTakeAction = async (QEffect afterAction, CombatAction action) =>
+                                        {
+                                            QEffect? oneShotOneKillEffect = startOfCombat.Owner.QEffects.FirstOrDefault(qe => qe.Id == GunslingerQEIDs.OneShotOneKill);
+                                            if (oneShotOneKillEffect != null && oneShotOneKillEffect.ExpiresAt == ExpirationCondition.Immediately)
+                                            {
+                                                afterAction.Owner.RemoveAllQEffects(qe => qe.Id == GunslingerQEIDs.OneShotOneKill);
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        },
+                        BonusToInitiative = (bonusToInitiative) =>
                         {
-                            return new Bonus(stealthAndPerceptionDifference, BonusType.Untyped, "One Shot, One Kill (Stealth)", stealthAndPerceptionDifference > 0);
-                        }
-                    }
+                            if (bonusToInitiative.Owner.HasFeat(GunslingerFeatNames.GunslingerSniperStealthInitiative))
+                            {
+                                int stealthAndPerceptionDifference = bonusToInitiative.Owner.Skills.Get(Skill.Stealth) - bonusToInitiative.Owner.Perception;
+                                if (stealthAndPerceptionDifference != 0)
+                                {
+                                    return new Bonus(stealthAndPerceptionDifference, BonusType.Untyped, "One Shot, One Kill (Stealth)", stealthAndPerceptionDifference > 0);
+                                }
+                            }
 
-                    return null;
-                };
+                            return null;
+                        }
+                    });
+                }
             });
         }
 
@@ -591,6 +653,45 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
 
                 };
                 self.ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn;
+            });
+        }
+
+        public static void AddVanguardLivingFortificationLogic(Feat vanguardFeat, bool asDedication = false)
+        {
+            // Adds a permanent Start of combat effect for living fortification
+            vanguardFeat.WithOnCreature((CalculatedCharacterSheetValues sheet, Creature self) =>
+            {
+                if (!asDedication || sheet.HasFeat(GunslingerFeatNames.WayOfTheVanguardDedication))
+                {
+                    self.AddQEffect(new QEffect(vanguardFeat.BaseName, "+1/+2 Circumstance AC on Initiative")
+                    {
+                        StartOfCombat = async (startOfCombat) =>
+                        {
+                            if (startOfCombat.Owner.HeldItems.Any(item => FirearmUtilities.IsItemFirearmOrCrossbow(item)))
+                            {
+                                int bonus = startOfCombat.Owner.HeldItems.Any(item => item.HasTrait(FirearmTraits.Parry)) ? 2 : 1;
+                                startOfCombat.Owner.Battle.Log(startOfCombat.Owner.Name + " raises their weapon defensive. (Living Fortification)");
+                                startOfCombat.Owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
+                                {
+                                    Name = vanguardFeat.BaseName,
+                                    Description = $"+{bonus} to AC till the start of your next turn.",
+                                    Illustration = IllustrationName.Shield,
+                                    BonusToDefenses = (QEffect bonusToDefenses, CombatAction? action, Defense defense) =>
+                                    {
+                                        if (defense == Defense.AC)
+                                        {
+                                            return new Bonus(bonus, BonusType.Circumstance, "Living Fortification", true);
+                                        }
+
+                                        return null;
+                                    }
+                                });
+                            }
+
+                        },
+                        ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn
+                    });
+                }
             });
         }
 

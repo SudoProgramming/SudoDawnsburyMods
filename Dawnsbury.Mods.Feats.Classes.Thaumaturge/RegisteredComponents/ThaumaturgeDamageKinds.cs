@@ -12,5 +12,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Personal Antithesis Damage Kind
         /// </summary>
         public static readonly DamageKind PersonalAntithesis = ModManager.RegisterEnumMember<DamageKind>("Personal Antithesis");
+
+        /// <summary>
+        /// The Glimpse Vulnerability Damage Kind
+        /// </summary>
+        public static readonly DamageKind GlimpseVulnerability = ModManager.RegisterEnumMember<DamageKind>("Glimpse Vulnerability");
     }
 }

@@ -34,6 +34,21 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         public static readonly Trait AdeptImplement = ModManager.RegisterTrait("AdeptImplement", new TraitProperties("Adept Implement", false));
 
         /// <summary>
+        /// The Tome Skill trait
+        /// </summary>
+        public static readonly Trait TomeSkill = ModManager.RegisterTrait("TomeSkill", new TraitProperties("Tome Skill", false));
+
+        /// <summary>
+        /// The Primary Tome Skill trait
+        /// </summary>
+        public static readonly Trait PrimaryTomeSkill = ModManager.RegisterTrait("PrimaryTomeSkill", new TraitProperties("Primary Tome Skill", false));
+
+        /// <summary>
+        /// The Secondary Tome Skill trait
+        /// </summary>
+        public static readonly Trait SecondaryTomeSkill = ModManager.RegisterTrait("SecondaryTomeSkill", new TraitProperties("Secondary Tome Skill", false));
+
+        /// <summary>
         /// The Mirror Clone Immunity trait
         /// </summary>
         public static readonly Trait MirrorCloneImmunity = ModManager.RegisterTrait("Mirror Clone Immunity", new TraitProperties("Mirror Clone Immunity", false));

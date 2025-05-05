@@ -396,6 +396,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                     {
                                         return "Item is already loaded";
                                     }
+                                    else if (!restrictionOwner.Battle.AllCreatures.Any(cr => cr.EnemyOf(restrictionOwner) && cr.Occupies.FogOfWar != FogOfWar.Blackened && HiddenRules.CountsAsHavingCoverOrConcealment(restrictionOwner, cr)))
+                                    {
+                                        return "You don't have cover or concealment from any enemy.";
+                                    }
                                     return null;
                                 });
                             }
@@ -455,6 +459,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                             // If you are rolling stealth for initiative effects have to be applied
                             if (startOfCombat.Owner.HasFeat(GunslingerFeatNames.GunslingerSniperStealthInitiative))
                             {
+                                string coverText = string.Empty;
+                                if (!startOfCombat.Owner.Battle.AllCreatures.Any(cr => cr.EnemyOf(startOfCombat.Owner) && cr.Occupies.FogOfWar != FogOfWar.Blackened && HiddenRules.CountsAsHavingCoverOrConcealment(startOfCombat.Owner, cr)))
+                                {
+                                    coverText = ". You don't have cover or concealment from any enemy, so no stealth was applied";
+                                }
+
                                 // Handles the hiding on stealth initiative rolls
                                 int stealthDC = startOfCombat.Owner.Initiative;
                                 foreach (Creature enemy in startOfCombat.Owner.Battle.AllCreatures.Where(creature => !startOfCombat.Owner.FriendOf(creature) && HiddenRules.HasCoverOrConcealment(startOfCombat.Owner, creature) && creature.Initiative < stealthDC))
@@ -462,7 +472,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                     startOfCombat.Owner.DetectionStatus.HiddenTo.Add(enemy);
                                 }
 
-                                startOfCombat.Owner.Battle.Log(startOfCombat.Owner.Name + " has rolled Stealth for initiative" + (startOfCombat.Owner.DetectionStatus.EnemiesYouAreHiddenFrom.Count() > 0 ? "and is hidden to:\n" + string.Join(",", startOfCombat.Owner.DetectionStatus.EnemiesYouAreHiddenFrom) : "."));
+                                startOfCombat.Owner.Battle.Log(startOfCombat.Owner.Name + " has rolled Stealth for initiative" + coverText + (startOfCombat.Owner.DetectionStatus.EnemiesYouAreHiddenFrom.Count() > 0 ? "and is hidden to:\n" + string.Join(",", startOfCombat.Owner.DetectionStatus.EnemiesYouAreHiddenFrom) : "."));
 
                                 // If a Firearm or Crossbow is held the bonus damage is applied
                                 if (startOfCombat.Owner.HeldItems.Any(item => FirearmUtilities.IsItemFirearmOrCrossbow(item)))

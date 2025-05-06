@@ -77,13 +77,14 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Catfolk
 
             // Creates the base Ratfolk ancestry selection feat and adds the logic for the Sharp Teeth base feature
             AncestrySelectionFeat catfolkFeat = new AncestrySelectionFeat(CatfolkFeatNames.Catfolk,
-                "Catfolk are highly social, feline humanoids prone to curiosity and wandering.\n\nCurious and gregarious wanderers, catfolk combine the features of felines and humanoids in both appearance and temperament. They enjoy learning new things, collecting new tales and trinkets, and ensuring their loved ones are safe and happy. Catfolk view themselves as the chosen guardians of natural places in the world and are often recklessly brave, even in the face of overwhelming opposition. They believe that strong communities, breadth of experience, and continual self-improvement aid them in this fight.",
+                "Catfolk are highly social, feline humanoids prone to curiosity and wandering.\n\nCurious and gregarious wanderers, catfolk combine the features of felines and humanoids in both appearance and temperament. They enjoy learning new things, collecting new tales and trinkets, and ensuring their loved ones are safe and happy. Catfolk view themselves as the chosen guardians of natural places in the world and are often recklessly brave, even in the face of overwhelming opposition. They believe that strong communities, breadth of experience, and continual self-improvement aid them in this fight.\n\n{b}Stable Trip{/b} You don't fall prone when you roll a Critical Failure on a Trip check.",
                 [CatfolkTraits.Catfolk, Trait.Humanoid],
                 8,
                 5,
                 [new EnforcedAbilityBoost(Ability.Dexterity), new EnforcedAbilityBoost(Ability.Charisma), new FreeAbilityBoost()],
                 [clawedCatfolkFeat, flexibleCatfolkFeat, jungleCatfolkFeat, nineLivesCatfolkFeat, sharpEaredCatfolkFeat, winterCatfolkFeat])
                 .WithAbilityFlaw(Ability.Wisdom);
+            AddStableTripLogic(catfolkFeat);
             yield return catfolkFeat;
 
             // Level 1 Ancestry Feats
@@ -148,11 +149,44 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Catfolk
             AddWellGroomedLogic(wellGroomedFeat);
             yield return wellGroomedFeat;
 
-            // Creates and adds the logic for the Well-Groomed Feat
-            TrueFeat focusedCatNapFeat = new TrueFeat(CatfolkFeatNames.FocusedCatNap, 5, "You get even more out of your naps.", "TODO", [CatfolkTraits.Catfolk]);
-            focusedCatNapFeat.WithPrerequisite(CatfolkFeatNames.CatNap, "Requires Cat Nap");
-            AddFocusedCatNapLogic(focusedCatNapFeat);
-            yield return focusedCatNapFeat;
+            // Creates and adds the logic for the Comfortable Cat Nap Feat
+            TrueFeat comfortableCatNapFeat = new TrueFeat(CatfolkFeatNames.ComfortableCatNap, 5, "You get even more out of your naps.", "The first encounter after each long rest, you gain double the amount of temporary HP from Cat Nap.", [CatfolkTraits.Catfolk]);
+            comfortableCatNapFeat.WithPrerequisite(CatfolkFeatNames.CatNap, "Comfortable Cat Nap");
+            AddComfortableCatNapLogic(comfortableCatNapFeat);
+            yield return comfortableCatNapFeat;
+        }
+
+        /// <summary>
+        /// Adds the Stable Trip Logic
+        /// </summary>
+        /// <param name="catfolkFeat">The catfolk feat</param>
+        public static void AddStableTripLogic(AncestrySelectionFeat catfolkFeat)
+        {
+            catfolkFeat.WithPermanentQEffect("You don't fall prone from Critical Failures when Tripping.", delegate (QEffect self)
+            {
+                self.Name = "Stable Trip";
+                self.YouBeginAction = async (QEffect youBeginAction, CombatAction action) =>
+                {
+                    if (action.ActionId == ActionId.Trip)
+                    {
+                        youBeginAction.Owner.AddQEffect(new QEffect()
+                        {
+                            Id = CatfolkQEIDs.StableTrip
+                        });
+                    }
+                };
+                self.YouAcquireQEffect = (QEffect effectGotten, QEffect acquiredQEffect) =>
+                {
+                    Creature owner = effectGotten.Owner;
+                    if (owner.HasEffect(CatfolkQEIDs.StableTrip) && acquiredQEffect.Id == QEffectId.Prone)
+                    {
+                        owner.RemoveAllQEffects(qe => qe.Id == CatfolkQEIDs.StableTrip);
+                        return null;
+                    }
+
+                    return acquiredQEffect;
+                };
+            });
         }
 
         /// <summary>
@@ -262,7 +296,15 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Catfolk
             {
                 self.StartOfCombat = async (QEffect startOfCombat) =>
                 {
-                    startOfCombat.Owner.GainTemporaryHP(startOfCombat.Owner.Level);
+                    Creature owner = startOfCombat.Owner;
+                    int tempHPAmount = owner.Level;
+                    if (owner.HasFeat(CatfolkFeatNames.ComfortableCatNap) && !owner.PersistentUsedUpResources.UsedUpActions.Contains("Comfortable Cat Nap"))
+                    {
+                        owner.PersistentUsedUpResources.UsedUpActions.Add("Comfortable Cat Nap");
+                        tempHPAmount = 2 * tempHPAmount;
+                    }
+
+                    owner.GainTemporaryHP(tempHPAmount);
                 };
             });
         }
@@ -563,12 +605,12 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Catfolk
         }
 
         /// <summary>
-        /// Adds the Focused Cat Nap Logic
+        /// Adds the Comfortable Cat Nap Logic
         /// </summary>
-        /// <param name="focusedCatNapFeat">The Focused Cat Nap feat</param>
-        public static void AddFocusedCatNapLogic(TrueFeat focusedCatNapFeat)
+        /// <param name="comfortableCatNapFeat">The Comfortable Cat Nap feat</param>
+        public static void AddComfortableCatNapLogic(TrueFeat comfortableCatNapFeat)
         {
-            focusedCatNapFeat.WithPermanentQEffect("", delegate (QEffect self)
+            comfortableCatNapFeat.WithPermanentQEffect("More temp HP from Cat Nap after a long rest.", delegate (QEffect self)
             {
             });
         }

@@ -99,8 +99,8 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Catfolk.RegisteredComponents
         public static readonly FeatName WellGroomed = ModManager.RegisterFeatName("Well-Groomed", "Well-Groomed");
 
         /// <summary>
-        /// The Focused Cat Nap ancestry feat name
+        /// The Comfortable Cat Nap ancestry feat name
         /// </summary>
-        public static readonly FeatName FocusedCatNap = ModManager.RegisterFeatName("Focused Cat Nap", "Focused Cat Nap");
+        public static readonly FeatName ComfortableCatNap = ModManager.RegisterFeatName("Comfortable Cat Nap", "Comfortable Cat Nap");
     }
 }

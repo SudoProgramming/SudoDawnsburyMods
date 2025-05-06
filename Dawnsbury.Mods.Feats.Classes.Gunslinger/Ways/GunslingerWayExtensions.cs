@@ -155,6 +155,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                     // Prompts for reaction, then has the user select a tile closer to the enemy then strides towards it.
                                     if (await owner.Battle.AskForConfirmation(owner, IllustrationName.FreeAction, "Stride as a free action towards a creature?", "Yes"))
                                     {
+                                        owner.AddQEffect(new QEffect()
+                                        {
+                                            PreventTakingAction = (CombatAction action) =>
+                                            {
+                                                if (action.ActionId == ActionId.Delay)
+                                                {
+                                                    return "Used Into the Fray this turn.";
+                                                }
+
+                                                return null;
+                                            }
+                                        });
                                         Tile? tileToStrideTo = await GetTileCloserToEnemy(owner, "Stride towards the selected enemy or right-click to cancel.", owner.HasEffect(QEffectId.Prone));
                                         if (tileToStrideTo != null)
                                         {
@@ -298,6 +310,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                 {
                                     if (await owner.Battle.AskForConfirmation(owner, IllustrationName.FreeAction, "Step up to 10 ft as a free action?", "Yes"))
                                     {
+                                        owner.AddQEffect(new QEffect()
+                                        {
+                                            PreventTakingAction = (CombatAction action) =>
+                                            {
+                                                if (action.ActionId == ActionId.Delay)
+                                                {
+                                                    return "Used Ten Paces this turn.";
+                                                }
+
+                                                return null;
+                                            }
+                                        });
                                         Tile? tileToStepTo = await GetStepableTileWithinRange(owner, "Choose which tile to step to or right-click to cancel.", owner.HasEffect(QEffectId.Prone) ? 1 : 2);
                                         if (tileToStepTo != null)
                                         {

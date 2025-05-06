@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dawnsbury.Mods.Variant.Ance
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dawnsbury.Mods.Feats.Classes.Thaumaturge", "Dawnsbury.Mods.Feats.Classes.Thaumaturge\Dawnsbury.Mods.Feats.Classes.Thaumaturge.csproj", "{23E6FC8C-6667-4C67-A79F-7FB1198D745C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dawnsbury.Mods.Feats.Ancestries.Catfolk", "Dawnsbury.Mods.Feats.Ancestries.Catfolk\Dawnsbury.Mods.Feats.Ancestries.Catfolk.csproj", "{3817FF14-269F-45F5-9597-4C63FE17F87E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{23E6FC8C-6667-4C67-A79F-7FB1198D745C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23E6FC8C-6667-4C67-A79F-7FB1198D745C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23E6FC8C-6667-4C67-A79F-7FB1198D745C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3817FF14-269F-45F5-9597-4C63FE17F87E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3817FF14-269F-45F5-9597-4C63FE17F87E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3817FF14-269F-45F5-9597-4C63FE17F87E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3817FF14-269F-45F5-9597-4C63FE17F87E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

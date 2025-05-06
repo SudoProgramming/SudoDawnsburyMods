@@ -1354,7 +1354,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 {
                                     void HandleWandAdeptEffect(DamageKind damageKind, Illustration wandIllustration, Creature attacker, Creature defender, CheckResult result)
                                     {
-                                        if (attacker.HasFeat(ThaumaturgeFeatNames.WandAdept))
+                                        if (attacker.HasFeat(ThaumaturgeFeatNames.WandAdept) && result <= CheckResult.Failure)
                                         {
                                             QEffect adeptEffect = new QEffect();
                                             switch (damageKind)

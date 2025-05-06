@@ -155,7 +155,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                     // Prompts for reaction, then has the user select a tile closer to the enemy then strides towards it.
                                     if (await owner.Battle.AskForConfirmation(owner, IllustrationName.FreeAction, "Stride as a free action towards a creature?", "Yes"))
                                     {
-                                        owner.AddQEffect(new QEffect()
+                                        owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
                                         {
                                             PreventTakingAction = (CombatAction action) =>
                                             {
@@ -310,7 +310,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                 {
                                     if (await owner.Battle.AskForConfirmation(owner, IllustrationName.FreeAction, "Step up to 10 ft as a free action?", "Yes"))
                                     {
-                                        owner.AddQEffect(new QEffect()
+                                        owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
                                         {
                                             PreventTakingAction = (CombatAction action) =>
                                             {

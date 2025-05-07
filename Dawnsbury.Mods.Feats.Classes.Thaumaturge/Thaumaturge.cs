@@ -1786,6 +1786,20 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         }
                     }
                 };
+                self.StartOfCombatBeforeOpeningCutscene = async (QEffect startOfPreCutscene) =>
+                {
+                    Creature self = startOfPreCutscene.Owner;
+                    List<Item> allItems = self.HeldItems.Concat(self.CarriedItems).ToList();
+                    foreach (Item implement in allItems.Where(item => item.HasTrait(ThaumaturgeTraits.Implement) && item.StoredItems.Count == 1))
+                    {
+                        Item scroll = implement.StoredItems[0];
+                        if (scroll.ScrollProperties?.Spell.CombatActionSpell.WhenCombatBegins != null)
+                        {
+                            scroll.Traits.Add(ThaumaturgeTraits.DuplicatedStartOfCombatScroll);
+                            self.AddHeldItem(scroll);
+                        }
+                    }
+                };
                 self.StartOfCombat = async (QEffect startOfCombat) =>
                 {
                     Creature self = startOfCombat.Owner;
@@ -1821,6 +1835,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     if (didWin)
                     {
                         Creature owner = endOfCombat.Owner;
+                        owner.HeldItems.RemoveAll(item => item.HasTrait(ThaumaturgeTraits.DuplicatedStartOfCombatScroll));
                         foreach (QEffect scrollAndImplementEffect in owner.QEffects.Where(qe => qe.Id == ThaumaturgeQEIDs.HeldScrollAndImplement))
                         {
                             if (scrollAndImplementEffect != null && scrollAndImplementEffect.Tag != null && scrollAndImplementEffect.Tag is ImplementAndHeldItem implementAndHeldItem)
@@ -1841,6 +1856,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             }
                         }
                     }
+                };
+                self.StartOfYourPrimaryTurn = async (QEffect startOfTurn, Creature owner) =>
+                {
+                    owner.HeldItems.RemoveAll(item => item.HasTrait(ThaumaturgeTraits.DuplicatedStartOfCombatScroll));
                 };
                 self.ProvideActionIntoPossibilitySection = (QEffect scrollThaumaturgyEffect, PossibilitySection possibilitySection) =>
                 {

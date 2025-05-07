@@ -2,6 +2,7 @@
 using Dawnsbury.Auxiliary;
 using Dawnsbury.Campaign.Encounters;
 using Dawnsbury.Core;
+using Dawnsbury.Core.Animations;
 using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.CharacterBuilder.AbilityScores;
 using Dawnsbury.Core.CharacterBuilder.Feats;
@@ -1608,49 +1609,94 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     string fakeOutTargetTextAddition = (creaturesAttacked.Contains(defender)) ? " (+1 circumstance bonus to this)" : string.Empty;
                                     if (action.HasTrait(Trait.Attack) && await creature.Battle.AskToUseReaction(ally, "Make an attack roll to Aid the triggering attack." + fakeOutTargetTextAddition))
                                     {
-                                        // Builds the strike for the aid strike
-                                        CombatAction aidStrike = new CombatAction(ally, new SimpleIllustration(IllustrationName.None), "Aid Strike (" + mainWeapon.Name + ")", [], "{b}Critical Success{/b} Your ally gains a +2 circumstance bonus to the triggering action.\n\n\"{b}Success{/b} Your ally gains a +1 circumstance bonus to the triggering action.\n\n\"{b}Critical Failure{/b} Your ally gains a -1 circumstance penalty to the triggering action.\n\n", Target.Ranged(mainWeapon.WeaponProperties.MaximumRange));
+                                        CombatAction aidStrike = ally.CreateStrike(mainWeapon);
                                         aidStrike.ActionCost = 0;
+                                        aidStrike.ProjectileKind = ProjectileKind.None;
+                                        aidStrike.WithSoundEffect(ally.HasTrait(Trait.Female) ? SfxName.Intimidate : SfxName.MaleIntimidate);
+                                        aidStrike.Name = "Aid Strike (" + mainWeapon.Name + ")";
                                         aidStrike.Item = mainWeapon;
-                                        aidStrike.Traits.CombatAction = aidStrike;
                                         aidStrike.ChosenTargets = action.ChosenTargets;
-                                        CalculatedNumberProducer attackCheck = Checks.Attack(mainWeapon);
-                                        attackCheck.WithExtraBonus((Func<CombatAction, Creature, Creature?, Bonus?>)((combatAction, demoralizer, target) => ((creaturesAttacked.Contains(defender)) ? new Bonus(1, BonusType.Circumstance, "Attacked last round") : (Bonus)null)));
-                                        aidStrike.WithActiveRollSpecification(new ActiveRollSpecification(attackCheck, Checks.FlatDC(15)));
+                                        aidStrike.StrikeModifiers.AdditionalBonusesToAttackRoll = [(creaturesAttacked.Contains(defender)) ? new Bonus(1, BonusType.Circumstance, "Attacked last round") : null];
+                                        aidStrike.WithActiveRollSpecification(new ActiveRollSpecification(Checks.Attack(mainWeapon, ally.Actions.AttackedThisManyTimesThisTurn), Checks.FlatDC(15)));
+                                        aidStrike.EffectOnOneTarget = null;
+                                        aidStrike.EffectOnChosenTargets = null;
                                         aidStrike.WithEffectOnEachTarget(async delegate (CombatAction aidAction, Creature attacker, Creature defender, CheckResult result)
                                         {
+                                            QEffect createAidQEffect(int bonusAmount)
+                                            {
+                                                return new QEffect("Aid", $"You gain a {(bonusAmount < 1 ? "-" : "+")}{bonusAmount} Circumstance bonus to the next attack roll.")
+                                                {
+                                                    BonusToAttackRolls = (QEffect bonusToAttackRoll, CombatAction action, Creature? creature) =>
+                                                    {
+                                                        return new Bonus(bonusAmount, BonusType.Circumstance, "Aid", bonusAmount >= 0);
+                                                    },
+                                                    AfterYouMakeAttackRoll = (QEffect afterAttackRoll, CheckBreakdownResult result) =>
+                                                    {
+                                                        afterAttackRoll.ExpiresAt = ExpirationCondition.Immediately;
+                                                    },
+                                                    Illustration = IllustrationName.GenericCombatManeuver
+                                                };
+                                            }
+
                                             // Depending on the attacks result the original attacker gains a bonus
                                             switch (result)
                                             {
                                                 case CheckResult.CriticalSuccess:
-                                                    beforeAttackRoll.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
-                                                    {
-                                                        BonusToAttackRolls = (QEffect bonusToAttackRoll, CombatAction action, Creature? creature) =>
-                                                        {
-                                                            return new Bonus(2, BonusType.Circumstance, "Aid", true);
-                                                        }
-                                                    });
+                                                    beforeAttackRoll.Owner.AddQEffect(createAidQEffect(2));
                                                     break;
                                                 case CheckResult.Success:
-                                                    beforeAttackRoll.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
-                                                    {
-                                                        BonusToAttackRolls = (QEffect bonusToAttackRoll, CombatAction action, Creature? creature) =>
-                                                        {
-                                                            return new Bonus(1, BonusType.Circumstance, "Aid", true);
-                                                        }
-                                                    });
+                                                    beforeAttackRoll.Owner.AddQEffect(createAidQEffect(1));
                                                     break;
                                                 case CheckResult.CriticalFailure:
-                                                    beforeAttackRoll.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
-                                                    {
-                                                        BonusToAttackRolls = (QEffect bonusToAttackRoll, CombatAction action, Creature? creature) =>
-                                                        {
-                                                            return new Bonus(-1, BonusType.Circumstance, "Aid", false);
-                                                        }
-                                                    });
+                                                    beforeAttackRoll.Owner.AddQEffect(createAidQEffect(-1));
                                                     break;
                                             }
                                         });
+
+
+                                        //// Builds the strike for the aid strike
+                                        //CombatAction aidStrike = new CombatAction(ally, new SimpleIllustration(IllustrationName.None), "Aid Strike (" + mainWeapon.Name + ")", [Trait.Ranged], "{b}Critical Success{/b} Your ally gains a +2 circumstance bonus to the triggering action.\n\n\"{b}Success{/b} Your ally gains a +1 circumstance bonus to the triggering action.\n\n\"{b}Critical Failure{/b} Your ally gains a -1 circumstance penalty to the triggering action.\n\n", Target.Ranged(mainWeapon.WeaponProperties.MaximumRange));
+                                        //aidStrike.ActionCost = 0;
+                                        //aidStrike.Item = mainWeapon;
+                                        //aidStrike.Traits.CombatAction = aidStrike;
+                                        //aidStrike.ChosenTargets = action.ChosenTargets;
+                                        //CalculatedNumberProducer attackCheck = Checks.Attack(mainWeapon);
+                                        //attackCheck.WithExtraBonus((Func<CombatAction, Creature, Creature?, Bonus?>)((combatAction, demoralizer, target) => ((creaturesAttacked.Contains(defender)) ? new Bonus(1, BonusType.Circumstance, "Attacked last round") : (Bonus)null)));
+                                        //aidStrike.WithActiveRollSpecification(new ActiveRollSpecification(attackCheck, Checks.FlatDC(15)));
+                                        //aidStrike.WithEffectOnEachTarget(async delegate (CombatAction aidAction, Creature attacker, Creature defender, CheckResult result)
+                                        //{
+                                        //    // Depending on the attacks result the original attacker gains a bonus
+                                        //    switch (result)
+                                        //    {
+                                        //        case CheckResult.CriticalSuccess:
+                                        //            beforeAttackRoll.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                        //            {
+                                        //                BonusToAttackRolls = (QEffect bonusToAttackRoll, CombatAction action, Creature? creature) =>
+                                        //                {
+                                        //                    return new Bonus(2, BonusType.Circumstance, "Aid", true);
+                                        //                }
+                                        //            });
+                                        //            break;
+                                        //        case CheckResult.Success:
+                                        //            beforeAttackRoll.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                        //            {
+                                        //                BonusToAttackRolls = (QEffect bonusToAttackRoll, CombatAction action, Creature? creature) =>
+                                        //                {
+                                        //                    return new Bonus(1, BonusType.Circumstance, "Aid", true);
+                                        //                }
+                                        //            });
+                                        //            break;
+                                        //        case CheckResult.CriticalFailure:
+                                        //            beforeAttackRoll.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                        //            {
+                                        //                BonusToAttackRolls = (QEffect bonusToAttackRoll, CombatAction action, Creature? creature) =>
+                                        //                {
+                                        //                    return new Bonus(-1, BonusType.Circumstance, "Aid", false);
+                                        //                }
+                                        //            });
+                                        //            break;
+                                        //    }
+                                        //});
 
                                         await aidStrike.AllExecute();
                                     }

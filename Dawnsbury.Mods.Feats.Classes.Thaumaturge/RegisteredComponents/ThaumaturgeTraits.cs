@@ -57,5 +57,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Temporary Ignore One Hand Plus trait
         /// </summary>
         public static readonly Trait TemporaryIgnoreOneHandPlus = ModManager.RegisterTrait("Temporary Ignore One Hand Plus", new TraitProperties("Temporary Ignore One Hand Plus", false));
+
+        /// <summary>
+        /// The Duplicated Start Of Combat Scroll trait
+        /// </summary>
+        public static readonly Trait DuplicatedStartOfCombatScroll = ModManager.RegisterTrait("Duplicated Start Of Combat Scroll", new TraitProperties("Duplicated Start Of Combat Scroll", false));
     }
 }

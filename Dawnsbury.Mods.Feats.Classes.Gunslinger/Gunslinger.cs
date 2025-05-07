@@ -1615,6 +1615,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         aidStrike.WithSoundEffect(ally.HasTrait(Trait.Female) ? SfxName.Intimidate : SfxName.MaleIntimidate);
                                         // HACK: Since Aid is not in base DD, this name should not be changed for mod support
                                         aidStrike.Name = "Aid Strike (" + mainWeapon.Name + ")";
+                                        aidStrike.Traits.Add(Trait.ReactiveAttack);
                                         aidStrike.Item = mainWeapon;
                                         aidStrike.ChosenTargets = action.ChosenTargets;
                                         aidStrike.StrikeModifiers.AdditionalBonusesToAttackRoll = [(creaturesAttacked.Contains(defender)) ? new Bonus(1, BonusType.Circumstance, "Attacked last round") : null];

@@ -151,7 +151,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
                     sharpTeethTraits.Add(Trait.Backstabber);
                 }
 
-                self.AdditionalUnarmedStrike = new Item(IllustrationName.Jaws, "Ratfolk Sharp Teeth", sharpTeethTraits.ToArray())
+                self.AdditionalUnarmedStrike = new Item(IllustrationName.Jaws, "Jaws", sharpTeethTraits.ToArray())
                     .WithWeaponProperties(new WeaponProperties(teethDamage, DamageKind.Piercing));
             });
         }

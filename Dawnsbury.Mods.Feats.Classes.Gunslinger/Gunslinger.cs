@@ -135,7 +135,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 {
                     // Adds the Singular Expertise base class feature, adds a Level 1 Gunslinger feat selection, and adds the Will Expert profeciency at level 3
                     sheet.AddFeat(singularExpertiseFeat, null);
-                    sheet.AddSelectionOption(new SingleFeatSelectionOption("GunslingerFeat1", "Gunslinger feat", 1, (Feat ft) => ft.HasTrait(GunslingerTraits.Gunslinger)));
+                    sheet.AddSelectionOption(new SingleFeatSelectionOption("1stGunslingerFeat", "Gunslinger feat", 1, (Feat ft) => ft.HasTrait(GunslingerTraits.Gunslinger)));
                     sheet.AddAtLevel(3, delegate (CalculatedCharacterSheetValues values)
                     {
                         values.SetProficiency(Trait.Will, Proficiency.Expert);

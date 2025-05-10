@@ -28,6 +28,7 @@ using Dawnsbury.Core.Tiles;
 using Dawnsbury.Display;
 using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Display.Text;
+using Dawnsbury.IO;
 using Dawnsbury.Modding;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.Enums;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents;
@@ -1619,7 +1620,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         aidStrike.Item = mainWeapon;
                                         aidStrike.ChosenTargets = action.ChosenTargets;
                                         aidStrike.StrikeModifiers.AdditionalBonusesToAttackRoll = [(creaturesAttacked.Contains(defender)) ? new Bonus(1, BonusType.Circumstance, "Attacked last round") : null];
-                                        aidStrike.WithActiveRollSpecification(new ActiveRollSpecification(Checks.Attack(mainWeapon, ally.Actions.AttackedThisManyTimesThisTurn), Checks.FlatDC(15)));
+                                        aidStrike.WithActiveRollSpecification(new ActiveRollSpecification(Checks.Attack(mainWeapon, ally.Actions.AttackedThisManyTimesThisTurn), Checks.FlatDC((PlayerProfile.Instance.IsBooleanOptionEnabled("MoreBasicActions.AidDCIs15") ? 15 : 20))));
                                         aidStrike.EffectOnOneTarget = null;
                                         aidStrike.EffectOnChosenTargets = null;
                                         aidStrike.WithEffectOnEachTarget(async delegate (CombatAction aidAction, Creature attacker, Creature defender, CheckResult result)

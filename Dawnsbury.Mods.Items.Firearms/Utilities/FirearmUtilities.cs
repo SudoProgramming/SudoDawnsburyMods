@@ -72,7 +72,7 @@ namespace Dawnsbury.Mods.Items.Firearms.Utilities
             }
             else
             {
-                await self.CreateReload(item).WithExtraTrait(Trait.DoesNotProvoke).WithActionCost(0).WithItem(item).AllExecute();
+                await self.CreateReload(item).WithExtraTrait(Trait.DoesNotBreakStealth).WithExtraTrait(Trait.DoesNotProvoke).WithActionCost(0).WithItem(item).AllExecute();
             }
         }
 

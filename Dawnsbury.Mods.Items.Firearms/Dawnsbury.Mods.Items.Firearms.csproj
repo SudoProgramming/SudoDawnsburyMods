@@ -34,6 +34,7 @@
 	  <None Remove="FirearmsAssets\LongAirRepeater.png" />
 	  <None Remove="FirearmsAssets\MithralTree.png" />
 	  <None Remove="FirearmsAssets\Pepperbox.png" />
+	  <None Remove="FirearmsAssets\ReinforcedStock.png" />
 	  <None Remove="FirearmsAssets\SlidePistol.png" />
 	  <None Remove="FirearmsAssets\UnknownGun.png" />
 	</ItemGroup>
@@ -99,6 +100,9 @@
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  <Content Include="FirearmsAssets\Pepperbox.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="FirearmsAssets\ReinforcedStock.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  <Content Include="FirearmsAssets\SlidePistol.png">

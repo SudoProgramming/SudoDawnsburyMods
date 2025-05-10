@@ -99,9 +99,29 @@ namespace Dawnsbury.Mods.Items.Firearms.RegisteredComponents
         public static readonly Trait IgnoreScatter = ModManager.RegisterTrait("IgnoreScatter", new TraitProperties("IgnoreScatter", false));
 
         /// <summary>
+        /// Adds the Attached Weapon trait for actions
+        /// </summary>
+        public static readonly Trait AttachedWeapon = ModManager.RegisterTrait("Attached Weapon", new TraitProperties("Attached Weapon", false));
+
+        /// <summary>
         /// Adds the Bayonet trait for actions
         /// </summary>
         public static readonly Trait Bayonet = ModManager.RegisterTrait("Bayonet", new TraitProperties("Bayonet", false));
+
+        /// <summary>
+        /// Adds the Reinforced Stock trait for actions
+        /// </summary>
+        public static readonly Trait ReinforcedStock = ModManager.RegisterTrait("Reinforced Stock", new TraitProperties("Reinforced Stock", false));
+
+        /// <summary>
+        /// Adds the Firearm Stabalizer trait for actions
+        /// </summary>
+        public static readonly Trait FirearmStabalizer = ModManager.RegisterTrait("Firearm Stabalizer", new TraitProperties("Firearm Stabalizer", false));
+
+        /// <summary>
+        /// Adds the Tripod trait for actions
+        /// </summary>
+        public static readonly Trait Tripod = ModManager.RegisterTrait("Tripod", new TraitProperties("Tripod", false));
 
         /// <summary>
         /// Adds the Item Updated trait for actions

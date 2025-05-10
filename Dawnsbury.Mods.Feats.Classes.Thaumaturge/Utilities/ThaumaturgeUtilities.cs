@@ -208,7 +208,35 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                                     });
                                 }
 
-                                attacker.AddQEffect(new ExploitEffect(attacker, defender, isGlimpse, weakness: weakness, applyToAll: applyToAll));
+                                ExploitEffect exploitEffect = new ExploitEffect(attacker, defender, isGlimpse, weakness: weakness, applyToAll: applyToAll);
+                                QEffect applyEffect = new QEffect()
+                                {
+                                    Description = defender.Name,
+                                    Illustration = IllustrationName.GenericCombatManeuver,
+                                    StateCheck = async (QEffect stateCheck) =>
+                                    {
+                                        foreach (Creature creature in attacker.Battle.AllCreatures.Where(creature => !creature.FriendOf(attacker) && creature.BaseName == defender.BaseName))
+                                        {
+                                            if (!creature.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget) || (creature.FindQEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget)?.Tag is Creature a && a == attacker))
+                                            {
+                                                creature.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                                {
+                                                    Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
+                                                    Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
+                                                    Name = "Exploited Vulnerability",
+                                                    Description = "Exploited Weakness by " + attacker.Name + " - " + (weakness is SpecialResistance changed ? changed.Name : weakness.DamageKind.HumanizeLowerCase2()) + " " + weakness.Value,
+                                                    Tag = attacker
+                                                });
+                                            }
+                                        }
+                                    }
+                                };
+                                exploitEffect.WhenExpires = (QEffect expired) =>
+                                {
+                                    applyEffect.ExpiresAt = ExpirationCondition.Immediately;
+                                };
+                                attacker.AddQEffect(exploitEffect);
+                                attacker.AddQEffect(applyEffect);
                             }
                         }
                     }
@@ -252,8 +280,55 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                             });
 
                         }
-                        
-                        attacker.AddQEffect(new ExploitEffect(attacker, defender, isGlimpse, antithesisAmount: antithesisAmount, applyToAll: applyToAll));
+
+                        ExploitEffect exploitEffect = new ExploitEffect(attacker, defender, isGlimpse, antithesisAmount: antithesisAmount, applyToAll: applyToAll);
+                        QEffect applyEffect = new QEffect()
+                        {
+                            Illustration = IllustrationName.GenericCombatManeuver,
+                            Description = defender.Name,
+                            StateCheck = async (QEffect stateCheck) =>
+                            {
+                                if (applyToAll)
+                                {
+                                    foreach (Creature applyWeakness in attacker.Battle.AllCreatures.Where(creature => creature != defender && !creature.FriendOf(attacker) && creature.BaseName == defender.BaseName))
+                                    {
+                                        if (!applyWeakness.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget) || (applyWeakness.FindQEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget)?.Tag is Creature a && a == attacker))
+                                        {
+                                            applyWeakness.AddQEffect(new QEffect(ExpirationCondition.Never)
+                                            {
+                                                Id = ThaumaturgeQEIDs.ExploitVulnerabilityTarget,
+                                                Tag = attacker,
+                                                Illustration = ThaumaturgeModdedIllustrations.ExploitVulnerabilityBackground,
+                                                Name = "Exploited Vulnerability",
+                                                Description = "Exploited Weakness by " + attacker.Name + " - " + damageKind.HumanizeTitleCase2() + " " + antithesisAmount,
+                                                StateCheck = (QEffect stateCheck) =>
+                                                {
+                                                    Creature owner = stateCheck.Owner;
+                                                    if (owner.HasEffect(ThaumaturgeQEIDs.ExploitVulnerabilityTarget))
+                                                    {
+                                                        if (!owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == damageKind))
+                                                        {
+                                                            owner.WeaknessAndResistance.AddWeakness(damageKind, antithesisAmount);
+                                                        }
+                                                    }
+                                                    else if (owner.WeaknessAndResistance.Weaknesses.Any(weakness => weakness.DamageKind == damageKind))
+                                                    {
+                                                        owner.WeaknessAndResistance.Weaknesses.RemoveAll(weakness => weakness.DamageKind == damageKind);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        };
+                        exploitEffect.WhenExpires = (QEffect expired) =>
+                        {
+                            applyEffect.ExpiresAt = ExpirationCondition.Immediately;
+                        };
+                        attacker.AddQEffect(exploitEffect);
+                        attacker.AddQEffect(applyEffect);
+
                     }
                     else if (!isGlimpse && result == CheckResult.CriticalFailure)
                     {

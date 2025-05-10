@@ -1608,7 +1608,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                 {
                                     // Prompts the user to use the reaction for this effect
                                     string fakeOutTargetTextAddition = (creaturesAttacked.Contains(defender)) ? " (+1 circumstance bonus to this)" : string.Empty;
-                                    if (action.HasTrait(Trait.Attack) && await creature.Battle.AskToUseReaction(ally, "Make an attack roll to Aid the triggering attack." + fakeOutTargetTextAddition))
+                                    if (action.HasTrait(Trait.Attack) && !action.Name.StartsWith("Aid Strike") && ally.HasLineOfEffectTo(defender.Occupies) < CoverKind.Blocked && ally.DistanceTo(defender) <= mainWeapon.WeaponProperties?.RangeIncrement && await creature.Battle.AskToUseReaction(ally, "Make an attack roll to Aid the triggering attack." + fakeOutTargetTextAddition))
                                     {
                                         CombatAction aidStrike = ally.CreateStrike(mainWeapon);
                                         aidStrike.ActionCost = 0;

@@ -1624,8 +1624,34 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                         aidStrike.EffectOnChosenTargets = null;
                                         aidStrike.WithEffectOnEachTarget(async delegate (CombatAction aidAction, Creature attacker, Creature defender, CheckResult result)
                                         {
-                                            QEffect createAidQEffect(int bonusAmount)
+                                            QEffect createAidQEffect(CheckResult checkResult, Proficiency proficiency)
                                             {
+                                                int bonusAmount = 0;
+                                                switch (result)
+                                                {
+                                                    case CheckResult.CriticalSuccess:
+                                                        if (proficiency == Proficiency.Legendary)
+                                                        {
+                                                            bonusAmount = 4;
+                                                        }
+                                                        else if (proficiency == Proficiency.Master)
+                                                        {
+                                                            bonusAmount = 3;
+                                                        }
+                                                        else
+                                                        {
+                                                            bonusAmount = 2;
+                                                        }
+                                                        break;
+                                                    case CheckResult.Success:
+                                                        bonusAmount = 1;
+                                                        break;
+                                                    case CheckResult.CriticalFailure:
+                                                        bonusAmount = -1;
+                                                        break;
+                                                }
+
+
                                                 return new QEffect("Aid", $"You gain a {(bonusAmount < 1 ? "-" : "+")}{bonusAmount} Circumstance bonus to the next attack roll.")
                                                 {
                                                     BonusToAttackRolls = (QEffect bonusToAttackRoll, CombatAction action, Creature? creature) =>
@@ -1641,18 +1667,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                             }
 
                                             // Depending on the attacks result the original attacker gains a bonus
-                                            switch (result)
-                                            {
-                                                case CheckResult.CriticalSuccess:
-                                                    beforeAttackRoll.Owner.AddQEffect(createAidQEffect(2));
-                                                    break;
-                                                case CheckResult.Success:
-                                                    beforeAttackRoll.Owner.AddQEffect(createAidQEffect(1));
-                                                    break;
-                                                case CheckResult.CriticalFailure:
-                                                    beforeAttackRoll.Owner.AddQEffect(createAidQEffect(-1));
-                                                    break;
-                                            }
+                                            beforeAttackRoll.Owner.AddQEffect(createAidQEffect(result, beforeAttackRoll.Owner.Proficiencies.Get(mainWeapon.Traits)));
                                         });
 
 

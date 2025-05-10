@@ -471,7 +471,7 @@ namespace Dawnsbury.Mods.Items.Firearms
                 // Adds logic for ammo tracking on reload and fire while also cleaning up our upgraded fatal die
                 AfterYouTakeAction = async (QEffect cleanup, CombatAction action) =>
                 {
-                    if (action.Item == item)
+                    if (action.Item == item && !action.HasTrait(FirearmTraits.IgnoreDoubleBarrel))
                     {
                         // Handles the base reload from Dawnsbury and sets the remaining ammo back down to 1 since that reload is only possible on 0 ammo
                         if (action.ActionId == ActionId.Reload)

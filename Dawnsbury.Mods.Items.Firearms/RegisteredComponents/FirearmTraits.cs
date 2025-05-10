@@ -94,6 +94,11 @@ namespace Dawnsbury.Mods.Items.Firearms.RegisteredComponents
         public static readonly Trait IgnoreKickbackPenalty = ModManager.RegisterTrait("IgnoreKickbackPenalty", new TraitProperties("IgnoreKickbackPenalty", false));
 
         /// <summary>
+        /// Adds the Ignore Double Barrel trait for actions
+        /// </summary>
+        public static readonly Trait IgnoreDoubleBarrel = ModManager.RegisterTrait("IgnoreDoubleBarrel", new TraitProperties("IgnoreDoubleBarrel", false));
+
+        /// <summary>
         /// Adds the Ignore Scatter trait for actions
         /// </summary>
         public static readonly Trait IgnoreScatter = ModManager.RegisterTrait("IgnoreScatter", new TraitProperties("IgnoreScatter", false));

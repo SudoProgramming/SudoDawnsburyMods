@@ -1612,6 +1612,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                     {
                                         CombatAction aidStrike = ally.CreateStrike(mainWeapon);
                                         aidStrike.ActionCost = 0;
+                                        aidStrike.WithExtraTrait(FirearmTraits.IgnoreDoubleBarrel);
                                         aidStrike.ProjectileKind = ProjectileKind.None;
                                         aidStrike.WithSoundEffect(ally.HasTrait(Trait.Female) ? SfxName.Intimidate : SfxName.MaleIntimidate);
                                         // HACK: Since Aid is not in base DD, this name should not be changed for mod support

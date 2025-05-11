@@ -34,7 +34,7 @@ using static Dawnsbury.Delegates;
 namespace Dawnsbury.Mods.Feats.Ancestries.Catfolk
 {
     /// <summary>
-    /// The Ratfolk Ancestry
+    /// The Catfolk Ancestry
     /// </summary>
     public static class Catfolk
     {
@@ -56,7 +56,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Catfolk
             yield return flexibleCatfolkFeat;
 
             // Creates and adds the logic for the Jungle Catfolk heritage
-            HeritageSelectionFeat jungleCatfolkFeat = new HeritageSelectionFeat(CatfolkFeatNames.JungleCatfolk, "You’re descended from jungle stalkers and can move swiftly through difficult terrain.", "You ignore difficutl terrain and great difficult terrain.");
+            HeritageSelectionFeat jungleCatfolkFeat = new HeritageSelectionFeat(CatfolkFeatNames.JungleCatfolk, "You’re descended from jungle stalkers and can move swiftly through difficult terrain.", "You ignore difficult terrain and greater difficult terrain.");
             AddJungleCatfolkLogic(jungleCatfolkFeat);
             yield return jungleCatfolkFeat;
 
@@ -75,7 +75,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Catfolk
             AddWinterCatfolkLogic(winterCatfolkFeat);
             yield return winterCatfolkFeat;
 
-            // Creates the base Ratfolk ancestry selection feat and adds the logic for the Sharp Teeth base feature
+            // Creates the base Catfolk ancestry selection feat and adds the logic for the Sharp Teeth base feature
             AncestrySelectionFeat catfolkFeat = new AncestrySelectionFeat(CatfolkFeatNames.Catfolk,
                 "Catfolk are highly social, feline humanoids prone to curiosity and wandering.\n\nCurious and gregarious wanderers, catfolk combine the features of felines and humanoids in both appearance and temperament. They enjoy learning new things, collecting new tales and trinkets, and ensuring their loved ones are safe and happy. Catfolk view themselves as the chosen guardians of natural places in the world and are often recklessly brave, even in the face of overwhelming opposition. They believe that strong communities, breadth of experience, and continual self-improvement aid them in this fight.\n\n{b}Stable Trip{/b} You don't fall prone when you roll a Critical Failure on a Trip check.",
                 [CatfolkTraits.Catfolk, Trait.Humanoid],
@@ -178,9 +178,10 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Catfolk
                 self.YouAcquireQEffect = (QEffect effectGotten, QEffect acquiredQEffect) =>
                 {
                     Creature owner = effectGotten.Owner;
-                    if (owner.HasEffect(CatfolkQEIDs.StableTrip) && acquiredQEffect.Id == QEffectId.Prone)
+                    QEffect? stableTripEffect = owner.FindQEffect(CatfolkQEIDs.StableTrip);
+                    if (stableTripEffect != null && acquiredQEffect.Id == QEffectId.Prone)
                     {
-                        owner.RemoveAllQEffects(qe => qe.Id == CatfolkQEIDs.StableTrip);
+                        stableTripEffect.ExpiresAt = ExpirationCondition.Immediately;
                         return null;
                     }
 

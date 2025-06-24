@@ -894,7 +894,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                     foreach (Tile tile in tilesToSearch)
                                     {
                                         searchedTiles.Add(tile);
-                                        foreach (TileQEffect tileQEffect in tile.QEffects)
+                                        foreach (TileQEffect tileQEffect in tile.TileQEffects)
                                         {
                                             if (tileQEffect.SeekDC != 0)
                                             {

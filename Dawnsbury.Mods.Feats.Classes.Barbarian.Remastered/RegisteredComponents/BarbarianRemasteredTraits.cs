@@ -14,5 +14,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered.RegisteredComponents
         /// The Registered Giant Weapon Trait
         /// </summary>
         public static readonly Trait GiantWeaponTrait = ModManager.RegisterTrait("Giant Weapon");
+
+        public static readonly Trait TemporaryReachTrait = ModManager.RegisterTrait("Temporary Reach", new TraitProperties("Temporary Reach", false));
     }
 }

@@ -7,7 +7,9 @@ using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Core;
 using Dawnsbury.Core.Mechanics.Enumerations;
+using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core.Mechanics.Treasure;
+using Dawnsbury.Core.Possibilities;
 using Dawnsbury.Core.Roller;
 using Dawnsbury.Modding;
 using Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered.RegisteredComponents;
@@ -52,7 +54,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
             yield return new DragonInstinctFeat(ModManager.RegisterFeatName("Omen dragon"), DamageKind.Mental);
 
             // The Giant Instict Feat
-            yield return new Feat(BarbarianRemasteredFeatNames.GiantInstict, "Your rage gives you the raw power and size of a giant", "You can use weapons built for larger creature. While weilding any weapon you increase the additional damage from Rage from 2 to 6. All weapons you weild are considered large which leaves you clumsy 1 as you weild a weapon.", new List<Trait>(), null).WithOnCreature(delegate (Creature cr)
+            yield return new Feat(BarbarianRemasteredFeatNames.GiantInstict, "Your rage gives you the raw power and size of a giant", "You can use weapons built for larger creature. While weilding any weapon you increase the additional damage from Rage from 2 to 6. All weapons you weild are considered large which leaves you clumsy 1 as you weild a weapon.\n\n{i}Specialization ability{/i} — At level 7, the rage bonus increases from 6 to 10 if you are weilding a large weapon..", new List<Trait>(), null).WithOnCreature(delegate (Creature cr)
             {
                 cr.AddQEffect(new QEffect
                 {
@@ -77,11 +79,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
                             DiceFormula item3 = null;
                             if (attack.HasTrait(BarbarianRemasteredTraits.GiantWeaponTrait))
                             {
-                                item3 = DiceFormula.FromText((attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "3" : "6", (attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "Barbarian rage (giant & agile)" : "Barbarian rage (giant)");
+                                string agileRageDamage = (owner.Level < 7) ? "3" : "5";
+                                string normalRageDamage = (owner.Level < 7) ? "6" : "10";
+                                item3 = DiceFormula.FromText((attack.HasTrait(Trait.Agile)) ? agileRageDamage : normalRageDamage, (attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "Barbarian rage (giant & agile)" : "Barbarian rage (giant)");
                             }
                             else
                             {
-                                item3 = DiceFormula.FromText((attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "1" : "2", (attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "Barbarian rage (agile)" : "Barbarian rage");
+                                item3 = DiceFormula.FromText((attack.HasTrait(Trait.Agile)) ? "1" : "2", (attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "Barbarian rage (agile)" : "Barbarian rage");
                             }
                             
                             return (item3, damageTypeToUse);
@@ -120,6 +124,56 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
                     return null;
                 };
             });
+
+            yield return new TrueFeat(ModManager.RegisterFeatName("Giant's Stature"), 6, "Your reach grows in size.", "Your giant melee weapon gains reach if it doesn't already have it until you stop raging.", [Trait.Barbarian, Trait.Polymorph, Trait.Primal, Trait.Rage])
+                .WithActionCost(1)
+                .WithPrerequisite(BarbarianRemasteredFeatNames.GiantInstict, "Must have giant instict.")
+                .WithPermanentQEffect("Melee giant weapons gain reach.", delegate (QEffect qf)
+                {
+                    qf.ProvideMainAction = (QEffect mainAction) =>
+                    {
+                        return new ActionPossibility(new CombatAction(qf.Owner, IllustrationName.Rage, "Giant's Stature", [Trait.Polymorph, Trait.Primal, Trait.Rage], "Your giant melee weapon gains reach if it doesn't already have it until you stop raging.", Target.Self()
+                            .WithAdditionalRestriction((Creature user) =>
+                            {
+                                if (!user.HasEffect(QEffectId.Rage))
+                                {
+                                    return "Must be raging";
+                                }
+
+                                return null;
+                            }))
+                            .WithActionCost(1)
+                            .WithEffectOnSelf(async (Creature self) =>
+                            {
+                                self.AddQEffect(new QEffect("Giant's Stature", "Your giant weapon's gain reach while raging")
+                                {
+                                    Illustration = IllustrationName.Rage,
+                                    StateCheck = async (QEffect stateCheck) =>
+                                    {
+                                        Creature owner = stateCheck.Owner;
+                                        if (!owner.HasEffect(QEffectId.Rage))
+                                        {
+                                            stateCheck.ExpiresAt = ExpirationCondition.Immediately;
+                                        }
+                                        foreach (Item item in owner.HeldItems.Concat(owner.CarriedItems).Where(item => item.HasTrait(Trait.Melee) && item.HasTrait(BarbarianRemasteredTraits.GiantWeaponTrait) && !item.HasTrait(BarbarianRemasteredTraits.TemporaryReachTrait) && !item.HasTrait(Trait.Reach)))
+                                        {
+                                            item.Traits.Add(Trait.Reach);
+                                            item.Traits.Add(BarbarianRemasteredTraits.TemporaryReachTrait);
+                                        }
+                                    },
+                                    WhenExpires = (QEffect expires) =>
+                                    {
+                                        Creature owner = expires.Owner;
+                                        foreach (Item item in owner.HeldItems.Concat(owner.CarriedItems).Where(item => item.HasTrait(BarbarianRemasteredTraits.TemporaryReachTrait)))
+                                        {
+                                            item.Traits.Remove(Trait.Reach);
+                                            item.Traits.Remove(BarbarianRemasteredTraits.TemporaryReachTrait);
+                                        }
+                                    }
+                                });
+                            }));
+                    };
+                });
         }
 
         /// <summary>
@@ -233,7 +287,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
         private static void UpdateFuryInstict(Feat furyInstictFeat)
         {
             // Updates the Rules Text and adds the updated effect
-            furyInstictFeat.RulesText = "Increase the additional damage from Rage from 2 to 3. " + furyInstictFeat.RulesText;
+            furyInstictFeat.RulesText = "Increase the additional damage from Rage from 2 to 3. " + furyInstictFeat.RulesText.Replace("from +2 to +6.", "from +3 to +7.");
             furyInstictFeat.WithOnCreature(delegate (Creature cr)
             {
                 cr.AddQEffect(new QEffect
@@ -254,9 +308,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
                         Creature owner = attack.Owner;
                         if (owner.HasEffect(QEffectId.Rage) && BarbarianFeatsDb.DoesRageApplyToAction(attack) && attack.Item != null)
                         {
+                            string agileRangeDamage = (owner.Level < 7) ? "1" : "5";
+                            string normalDamage = (owner.Level < 7) ? "3" : "7";
                             List<DamageKind> list = attack.Item.DetermineDamageKinds();
                             DamageKind damageTypeToUse = defender.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(list);
-                            DiceFormula item3 = DiceFormula.FromText((attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "1" : "3", (attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "Barbarian rage (agile)" : "Barbarian rage");
+                            DiceFormula item3 = DiceFormula.FromText((attack.HasTrait(Trait.Agile)) ? agileRangeDamage : normalDamage, (attack.HasTrait(Trait.Unarmed) || attack.HasTrait(Trait.Agile)) ? "Barbarian rage (agile)" : "Barbarian rage");
                             return (item3, damageTypeToUse);
                         }
 

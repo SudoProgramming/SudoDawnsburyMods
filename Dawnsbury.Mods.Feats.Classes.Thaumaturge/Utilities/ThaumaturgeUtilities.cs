@@ -501,7 +501,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             {
                 foreach (Tile tile in targets.ChosenTiles)
                 {
-                    foreach (TileQEffect qeffect in tile.QEffects)
+                    foreach (TileQEffect qeffect in tile.TileQEffects)
                     {
                         if (qeffect.SeekDC != 0)
                         {

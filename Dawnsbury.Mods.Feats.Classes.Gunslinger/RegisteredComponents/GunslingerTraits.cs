@@ -9,6 +9,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents
     public static class GunslingerTraits
     {
         /// <summary>
+        /// Dummy trait for simple and matrial firearms and crossbows
+        /// </summary>
+        public static readonly Trait DummySimpleAndMartialProf = ModManager.RegisterTrait("DummySimpleAndMartialProf", new TraitProperties("DummySimpleAndMartialProf", false) { ProficiencyName = "simple and martial firearms and crossbows" });
+
+        /// <summary>
+        /// Dummy trait for advanced firearms and crossbows
+        /// </summary>
+        public static readonly Trait DummyAdvancedProf = ModManager.RegisterTrait("DummyAdvancedProf", new TraitProperties("DummyAdvancedProf", false) { ProficiencyName = "advanced firearms and crossbows" });
+
+        /// <summary>
         /// The Gunslinger class trait 
         /// </summary>
         public static readonly Trait Gunslinger = ModManager.RegisterTrait("Gunslinger", new TraitProperties("Gunslinger", relevant: true) { IsClassTrait = true });

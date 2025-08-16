@@ -33,6 +33,7 @@ using Dawnsbury.Modding;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.Enums;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents;
 using Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways;
+using Dawnsbury.Mods.Items.Firearms;
 using Dawnsbury.Mods.Items.Firearms.RegisteredComponents;
 using Dawnsbury.Mods.Items.Firearms.Utilities;
 using Microsoft.Xna.Framework;
@@ -89,13 +90,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             yield return new Feat(GunslingerFeatNames.AdvancedShooterFirearm, "You've dedicated your training to the most complex and weird firearms.", "You are a Master in advanced firearms", [], null)
                 .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
                 {
-                    sheet.SetProficiency(FirearmTraits.AdvancedFirearm, Proficiency.Master);
+                    sheet.Proficiencies.Set([Trait.Firearm, Trait.Advanced], Proficiency.Master);
                 });
 
             yield return new Feat(GunslingerFeatNames.AdvancedShooterCrossbow, "You've dedicated your training to the most complex and weird crossbow.", "You are a Master in advanced crossbow", [], null)
                 .WithOnSheet((CalculatedCharacterSheetValues sheet) =>
                 {
-                    sheet.SetProficiency(FirearmTraits.AdvancedCrossbow, Proficiency.Master);
+                    sheet.Proficiencies.Set([Trait.Crossbow, Trait.Advanced], Proficiency.Master);
                 });
 
             yield return new Feat(GunslingerFeatNames.PistoleroDedicationDeception, "The way of the Pistolero.", "You become trained in Deception.", [GunslingerTraits.PistoleroSkillChoice], null)
@@ -118,8 +119,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             // Creates the class selection feat for the Gunslinger
             yield return new ClassSelectionFeat(GunslingerFeatNames.GunslingerClass, "While some fear projectile weapons, you savor the searing flash, wild kick, and cloying smoke that accompanies a gunshot, or snap of the cable and telltale thunk of your crossbow just before your bolt finds purchase. Ready to draw a bead on an enemy at every turn, you rely on your reflexes, steady hand, and knowledge of your weapons to riddle your foes with holes.",
                 GunslingerTraits.Gunslinger, new EnforcedAbilityBoost(Ability.Dexterity), 8,
-                [Trait.Will, Trait.Unarmed, Trait.Simple, Trait.Martial, FirearmTraits.AdvancedCrossbow, FirearmTraits.AdvancedFirearm, Trait.UnarmoredDefense, Trait.LightArmor, Trait.MediumArmor],
-                [Trait.Perception, Trait.Fortitude, Trait.Reflex, FirearmTraits.SimpleCrossbow, FirearmTraits.MartialCrossbow, FirearmTraits.SimpleFirearm, FirearmTraits.MartialFirearm],
+                [Trait.Will, Trait.Unarmed, Trait.Simple, Trait.Martial,Trait.UnarmoredDefense, Trait.LightArmor, Trait.MediumArmor, GunslingerTraits.DummyAdvancedProf],
+                [Trait.Perception, Trait.Fortitude, Trait.Reflex, GunslingerTraits.DummySimpleAndMartialProf],
                 3,
                 "{b}1. Gunslinger's Way{/b} All gunslingers have a particular way they follow, a combination of philosophy and combat style that defines both how they fight and the weapons they excel with. At 1st level, your way grants you an initial deed, a unique reload action called a slinger's reload, and proficiency with a particular skill. You also gain advanced and greater deeds at later levels, as well as access to way-specific feats.\n\n" +
                 "{b}2. Singular Expertise{/b} You have particular expertise with guns and crossbows that grants you greater proficiency with them and the ability to deal more damage. You gain a +1 circumstance bonus to damage rolls with firearms and crossbows.\r\n\r\nThis intense focus on firearms and crossbows prevents you from reaching the same heights with other weapons. Your proficiency with unarmed attacks and with weapons other than firearms and crossbows can't be higher than trained, even if you gain an ability that would increase your proficiency in one or more other weapons to match your highest weapon proficiency (such as the weapon expertise feats many ancestries have). If you have gunslinger weapon mastery, the limit is expert, and if you have gunslinging legend, the limit is master.\n\n" +
@@ -134,6 +135,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 "{b}Level 8:{/b}Gunslinger feat\n", new List<Feat>() { wayOfTheDrifter.Feat, wayOfThePistolero.Feat, wayOfTheSniper.Feat, wayOfTheVanguard.Feat })
                 .WithOnSheet(delegate (CalculatedCharacterSheetValues sheet)
                 {
+                    // Base Prof
+                    sheet.Proficiencies.Set([Trait.Firearm, Trait.Simple], Proficiency.Expert);
+                    sheet.Proficiencies.Set([Trait.Firearm, Trait.Material], Proficiency.Expert);
+                    sheet.Proficiencies.Set([Trait.Firearm, Trait.Advanced], Proficiency.Trained);
+                    sheet.Proficiencies.Set([Trait.Crossbow, Trait.Simple], Proficiency.Expert);
+                    sheet.Proficiencies.Set([Trait.Crossbow, Trait.Material], Proficiency.Expert);
+                    sheet.Proficiencies.Set([Trait.Crossbow, Trait.Advanced], Proficiency.Trained);
+
                     // Adds the Singular Expertise base class feature, adds a Level 1 Gunslinger feat selection, and adds the Will Expert profeciency at level 3
                     sheet.AddFeat(singularExpertiseFeat, null);
                     sheet.AddSelectionOption(new SingleFeatSelectionOption("1stGunslingerFeat", "Gunslinger feat", 1, (Feat ft) => ft.HasTrait(GunslingerTraits.Gunslinger)));
@@ -143,15 +152,17 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     });
                     sheet.AddAtLevel(5, delegate (CalculatedCharacterSheetValues values)
                     {
-                        values.SetProficiency(FirearmTraits.SimpleCrossbow, Proficiency.Master);
-                        values.SetProficiency(FirearmTraits.MartialCrossbow, Proficiency.Master);
-                        values.SetProficiency(FirearmTraits.SimpleFirearm, Proficiency.Master);
-                        values.SetProficiency(FirearmTraits.MartialFirearm, Proficiency.Master);
+                        // Upgraded Prof
+                        sheet.Proficiencies.Set([Trait.Firearm, Trait.Simple], Proficiency.Master);
+                        sheet.Proficiencies.Set([Trait.Firearm, Trait.Material], Proficiency.Master);
+                        sheet.Proficiencies.Set([Trait.Firearm, Trait.Advanced], Proficiency.Expert);
+                        sheet.Proficiencies.Set([Trait.Crossbow, Trait.Simple], Proficiency.Master);
+                        sheet.Proficiencies.Set([Trait.Crossbow, Trait.Material], Proficiency.Master);
+                        sheet.Proficiencies.Set([Trait.Crossbow, Trait.Advanced], Proficiency.Expert);
+
                         values.SetProficiency(Trait.Unarmed, Proficiency.Expert);
                         values.SetProficiency(Trait.Simple, Proficiency.Expert);
                         values.SetProficiency(Trait.Martial, Proficiency.Expert);
-                        values.SetProficiency(FirearmTraits.AdvancedCrossbow, Proficiency.Expert);
-                        values.SetProficiency(FirearmTraits.AdvancedFirearm, Proficiency.Expert);
                         // TODO: Crit Specilization needed to be added for fire arms
                     });
                     sheet.AddAtLevel(7, delegate (CalculatedCharacterSheetValues values)
@@ -301,7 +312,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
             // Level 8 Class Feats
             // Creates and adds the logic for the Stab And Blast class feat
-            TrueFeat stabAndBlast = new TrueFeat(GunslingerFeatNames.StabAndBlast, 8, "You slice or smash your opponent with the melee portion of your weapon before pulling the trigger at point-blank range.", "{b}Requirements{/b} You're wielding a loaded firearm that has a bayonet attached.\n\nMake a melee Strike with the required weapon. If the Strike is successful, you can immediately make a ranged Strike against the same target with a +2 circumstance bonus to the attack roll. This counts as two attacks toward your multiple attack penalty, but you don't apply the multiple attack penalty until after making both attacks.", [Trait.Flourish, GunslingerTraits.Gunslinger]);
+            TrueFeat stabAndBlast = new TrueFeat(GunslingerFeatNames.StabAndBlast, 8, "You slice or smash your opponent with the melee portion of your weapon before pulling the trigger at point-blank range.", "{b}Requirements{/b} You're wielding a loaded firearm that has a bayonet or stock attached.\n\nMake a melee Strike with the required weapon. If the Strike is successful, you can immediately make a ranged Strike against the same target with a +2 circumstance bonus to the attack roll. This counts as two attacks toward your multiple attack penalty, but you don't apply the multiple attack penalty until after making both attacks.", [Trait.Flourish, GunslingerTraits.Gunslinger]);
             stabAndBlast.WithActionCost(1);
             AddStabAndBlastLogic(stabAndBlast);
             yield return stabAndBlast;
@@ -2234,12 +2245,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
         private static void AddStabAndBlastLogic(TrueFeat stabAndBlastFeat)
         {
             // Provides the effect that adds the Stab And Blast as a strike modifier
-            stabAndBlastFeat.WithPermanentQEffect("Make a melee strike with your Bayonet then a ranged stike.", delegate (QEffect self)
+            stabAndBlastFeat.WithPermanentQEffect("Make a melee strike with your Bayonet or Stock then a ranged stike.", delegate (QEffect self)
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
-                    if (item.HasTrait(FirearmTraits.Bayonet) && item.Tag != null && item.Tag is Item rangedWeapon && FirearmUtilities.IsItemFirearmOrCrossbow(rangedWeapon))
+                    if (item is AttachedWeapon attachedWeapon && (item.HasTrait(FirearmTraits.Bayonet) || item.HasTrait(FirearmTraits.ReinforcedStock)))
                     {
+                        Item rangedWeapon = attachedWeapon.ItemAttachedTo;
+
                         Creature owner = self.Owner;
                         CombatAction stabAndBlastAction = owner.CreateStrike(item);
                         stabAndBlastAction.Name = $"Stab and Blast";
@@ -2252,18 +2265,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         {
                             if (result >= CheckResult.Success)
                             {
-                                CombatAction meleeStrike = attacker.CreateStrike(rangedWeapon);
-                                meleeStrike.WithActionCost(0);
-                                meleeStrike.StrikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.EphemeralAtEndOfImmediateAction)
+                                CombatAction rangedStrike = attacker.CreateStrike(rangedWeapon);
+                                rangedStrike.WithActionCost(0);
+                                rangedStrike.StrikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.EphemeralAtEndOfImmediateAction)
                                 {
                                     BonusToAttackRolls = (QEffect qfAttackRoll, CombatAction action, Creature? target) =>
                                     {
                                         return new Bonus(2, BonusType.Circumstance, "Stab and Blast", true);
                                     }
                                 };
-                                attacker.Actions.AttackedThisManyTimesThisTurn--;
-                                await attacker.MakeStrike(meleeStrike, defender);
-                                attacker.Actions.AttackedThisManyTimesThisTurn++;
+                                await attacker.MakeStrike(rangedStrike, defender);
                             }
                         };
 
@@ -2280,6 +2291,48 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
 
                         return stabAndBlastAction;
                     }
+                    //if ((item.HasTrait(FirearmTraits.Bayonet) || item.HasTrait(FirearmTraits.ReinforcedStock)) && item.Tag != null && item.Tag is Item rangedWeapon && FirearmUtilities.IsItemFirearmOrCrossbow(rangedWeapon))
+                    //{
+                    //    Creature owner = self.Owner;
+                    //    CombatAction stabAndBlastAction = owner.CreateStrike(item);
+                    //    stabAndBlastAction.Name = $"Stab and Blast";
+                    //    stabAndBlastAction.Traits.Add(Trait.Flourish);
+                    //    stabAndBlastAction.WithActionCost(1);
+                    //    stabAndBlastAction.Illustration = new SideBySideIllustration(item.Illustration, rangedWeapon.Illustration);
+                    //    stabAndBlastAction.Item = rangedWeapon;
+                    //    stabAndBlastAction.Description = StrikeRules.CreateBasicStrikeDescription3(stabAndBlastAction.StrikeModifiers, additionalSuccessText: "Make a ranged Strike against the same target with a +2 circumstance bonus to the attack roll. This counts as two attacks toward your multiple attack penalty, but you don't apply the multiple attack penalty until after making both attacks.");
+                    //    stabAndBlastAction.StrikeModifiers.OnEachTarget = async (Creature attacker, Creature defender, CheckResult result) =>
+                    //    {
+                    //        if (result >= CheckResult.Success)
+                    //        {
+                    //            CombatAction meleeStrike = attacker.CreateStrike(rangedWeapon);
+                    //            meleeStrike.WithActionCost(0);
+                    //            meleeStrike.StrikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.EphemeralAtEndOfImmediateAction)
+                    //            {
+                    //                BonusToAttackRolls = (QEffect qfAttackRoll, CombatAction action, Creature? target) =>
+                    //                {
+                    //                    return new Bonus(2, BonusType.Circumstance, "Stab and Blast", true);
+                    //                }
+                    //            };
+                    //            attacker.Actions.AttackedThisManyTimesThisTurn--;
+                    //            await attacker.MakeStrike(meleeStrike, defender);
+                    //            attacker.Actions.AttackedThisManyTimesThisTurn++;
+                    //        }
+                    //    };
+
+                    //    // Checks if the item needs to be reloaded
+                    //    ((CreatureTarget)stabAndBlastAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                    //    {
+                    //        if (!FirearmUtilities.IsItemLoaded(rangedWeapon))
+                    //        {
+                    //            return Usability.NotUsable("Needs to be reloaded.");
+                    //        }
+
+                    //        return Usability.Usable;
+                    //    });
+
+                    //    return stabAndBlastAction;
+                    //}
 
                     return null;
                 };

@@ -906,7 +906,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                                 CheckBreakdownResult seekResult = new CheckBreakdownResult(seekCheckBreakdown);
                                                 if (seekResult.CheckResult >= CheckResult.Success)
                                                 {
-                                                    tile.Overhead(seekResult.CheckResult.HumanizeTitleCase2(), Color.LightBlue, owner + " rolls " + seekResult.CheckResult.HumanizeTitleCase2() + " on Lantern Seek.", "Lantern Seek", seekCheckBreakdown.DescribeWithFinalRollTotal(seekResult));
+                                                    owner.Overhead(seekResult.CheckResult.HumanizeTitleCase2(), Color.LightBlue, owner + " rolls " + seekResult.CheckResult.HumanizeTitleCase2() + " on Lantern Seek.", "Lantern Seek", seekCheckBreakdown.DescribeWithFinalRollTotal(seekResult));
                                                     await tileQEffect.WhenSeeked.InvokeIfNotNull();
                                                 }
                                             }

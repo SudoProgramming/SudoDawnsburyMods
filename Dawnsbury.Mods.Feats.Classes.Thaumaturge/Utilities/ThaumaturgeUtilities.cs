@@ -479,22 +479,22 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                         if (target.DetectionStatus.Undetected)
                         {
                             target.DetectionStatus.Undetected = false;
-                            target.Occupies.Overhead("detected", Color.Yellow, target?.ToString() + " is no longer undetected.");
+                            target.Overhead("detected", Color.Yellow, target?.ToString() + " is no longer undetected.");
                             break;
                         }
                         if (!target.DetectionStatus.HiddenTo.Remove(caster))
                             break;
-                        target.Occupies.Overhead("seen", Color.Black, target?.ToString() + " is no longer hidden to " + caster?.ToString() + ".");
+                        target.Overhead("seen", Color.Black, target?.ToString() + " is no longer hidden to " + caster?.ToString() + ".");
                         break;
                     case CheckResult.CriticalSuccess:
                         if (target.DetectionStatus.Undetected)
                         {
                             target.DetectionStatus.Undetected = false;
-                            target.Occupies.Overhead("detected", Color.Yellow, target?.ToString() + " is no longer undetected.");
+                            target.Overhead("detected", Color.Yellow, target?.ToString() + " is no longer undetected.");
                         }
                         if (!target.DetectionStatus.HiddenTo.Remove(caster))
                             break;
-                        target.Occupies.Overhead("seen", Color.Black, target?.ToString() + " is no longer hidden to " + caster?.ToString() + ".");
+                        target.Overhead("seen", Color.Black, target?.ToString() + " is no longer hidden to " + caster?.ToString() + ".");
                         break;
                 }
             })).WithEffectOnChosenTargets((Delegates.EffectOnChosenTargets)(async (spell, caster, targets) =>
@@ -509,7 +509,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                             CheckBreakdownResult breakdownResult = new CheckBreakdownResult(breakdown);
                             if (breakdownResult.CheckResult >= CheckResult.Success)
                             {
-                                tile.Overhead(breakdownResult.CheckResult.HumanizeTitleCase2(), Color.LightBlue, caster?.ToString() + " rolls " + breakdownResult.CheckResult.HumanizeTitleCase2() + " on " + name + ".", name, breakdown.DescribeWithFinalRollTotal(breakdownResult));
+                                caster.Overhead(breakdownResult.CheckResult.HumanizeTitleCase2(), Color.LightBlue, caster?.ToString() + " rolls " + breakdownResult.CheckResult.HumanizeTitleCase2() + " on " + name + ".", name, breakdown.DescribeWithFinalRollTotal(breakdownResult));
                                 await qeffect.WhenSeeked.InvokeIfNotNull();
                             }
                         }

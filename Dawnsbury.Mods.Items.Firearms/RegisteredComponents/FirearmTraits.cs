@@ -5,41 +5,10 @@ namespace Dawnsbury.Mods.Items.Firearms.RegisteredComponents
 {
     public static class FirearmTraits
     {
-        ///// <summary>
-        ///// Adds the weapon group trait of Firearm
-        ///// NOW IN THE BASE GAME
-        ///// </summary>
-        //public static readonly Trait Firearm = ModManager.RegisterTrait("Firearm", new TraitProperties("Firearm", true, relevantForShortBlock: true));
-
         /// <summary>
-        /// Adds the technical trait for simple firearms used for proficiency
+        /// Adds a dummary repeating trait for repeating weapons that have a reload.
         /// </summary>
-        public static readonly Trait SimpleFirearm = ModManager.RegisterTrait("Simple Firearm", new TraitProperties("Simple Firearm", false) { ProficiencyName = "Simple Firearm" });
-
-        /// <summary>
-        /// Adds the technical trait for martial firearms used for proficiency
-        /// </summary>
-        public static readonly Trait MartialFirearm = ModManager.RegisterTrait("Martial Firearm", new TraitProperties("Martial Firearm", false) { ProficiencyName = "Martial Firearm" });
-
-        /// <summary>
-        /// Adds the technical trait for advanced firearms used for proficiency
-        /// </summary>
-        public static readonly Trait AdvancedFirearm = ModManager.RegisterTrait("Advanced Firearm", new TraitProperties("Advanced Firearm", false) { ProficiencyName = "Advanced Firearm" });
-
-        /// <summary>
-        /// Adds the technical trait for simple crossbows used for proficiency
-        /// </summary>
-        public static readonly Trait SimpleCrossbow = ModManager.RegisterTrait("Simple Crossbow Prof", new TraitProperties("Simple Crossbow Prof", false) { ProficiencyName = "Simple Crossbow" });
-
-        /// <summary>
-        /// Adds the technical trait for martial crossbows used for proficiency
-        /// </summary>
-        public static readonly Trait MartialCrossbow = ModManager.RegisterTrait("Martial Crossbow", new TraitProperties("Martial Crossbow", false) { ProficiencyName = "Martial Crossbow" });
-
-        /// <summary>
-        /// Adds the technical trait for advanced crossbows used for proficiency
-        /// </summary>
-        public static readonly Trait AdvancedCrossbow = ModManager.RegisterTrait("Advanced Crossbow", new TraitProperties("Advanced Crossbow", false) { ProficiencyName = "Advanced Crossbow" });
+        public static readonly Trait DummyRepeating5 = ModManager.RegisterTrait("DummyRepeating5", new TraitProperties("Repeating", true, "Deals either bludgeoning or piercing damage, whichever is better for you.", relevantForShortBlock: true));
 
         /// <summary>
         /// Adds the concussive trait for firearms

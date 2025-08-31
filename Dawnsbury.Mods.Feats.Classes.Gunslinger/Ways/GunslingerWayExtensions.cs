@@ -21,6 +21,7 @@ using Dawnsbury.Core.Mechanics.Targeting.Targets;
 using Dawnsbury.Core.Mechanics.Treasure;
 using Dawnsbury.Core.Possibilities;
 using Dawnsbury.Core.Roller;
+using Dawnsbury.Core.StatBlocks.Monsters.L12;
 using Dawnsbury.Core.Tiles;
 using Dawnsbury.Display.Illustrations;
 using Dawnsbury.Modding;
@@ -180,6 +181,77 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                     startOfTurn.ExpiresAt = ExpirationCondition.Immediately;
                                 }
                             });
+                        }
+                    });
+                }
+            });
+        }
+
+        /// <summary>
+        /// Adds Finish the Job logic
+        /// </summary>
+        /// <param name="pistoleroWay">The Pistolero way</param>
+        public static void WithDriftersFinishTheJobLogic(this GunslingerWay driftersWay)
+        {
+            Feat drifterFeat = driftersWay.Feat;
+            drifterFeat.WithOnCreature((Creature creature) =>
+            {
+                if (creature.Level >= 9)
+                {
+                    creature.AddQEffect(new QEffect("Finish the Job", "Make a follow-up melee strike at the same MAP after a failed ranged strike.")
+                    {
+                        AfterYouTakeAction = async (QEffect afterAction, CombatAction action) =>
+                        {
+                            Creature owner = afterAction.Owner;
+                            if (owner.HasEffect(GunslingerQEIDs.FinishTheJob))
+                            {
+                                owner.RemoveAllQEffects(qe => qe.Id == GunslingerQEIDs.FinishTheJob);
+                            }
+
+                            if (action.Item != null && action.HasTrait(Trait.Strike) && action.CheckResult == CheckResult.Failure && !action.Item.HasTrait(Trait.TwoHanded) && FirearmUtilities.IsItemFirearmOrCrossbow(action.Item))
+                            {
+                                bool addFinishTheJob = false;
+                                if (owner.HeldItems.Count > 1)
+                                {
+                                    addFinishTheJob = owner.HeldItems.Any(item => item != action.Item && item.HasTrait(Trait.Melee) && !item.HasTrait(Trait.TwoHanded));
+                                }
+                                else if (owner.HeldItems.Count == 1)
+                                {
+                                    addFinishTheJob = owner.HeldItems.Any(item => item == action.Item);
+                                }
+
+                                if (addFinishTheJob)
+                                {
+                                    owner.AddQEffect(new QEffect("Finish the Job", "Finish the Job's criteria is met.")
+                                    {
+                                        Id = GunslingerQEIDs.FinishTheJob,
+                                        Illustration = IllustrationName.GenericCombatManeuver
+                                    });
+                                }
+                            }
+                        },
+                        ProvideStrikeModifier = (Item item) =>
+                        {
+                            if (item.HasTrait(Trait.TwoHanded) || (!item.HasTrait(Trait.Unarmed) && !item.HasTrait(Trait.Melee)))
+                            {
+                                return null;
+                            }
+
+                            CombatAction finishTheJobAction = creature.CreateStrike(item, creature.Actions.AttackedThisManyTimesThisTurn - 1);
+                            finishTheJobAction.Name = "Finish the Job";
+                            finishTheJobAction.Description = StrikeRules.CreateBasicStrikeDescription4(finishTheJobAction.StrikeModifiers, additionalAttackRollText: "This attack uses the same multiple attack penalty as the last Strike. Afterward, increase your multiple attack penalty normally.");
+
+                            ((CreatureTarget)finishTheJobAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                            {
+                                if (!attacker.HasEffect(GunslingerQEIDs.FinishTheJob))
+                                {
+                                    return Usability.NotUsable("Your last action wasn't a failed Strike with a one handed firearm or crossbow.");
+                                }
+
+                                return Usability.Usable;
+                            });
+
+                            return finishTheJobAction;
                         }
                     });
                 }
@@ -347,6 +419,55 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
         }
 
         /// <summary>
+        /// Adds Pistoler's Retort logic
+        /// </summary>
+        /// <param name="pistoleroWay">The Pistolero way</param>
+        public static void WithPistolerosPistolersRetortLogic(this GunslingerWay pistoleroWay)
+        {
+            Feat pistoleroFeat = pistoleroWay.Feat;
+            pistoleroFeat.WithOnCreature((Creature creature) =>
+            {
+                if (creature.Level >= 9)
+                {
+                    creature.AddQEffect(new QEffect("Pistoler's Retort", "Make a ranged Strike when a fow critically fails an attack.")
+                    {
+                        AfterYouAreTargeted = async (QEffect afterTarget, CombatAction action) =>
+                        {
+                            Creature owner = afterTarget.Owner;
+                            Creature attacker = action.Owner;
+                            if (attacker != null && owner.HasLineOfEffectTo(attacker) < CoverKind.Blocked)
+                            {
+                                Item[] itemsThatCanBeUsedInReaciton = owner.HeldItems.Where(item => FirearmUtilities.IsItemFirearmOrCrossbow(item, true) && item.WeaponProperties != null && attacker.DistanceTo(owner) <= item.WeaponProperties.RangeIncrement).ToArray();
+                                if (action.ChosenTargets.GetResultFor(owner) == CheckResult.CriticalFailure && (action.HasTrait(Trait.Strike) || (action.SpellcastingSource != null && action.HasTrait(Trait.Attack))) && itemsThatCanBeUsedInReaciton.Length > 0)
+                                {
+                                    if (itemsThatCanBeUsedInReaciton.Length == 1)
+                                    {
+                                        Item itemBeingUsed = itemsThatCanBeUsedInReaciton[0];
+                                        if (await owner.AskToUseReaction($"Use your reaction to make a Strike with {itemBeingUsed.Name} against {attacker.Name}?", itemBeingUsed.Illustration))
+                                        {
+                                            await owner.MakeStrike(attacker, itemBeingUsed, 0);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Item selectedItem = itemsThatCanBeUsedInReaciton[0];
+                                        ChoiceButtonOption choice = await owner.AskForChoiceAmongButtons(selectedItem.Illustration, $"Use your reaction to make a Strike against {attacker.Name}?", itemsThatCanBeUsedInReaciton.Select(item => item.Name).ToList().Append("Pass").ToArray());
+                                        if (choice.Index != itemsThatCanBeUsedInReaciton.Length)
+                                        {
+                                            selectedItem = itemsThatCanBeUsedInReaciton[choice.Index];
+                                            owner.Actions.UseUpReaction();
+                                            await owner.MakeStrike(attacker, selectedItem, 0);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        /// <summary>
         /// Adds Covered Reload Logic
         /// </summary>
         /// <param name="sniperWay">The Sniper way</param>
@@ -476,7 +597,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
             {
                 if (!asDedication || sheet.HasFeat(GunslingerFeatNames.WayOfTheSniperDedication))
                 {
-                    self.AddQEffect(new QEffect(sniperFeat.BaseName, "Can roll Stealth as Initiative and gain 1d6 percision on first Strike")
+                    self.AddQEffect(new QEffect(sniperFeat.BaseName, "Can roll Stealth as Initiative and gain 1d6 (2d6 at level 9) percision on first Strike")
                     {
                         StartOfCombat = async (startOfCombat) =>
                         {
@@ -514,7 +635,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                                     oneShotOneKillEffect.ExpiresAt = ExpirationCondition.Immediately;
                                                 }
 
-                                                return (DiceFormula.FromText("1d6", "One Shot, One Kill"), item.WeaponProperties.DamageKind);
+                                                int numberOfDie = (startOfCombat.Owner.Level >= 9) ? ((startOfCombat.Owner.Level >= 15) ? 3 : 2) : 1;
+
+                                                return (DiceFormula.FromText($"{numberOfDie}d6", "One Shot, One Kill"), item.WeaponProperties.DamageKind);
                                             }
 
                                             return null;
@@ -540,6 +663,64 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
                                 {
                                     return new Bonus(stealthAndPerceptionDifference, BonusType.Untyped, "One Shot, One Kill (Stealth)", stealthAndPerceptionDifference > 0);
                                 }
+                            }
+
+                            return null;
+                        }
+                    });
+                }
+            });
+        }
+
+        /// <summary>
+        /// Adds Vital Shot logic
+        /// </summary>
+        /// <param name="sniperWay">The Sniper way</param>
+        public static void WithSnipersVitalShotLogic(this GunslingerWay sniperWay)
+        {
+            Feat sniperWayFeat = sniperWay.Feat;
+            sniperWayFeat.WithOnCreature((Creature creature) =>
+            {
+                if (creature.Level >= 9)
+                {
+                    creature.AddQEffect(new QEffect("Vital Shot", "Make a ranged Strike against a flat-footed creature that deals more damage.")
+                    {
+                        ProvideStrikeModifier = (Item item) =>
+                        {
+                            if (item.HasTrait(Trait.Ranged))
+                            {
+                                int numberOfDice = (creature.Level >= 15) ? 3 : 2;
+
+                                CombatAction vitalShotAction = creature.CreateStrike(item, -1, new StrikeModifiers() { AdditionalWeaponDamageDice = 1 });
+                                vitalShotAction.WithActionCost(2);
+                                vitalShotAction.Name = "Vital Shot";
+                                vitalShotAction.Description = StrikeRules.CreateBasicStrikeDescription4(vitalShotAction.StrikeModifiers, additionalSuccessText: $"Deals {numberOfDice}d6 persistent bleed damage.");
+                                vitalShotAction.StrikeModifiers.QEffectForStrike = new QEffect(ExpirationCondition.Ephemeral)
+                                {
+                                    AddExtraKindedDamageOnStrike = (CombatAction action, Creature defender) =>
+                                    {
+                                        CheckResult result = action.ChosenTargets.GetResultFor(defender);
+                                        if (result >= CheckResult.Success)
+                                        {
+                                            numberOfDice = (result == CheckResult.CriticalSuccess) ? numberOfDice * 2 : numberOfDice;
+                                            defender.AddQEffect(QEffect.PersistentDamage(DiceFormula.FromText($"{numberOfDice}d6", "Vital Shot"), DamageKind.Bleed));
+                                        }
+
+                                        return null;
+                                    }
+                                };
+
+                                ((CreatureTarget)vitalShotAction.Target).WithAdditionalConditionOnTargetCreature((Creature attacker, Creature defender) =>
+                                {
+                                    if (!defender.IsFlatFootedTo(attacker, vitalShotAction))
+                                    {
+                                        return Usability.NotUsableOnThisCreature("Not flat-footed");
+                                    }
+
+                                    return Usability.Usable;
+                                });
+
+                                return vitalShotAction;
                             }
 
                             return null;
@@ -714,6 +895,91 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.Ways
 
                         },
                         ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn
+                    });
+                }
+            });
+        }
+
+        /// <summary>
+        /// Adds Living Fortification logic
+        /// </summary>
+        /// <param name="vanguardWay">The vanguard way</param>
+        public static void WithVanguardSpinningCrushLogic(this GunslingerWay vanguardWay)
+        {
+            Feat vanguardWayFeat = vanguardWay.Feat;
+            vanguardWayFeat.WithOnCreature((Creature creature) =>
+            {
+                if (creature.Level >= 9)
+                {
+                    creature.AddQEffect(new QEffect("Spinning Crush", "Deal bludgeoning damage to all adjacent creatures.")
+                    {
+                        ProvideMainAction = (QEffect mainAction) =>
+                        {
+                            string spinningCrushRulesText = "All creatures adjacent to you take {0}+{1} bludgeoning damage. (This ability does not apply other effects that increase damage with your firearm Strikes such as weapon specialization.)\n\nCreatures affected by this attack must attempt a basic Reflex save. A creature that fails its save is also pushed 10 feet directly away from you.";
+                            CombatAction spinningCrushAction = new CombatAction(creature, IllustrationName.GenericCombatManeuver, "Spinning Crush", [], spinningCrushRulesText.Replace("{0}", string.Empty).Replace("+{1} ", string.Empty), Target.SelfExcludingEmanation(1)
+                                .WithAdditionalRequirementOnCaster((Creature attacker) =>
+                                {
+                                    if (!attacker.HeldItems.Any(item => FirearmUtilities.IsItemFirearmOrCrossbow(item, true)))
+                                    {
+                                        return Usability.NotUsable("No loaded firearm or crossbow");
+                                    }
+
+                                    return Usability.Usable;
+                                }))
+                                .WithActionCost(3)
+                                .WithSavingThrow(new SavingThrow(Defense.Reflex, creature.ClassDC(GunslingerTraits.Gunslinger)));
+
+                            int runeLevel = 3;
+                            Item? bestItem = creature.HeldItems.FirstOrDefault(item => FirearmUtilities.IsItemFirearmOrCrossbow(item, true) && item.Runes.Any(rune => rune.ItemName == ItemName.MajorStrikingRunestone));
+                            if (bestItem == null)
+                            {
+                                runeLevel--;
+                                bestItem = creature.HeldItems.FirstOrDefault(item => FirearmUtilities.IsItemFirearmOrCrossbow(item, true) && item.Runes.Any(rune => rune.ItemName == ItemName.GreaterStrikingRunestone));
+                            }
+                            if (bestItem == null)
+                            {
+                                runeLevel--;
+                                bestItem = creature.HeldItems.FirstOrDefault(item => FirearmUtilities.IsItemFirearmOrCrossbow(item, true) && item.Runes.Any(rune => rune.ItemName == ItemName.StrikingRunestone));
+                            }
+                            if (bestItem == null)
+                            {
+                                runeLevel--;
+                                bestItem = creature.HeldItems.FirstOrDefault(item => FirearmUtilities.IsItemFirearmOrCrossbow(item, true));
+                            }
+
+                            if (bestItem != null)
+                            {
+                                spinningCrushAction.Illustration = bestItem.Illustration;
+                                string spinningCrushDamage = "4d6";
+                                switch (runeLevel)
+                                {
+                                    case 3:
+                                        spinningCrushDamage = "10d6";
+                                        break;
+                                    case 2:
+                                        spinningCrushDamage = "8d6";
+                                        break;
+                                    case 1:
+                                        spinningCrushDamage = "6d6";
+                                        break;
+                                    default:
+                                        break;
+                                }
+
+                                spinningCrushAction.Description = spinningCrushRulesText.Replace("{0}", $"{spinningCrushDamage}").Replace("{1}", $"{creature.Abilities.Strength} ");
+                                spinningCrushAction.WithEffectOnEachTarget(async (CombatAction action, Creature attacker, Creature defender, CheckResult result) =>
+                                {
+                                    await CommonSpellEffects.DealBasicDamage(action, attacker, defender, result, DiceFormula.FromText($"{spinningCrushDamage}+{attacker.Abilities.Strength}"), DamageKind.Bludgeoning);
+                                    if (result <= CheckResult.Failure)
+                                    {
+                                        await attacker.PushCreature(defender, 2);
+                                    }
+                                });
+
+                            }
+
+                            return new ActionPossibility(spinningCrushAction);
+                        }
                     });
                 }
             });

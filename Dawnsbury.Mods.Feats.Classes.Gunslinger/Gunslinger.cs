@@ -6,6 +6,7 @@ using Dawnsbury.Core.Animations;
 using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.CharacterBuilder.AbilityScores;
 using Dawnsbury.Core.CharacterBuilder.Feats;
+using Dawnsbury.Core.CharacterBuilder.Feats.Features;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb.Archetypes;
 using Dawnsbury.Core.CharacterBuilder.Selections.Options;
@@ -124,15 +125,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 3,
                 "{b}1. Gunslinger's Way{/b} All gunslingers have a particular way they follow, a combination of philosophy and combat style that defines both how they fight and the weapons they excel with. At 1st level, your way grants you an initial deed, a unique reload action called a slinger's reload, and proficiency with a particular skill. You also gain advanced and greater deeds at later levels, as well as access to way-specific feats.\n\n" +
                 "{b}2. Singular Expertise{/b} You have particular expertise with guns and crossbows that grants you greater proficiency with them and the ability to deal more damage. You gain a +1 circumstance bonus to damage rolls with firearms and crossbows.\r\n\r\nThis intense focus on firearms and crossbows prevents you from reaching the same heights with other weapons. Your proficiency with unarmed attacks and with weapons other than firearms and crossbows can't be higher than trained, even if you gain an ability that would increase your proficiency in one or more other weapons to match your highest weapon proficiency (such as the weapon expertise feats many ancestries have). If you have gunslinger weapon mastery, the limit is expert, and if you have gunslinging legend, the limit is master.\n\n" +
-                "{b}3. Gunslinger Feat{/b}\n\n" +
-                "{b}At higher levels:{/b}\n" +
-                "{b}Level 2:{/b} Gunslinger feat\n" +
-                "{b}Level 3:{/b} General feat, skill increase, expert in Will,\n" +
-                "{b}Level 4:{/b} Gunslinger feat\n" +
-                "{b}Level 5:{/b}Ability boosts, ancestry feat, skill increase, gunslinger weapon master {i}(Your proficiency rank increases to master with simple and martial firearms and crossbows. Your proficiency rank for advanced firearms and crossbows, simple weapons, martial weapons, and unarmed attacks increases to expert. You gain access to the critical specialization effects for firearms and crossbows.){/i}\n" +
-                "{b}Level 6:{/b}Gunslinger feat\n" +
-                "{b}Level 7:{/b}General feat, skill increase, weapon specialization {i}(you deal 2 additional damage with weapons and unarmed attacks in which you are an expert; this damage increases to 3 if you're a master, and to 4 if you're legendary){/i}, master in Perception\n" +
-                "{b}Level 8:{/b}Gunslinger feat\n", new List<Feat>() { wayOfTheDrifter.Feat, wayOfThePistolero.Feat, wayOfTheSniper.Feat, wayOfTheVanguard.Feat })
+                "{b}3. Gunslinger Feat{/b}",
+                new List<Feat>() { wayOfTheDrifter.Feat, wayOfThePistolero.Feat, wayOfTheSniper.Feat, wayOfTheVanguard.Feat })
+                .WithClassFeatures(features => features
+                    .AddFeature(3, WellKnownClassFeature.ExpertInWill)
+                    .AddFeature(5, "Gunslinger weapon master", "Your proficiency rank increases to master with simple and martial firearms and crossbows. Your proficiency rank for advanced firearms and crossbows, simple weapons, martial weapons, and unarmed attacks increases to expert. You gain access to the critical specialization effects for firearms and crossbows.")
+                    .AddFeature(7, WellKnownClassFeature.ExpertInPerception)
+                    .AddFeature(7, WellKnownClassFeature.WeaponSpecialization)
+                    .AddFeature(7, WellKnownClassFeature.ExpertInClassDC)
+                )
                 .WithOnSheet(delegate (CalculatedCharacterSheetValues sheet)
                 {
                     // Base Prof
@@ -163,11 +164,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                         values.SetProficiency(Trait.Unarmed, Proficiency.Expert);
                         values.SetProficiency(Trait.Simple, Proficiency.Expert);
                         values.SetProficiency(Trait.Martial, Proficiency.Expert);
-                        // TODO: Crit Specilization needed to be added for fire arms
                     });
                     sheet.AddAtLevel(7, delegate (CalculatedCharacterSheetValues values)
                     {
                         values.SetProficiency(Trait.Perception, Proficiency.Master);
+                    });
+                    sheet.AddAtLevel(9, delegate (CalculatedCharacterSheetValues values)
+                    {
+                        values.SetProficiency(GunslingerTraits.Gunslinger, Proficiency.Expert);
                     });
                 })
                 .WithOnCreature((creature) =>

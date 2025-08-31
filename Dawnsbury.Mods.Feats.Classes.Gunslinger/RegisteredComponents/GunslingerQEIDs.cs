@@ -52,5 +52,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger.RegisteredComponents
         /// The Pistolero's Challenge persistent QEffect ID 
         /// </summary>
         public static readonly QEffectId PistolerosChallenge = ModManager.RegisterEnumMember<QEffectId>("Pistolero's Challenge QEID");
+
+        /// <summary>
+        /// The Finish the Job persistent QEffect ID 
+        /// </summary>
+        public static readonly QEffectId FinishTheJob = ModManager.RegisterEnumMember<QEffectId>("Finish the Job QEID");
     }
 }

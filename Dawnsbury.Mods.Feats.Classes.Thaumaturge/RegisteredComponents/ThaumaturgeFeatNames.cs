@@ -24,6 +24,11 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         public static readonly FeatName ImplementsEmpowerment = ModManager.RegisterFeatName("Implement's Empowerment", "Implement's Empowerment");
 
         /// <summary>
+        /// The Intensify Vulnerability base class Feature
+        /// </summary>
+        public static readonly FeatName IntensifyVulnerability = ModManager.RegisterFeatName("Intensify Vulnerability", "IntensifyVulnerability");
+
+        /// <summary>
         /// The Amulet Implement
         /// </summary>
         public static readonly FeatName AmuletImplement = ModManager.RegisterFeatName("Amulet Implement", "Amulet");
@@ -269,5 +274,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// Tome Secondary Skill feat
         /// </summary>
         public static readonly FeatName TomeSecondarySkill = ModManager.RegisterFeatName("Tome Secondary Skill", "Tome Secondary Skill");
+
+        public static readonly FeatName[] ImplementFeatNames = [AmuletImplement, BellImplement, ChaliceImplement, LanternImplement, MirrorImplement, RegaliaImplement, TomeImplement, WandImplement, WeaponImplement];
     }
 }

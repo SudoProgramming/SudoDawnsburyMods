@@ -6,12 +6,14 @@ using Dawnsbury.Core;
 using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.CharacterBuilder.AbilityScores;
 using Dawnsbury.Core.CharacterBuilder.Feats;
+using Dawnsbury.Core.CharacterBuilder.Feats.Features;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb;
 using Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb.Archetypes;
 using Dawnsbury.Core.CharacterBuilder.Selections.Options;
 using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Core.Coroutines.Options;
+using Dawnsbury.Core.Coroutines.Requests;
 using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Creatures.Parts;
 using Dawnsbury.Core.Mechanics;
@@ -62,6 +64,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             Feat implementsEmpowermentFeat = new Feat(ThaumaturgeFeatNames.ImplementsEmpowerment, "The power of your implement can also be turned to the more common task of combat, its power adding to and amplifying the effects of runes and other magical empowerments.", "When you Strike, you can trace mystic patterns with an implement you're holding to empower the Strike, causing it to deal 2 additional damage per weapon damage die. Channeling the power requires full use of your hands. You don't gain the benefit of implement's empowerment if you are holding anything in either hand other than a single one-handed weapon, other implements, or esoterica, and you must be holding at least one implement to gain the benefit.", [], null);
             AddImplementsEmpowermentLogic(implementsEmpowermentFeat);
             yield return implementsEmpowermentFeat;
+
+            Feat intensifyVulnerabilityFeat = new Feat(ThaumaturgeFeatNames.IntensifyVulnerability, "You've learned to use your implement to further assault a creature whose vulnerabilities you're exploiting.", "You gain the Intensify Vulnerability action.", [], null);
+            AddIntensifyVulnerabilityLogic(intensifyVulnerabilityFeat);
+            yield return intensifyVulnerabilityFeat;
 
             // Creates and adds the sub feats for the Wand Implement
             yield return new Feat(ThaumaturgeFeatNames.ColdWand, "Cold Wand", "Your wand is attuned to Cold.", [], null);
@@ -191,16 +197,22 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 "{b}2. Exploit Vulnerability {icon:Action}{/b}\n{b}Frequency{/b} once per round; {b}Requirements{/b} You are holding your implement\n\nSelect a creature you can see and attempt an Esoteric Lore check against a standard DC for its level. You gain the following effects until you Exploit Vulnerabilities again.\n\n{b}Success{/b} Your unarmed and weapon Strikes activate the highest weakness againt the target, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. The {b}Failure{/b} result is used if the target has no weakness or if it is better.\n{b}Failure{/b} This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level.\n{b}Critical Failure{/b} You become flat-footed until the beginning of your next turn.\n\n" +
                 "{b}3. First Implement{/b} Choose an implement.\n\n" +
                 "{b}4. Implement's Empowerment{/b} When you Strike, you can trace mystic patterns with an implement you're holding to empower the Strike, causing it to deal 2 additional damage per weapon damage die. Channeling the power requires full use of your hands. You don't gain the benefit of implement's empowerment if you are holding anything in either hand other than a single one-handed weapon or other implements and you must be holding at least one implement to gain the benefit.\n\n" +
-                "{b}5. Thaumaturge Feat{/b}\n\n" +
-                "{b}At Higher Levels:{/b}\n" +
-                "{b}Level 2{/b} Thaumaturge Feat\n" +
-                "{b}Level 3{/b} General feat, skill increase, Expert in Esoteric Lore\n" +
-                "{b}Level 4{/b} Thaumaturge Feat\n" +
-                "{b}Level 5:{/b} Ability boosts, ancestry feat, skill increase, Thaumaturge Weapon Expertise {i}(Expert in unarmed, simple and martial weapons){/i}, Second Implement {i}(you choose a second implement and gain the initiate benefit. Swapping an implement with another implement is a free action. All implements with reactions will prompt you to swap to it if it would trigger.){/i}\n" +
-                "{b}Level 6:{/b} Thaumaturge feat\n" +
-                "{b}Level 7:{/b} Implement Adept, general feat, skill increase, weapon specialization {i}(you deal 2 additional damage with weapons and unarmed attacks in which you are an expert; this damage increases to 3 if you're a master, and to 4 if you're legendary){/i}, master in Will, resolve {i}(Your proficiency rank for Reflex saves increases to master. When you roll a success on a Reflex save, you get a critical success instead.){/i}\n" +
-                "{b}Level 8:{/b} Thaumaturge feat\n", 
+                "{b}5. Thaumaturge Feat{/b}",
                 null)
+                .WithClassFeatures(features => features
+                    .AddFeature(3, "Expert in Esoteric Lore")
+                    .AddFeature(5, "Second Implement", "You choose a second implement and gain the initiate benefit. Swapping an implement with another implement is a free action. All implements with reactions will prompt you to swap to it if it would trigger.")
+                    .AddFeature(5, "Thaumaturge Weapon Expertise", "Expert in unarmed, simple and martial weapons")
+                    .AddFeature(5, "Gunslinger weapon master", "Your proficiency rank increases to master with simple and martial firearms and crossbows. Your proficiency rank for advanced firearms and crossbows, simple weapons, martial weapons, and unarmed attacks increases to expert. You gain access to the critical specialization effects for firearms and crossbows.")
+                    .AddFeature(7, "Implement Adept")
+                    .AddFeature(7, "Master in Will")
+                    .AddFeature(7, WellKnownClassFeature.WeaponSpecialization)
+                    .AddFeature(7, WellKnownClassFeature.ExpertInClassDC)
+                    .AddFeature(9, WellKnownClassFeature.ExpertInClassDC)
+                    .AddFeature(9, WellKnownClassFeature.MasterInPerception)
+                    .AddFeature(9, "Thaumaturgic expertise vulnerability", "You also gain an additional skill increase, which you can apply only to Arcana, Nature, Occultism, or Religion.")
+                    .AddFeature(9, "Intensify vulnerability", "You gain the intensify vulnerability benefit of all of your implements, as well as the following action:\n{b}Intensify Vulnerability{/b} {icon:Action}\n{b}Fequency{/b} once per round\n{b}Requirements{/b} You're benefiting from Exploit Vulnerability, you can see the subject, and you haven't used Exploit Vulnerability this round.\n\nYou gain the intensified vulnerability benefit from one of the implements you're holding, which lasts until the beginning of your next turn.")
+                )
                 .WithOnSheet(delegate (CalculatedCharacterSheetValues sheet)
                 {
                     sheet.AddFeat(exploitVulnerabilityFeat, null);
@@ -224,6 +236,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         sheet.AddSelectionOption(new SingleFeatSelectionOption("ImplementAdept", "Implement Adept", 7, (Feat ft) => ft.HasTrait(ThaumaturgeTraits.AdeptImplement)));
                         values.SetProficiency(Trait.Will, Proficiency.Master);
                     });
+                    sheet.AddAtLevel(9, delegate (CalculatedCharacterSheetValues values)
+                    {
+                        sheet.SetProficiency(ThaumaturgeTraits.Thaumaturge, Proficiency.Expert);
+                        sheet.SetProficiency(Trait.Perception, Proficiency.Master);
+                        sheet.AddSelectionOption(CreateLimitedSkillFeatOption(values, "ThaumaturgicExpertiseSkill", "Thaumaturgic Expertise Skill", 9, [Skill.Arcana, Skill.Nature, Skill.Occultism, Skill.Religion]).WithIsOptional());
+                        sheet.AddFeat(intensifyVulnerabilityFeat, null);
+                    });
                 })
                 .WithOnCreature(creature =>
                 {
@@ -240,7 +259,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         });
                     }
                 });
-            
+
             // Creates and adds the logic for the Ammunition Thaumaturgy feat
             TrueFeat ammunitionThaumaturgyFeat = new TrueFeat(ThaumaturgeFeatNames.AmmunitionThaumaturgy, 1, "You're so used to handling your implement, weapon, and esoterica in the heat of combat that adding a few bullets or arrows to the mix is no extra burden.", "You can use Bows using the hand holding your implement.", [ThaumaturgeTraits.Thaumaturge]);
             AddAmmunitionThaumaturgyLogic(ammunitionThaumaturgyFeat);
@@ -435,6 +454,53 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         }
 
         /// <summary>
+        /// Adds the logic for the Intensify Vulnerability base class feature
+        /// </summary>
+        /// <param name="intensifyVulnerabilityFeat">The Intensify Vulnerability feat object</param>
+        public static void AddIntensifyVulnerabilityLogic(Feat intensifyVulnerabilityFeat)
+        {
+            intensifyVulnerabilityFeat.WithPermanentQEffect("Use your implement to intensify your target's vulnerability", delegate (QEffect self)
+            {
+                self.ProvideActionIntoPossibilitySection = (QEffect intensifyVulnerabilityEffect, PossibilitySection possibilitySection) =>
+                {
+                    if (possibilitySection.PossibilitySectionId == PossibilitySectionId.MainActions)
+                    {
+                        Creature owner = intensifyVulnerabilityEffect.Owner;
+                        SubmenuPossibility intensifyVulnerabilityMenu = new SubmenuPossibility(ThaumaturgeModdedIllustrations.ExploitVulnerability, "Intensify Vulnerability");
+                        if (ThaumaturgeUtilities.IsCreatureHoldingAnyImplement(self.Owner) && owner.PersistentCharacterSheet != null)
+                        {
+                            List<CombatAction> implementIntensifyVulnerabilityActions = new List<CombatAction>();
+                            FeatName[] implementFeats = owner.PersistentCharacterSheet.Calculated.AllFeatNames.Where(featName => ThaumaturgeFeatNames.ImplementFeatNames.ToList().Contains(featName)).ToArray();
+                            foreach (FeatName implementFeat in implementFeats)
+                            {
+                                CombatAction? intensifyVulnerabilityAction = GetIntensifyVulnerabilityActionForImplement(owner, implementFeat);
+                                if (intensifyVulnerabilityAction != null)
+                                {
+                                    implementIntensifyVulnerabilityActions.Add(intensifyVulnerabilityAction);
+                                }
+                            }
+
+                            if (implementIntensifyVulnerabilityActions.Count > 0)
+                            {
+                                PossibilitySection implementIntensifyVulnerabilitySection = new PossibilitySection("Implements");
+                                foreach (CombatAction action in implementIntensifyVulnerabilityActions)
+                                {
+                                    implementIntensifyVulnerabilitySection.AddPossibility(new ActionPossibility(action));
+                                }
+
+                                intensifyVulnerabilityMenu.Subsections.Add(implementIntensifyVulnerabilitySection);
+                            }
+                        }
+
+                        return intensifyVulnerabilityMenu;
+                    }
+
+                    return null;
+                };
+            });
+        }
+
+        /// <summary>
         /// Adds the logic for swapping implements
         /// </summary>
         /// <param name="creature">The creature containing the logic</param>
@@ -539,6 +605,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 
                                                         return new ReduceDamageModification(2 + owner.Level, "Amulet's Abeyance");
                                                     }
+                                                    else
+                                                    {
+                                                        owner.Actions.RefundReaction();
+                                                    }
                                                 }
                                             }
                                         }
@@ -600,7 +670,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                             {
                                                 if (await ThaumaturgeUtilities.HeldImplementOrSwap(Enums.ImplementIDs.Bell, owner, " use Bell reaction"))
                                                 {
-                                                    CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(action.Owner, new CombatAction(owner, ThaumaturgeModdedIllustrations.Bell, ImplementDetails.BellInitiateBenefitName, [Trait.Auditory, Trait.Emotion, Trait.Enchantment, Trait.Magical, Trait.Manipulate, Trait.Mental, ThaumaturgeTraits.Thaumaturge], ImplementDetails.BellInitiateBenefitRulesText, Target.Touch()), actionIsSpell ? Defense.Fortitude : Defense.Will, ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge));
+                                                    CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(action.Owner, new CombatAction(owner, ThaumaturgeModdedIllustrations.Bell, ImplementDetails.BellInitiateBenefitName, [Trait.Auditory, Trait.Emotion, Trait.Enchantment, Trait.Magical, Trait.Manipulate, Trait.Mental, ThaumaturgeTraits.Thaumaturge], ImplementDetails.BellInitiateBenefitRulesText, Target.Touch()).WithActionId(ThaumaturgeActionIDs.RingBell), actionIsSpell ? Defense.Fortitude : Defense.Will, owner.ClassDC(ThaumaturgeTraits.Thaumaturge));
                                                     if (savingThrowResult <= CheckResult.Failure)
                                                     {
                                                         QEffect bellEffect = new QEffect(ExpirationCondition.CountsDownAtStartOfSourcesTurn);
@@ -624,6 +694,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                                         }
                                                         owner.AddQEffect(bellEffect);
                                                     }
+                                                }
+                                                else
+                                                {
+                                                    owner.Actions.RefundReaction();
                                                 }
                                             }
                                         }
@@ -675,7 +749,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 
                                 bool holdingChalice = ThaumaturgeUtilities.AnyHeldImplementsMatchID(Enums.ImplementIDs.Chalice, self);
                                 bool hasAdeptChalice = self.HasFeat(ThaumaturgeFeatNames.ChaliceAdept);
-                                CombatAction sipAction = new CombatAction(self, chaliceIllustrationName, "Sip", chaliceTraits.ToArray(), (holdingChalice ? string.Empty : "{b}{Red}Swap to Chalice{/Red}{/b}\n\n") + string.Format(ImplementDetails.ChaliceInitiateBenefitSipUnformattedText, (2 + self.Level)) + (hasAdeptChalice ? "\n\nIf the target has taken critical Piercing or Slashing damage or taken persistent damage within 30 feet of you since their last turn, you instead give {Blue}" + (2 + self.Abilities.Charisma + self.Level) + "{/Blue} temporary HP." : string.Empty), Target.AdjacentCreatureOrSelf()
+                                int additionalSipTempHP = (self.HasEffect(ThaumaturgeQEIDs.ChaliceIntensified)) ? ((int)Math.Floor(self.Level / 2.0)) : 0;
+                                CombatAction sipAction = new CombatAction(self, chaliceIllustrationName, "Sip", chaliceTraits.ToArray(), (holdingChalice ? string.Empty : "{b}{Red}Swap to Chalice{/Red}{/b}\n\n") + string.Format(ImplementDetails.ChaliceInitiateBenefitSipUnformattedText, (2 + ((int)Math.Floor(self.Level / 2.0))) + additionalSipTempHP) + (hasAdeptChalice ? "\n\nIf the target has taken critical Piercing or Slashing damage or taken persistent damage within 30 feet of you since their last turn, you instead give {Blue}" + (2 + self.Abilities.Charisma + self.Level + additionalSipTempHP) + "{/Blue} temporary HP." : string.Empty), Target.AdjacentCreatureOrSelf()
                                     .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
                                     {
                                         if (user.QEffects.Any(qe => qe.Name == "Chalice Used this Round"))
@@ -701,12 +776,18 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                                 Name = "Chalice Used this Round"
                                             });
                                             int tempHPAmount = (target.HasEffect(ThaumaturgeQEIDs.AdeptChaliceBuff)) ? 2 + user.Abilities.Charisma + user.Level : 2 + (int)(Math.Floor(user.Level / 2.0));
+                                            tempHPAmount += additionalSipTempHP;
                                             target.GainTemporaryHP(tempHPAmount);
                                         }
                                     }
+                                    else
+                                    {
+                                        sipAction.RevertRequested = true;
+                                    }
                                 });
 
-                                CombatAction drainAction = new CombatAction(self, chaliceIllustrationName, "Drain", (chaliceTraits.Concat([Trait.Healing, Trait.Positive])).ToArray(), (holdingChalice ? string.Empty : "{b}{Red}Swap to Chalice{/Red}{/b}\n\n") + string.Format(ImplementDetails.ChaliceInitiateBenefitDrainUnformattedText, 3 * self.Level) + (hasAdeptChalice ? "\n\nIf the target has taken critical Piercing or Slashing damage or taken persistent damage within 30 feet of you since their last turn, you instead heal {Blue}" + (5 * self.Level) + "{/Blue} HP." : string.Empty), Target.AdjacentCreatureOrSelf()
+                                int additionalDrainHealing = (self.HasEffect(ThaumaturgeQEIDs.ChaliceIntensified)) ? self.Level : 0;
+                                CombatAction drainAction = new CombatAction(self, chaliceIllustrationName, "Drain", (chaliceTraits.Concat([Trait.Healing, Trait.Positive])).ToArray(), (holdingChalice ? string.Empty : "{b}{Red}Swap to Chalice{/Red}{/b}\n\n") + string.Format(ImplementDetails.ChaliceInitiateBenefitDrainUnformattedText, 3 * self.Level + additionalDrainHealing) + (hasAdeptChalice ? "\n\nIf the target has taken critical Piercing or Slashing damage or taken persistent damage within 30 feet of you since their last turn, you instead heal {Blue}" + ((5 * self.Level) + additionalDrainHealing) + "{/Blue} HP." : string.Empty), Target.AdjacentCreatureOrSelf()
                                     .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
                                     {
                                         if (user.QEffects.Any(qe => qe.Name == "Chalice Used this Round"))
@@ -740,8 +821,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                                 Name = "Chalice is Drained"
                                             });
                                             int hpToHeal = (target.HasEffect(ThaumaturgeQEIDs.AdeptChaliceBuff)) ? 5 * user.Level : 3 * user.Level;
+                                            hpToHeal += additionalDrainHealing;
                                             await target.HealAsync("" + hpToHeal, drainAction);
                                         }
+                                    }
+                                    else
+                                    {
+                                        drainAction.RevertRequested = true;
                                     }
                                 });
 
@@ -836,15 +922,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 {
                     self.AddQEffect(new QEffect(lanternImplementFeat.BaseName, "Lantern Initiate Benefit" + " - Passive improved seeking")
                     {
-                        BonusToAttackRolls = (QEffect bonusToSeek, CombatAction action, Creature? creature) =>
-                        {
-                            if (action.ActionId == ActionId.Seek && ThaumaturgeUtilities.AnyHeldImplementsMatchID(Enums.ImplementIDs.Lantern, action.Owner))
-                            {
-                                return new Bonus(1, BonusType.Status, "Lantern Initiate Benefit", true);
-                            }
+                        //BonusToAttackRolls = (QEffect bonusToSeek, CombatAction action, Creature? creature) =>
+                        //{
+                        //    if (action.ActionId == ActionId.Seek && ThaumaturgeUtilities.AnyHeldImplementsMatchID(Enums.ImplementIDs.Lantern, action.Owner))
+                        //    {
+                        //        return new Bonus(1, BonusType.Status, "Lantern Initiate Benefit", true);
+                        //    }
 
-                            return null;
-                        },
+                        //    return null;
+                        //},
                         StartOfCombat = async (QEffect startOfCombat) =>
                         {
                             startOfCombat.Owner.AddQEffect(new QEffect(ExpirationCondition.Never)
@@ -864,6 +950,28 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             if (ThaumaturgeUtilities.AnyHeldImplementsMatchID(Enums.ImplementIDs.Lantern, owner))
                             {
                                 bool hasLanternAdept = owner.HasFeat(ThaumaturgeFeatNames.LanternAdept);
+                                int bonusAmount = (owner.HasEffect(ThaumaturgeQEIDs.LanternIntensified)) ? 2 : 1;
+                                foreach (Creature allyOrSelf in owner.Battle.AllCreatures.Where(creature => creature == owner || (owner.FriendOfAndNotSelf(creature) && creature.DistanceTo(owner) < (hasLanternAdept ? 6 : 4) && creature.HasLineOfEffectTo(owner) < CoverKind.Blocked)))
+                                {
+                                    if (!allyOrSelf.HasEffect(ThaumaturgeQEIDs.LanternSeekBuff))
+                                    {
+                                        allyOrSelf.AddQEffect(new QEffect("Lantern's Light", $"You have a +{bonusAmount} status bonus to searching.")
+                                        {
+                                            Illustration = ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Lantern),
+                                            ExpiresAt = ExpirationCondition.Ephemeral,
+                                            Id = ThaumaturgeQEIDs.LanternSeekBuff,
+                                            BonusToAttackRolls = (QEffect bonusToSeek, CombatAction action, Creature? creature) =>
+                                            {
+                                                if (action.ActionId == ActionId.Seek)
+                                                {
+                                                    return new Bonus(1, BonusType.Status, "Lantern Initiate Benefit", true);
+                                                }
+
+                                                return null;
+                                            }
+                                        });
+                                    }
+                                }
                                 if (hasLanternAdept)
                                 {
                                     foreach (Creature invisibleCreature in owner.Battle.AllCreatures.Where(creature => creature.HasEffect(QEffectId.Invisible) && owner.HasLineOfEffectTo(creature.Occupies) < CoverKind.Blocked && owner.DistanceTo(creature) <= 6))
@@ -985,7 +1093,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 
                             return new ActionPossibility(new CombatAction(owner, ThaumaturgeModdedIllustrations.Mirror, ImplementDetails.MirrorInitiateBenefitName, [Trait.Illusion, Trait.Magical, Trait.Manipulate, Trait.Basic, ThaumaturgeTraits.Thaumaturge], (holdingMirror ? string.Empty : "{b}{Red}Swap to Mirror{/Red}{/b}\n\n") + ImplementDetails.MirrorInitiateBenefitRulesText, Target.Tile((creature, tile) => tile.LooksFreeTo(creature) && creature.Occupies != null && creature.DistanceTo(tile) <= 3, (creature, tile) => (float)int.MinValue))
                                 .WithActionCost(1)
-                                .WithEffectOnChosenTargets(async delegate (Creature attacker, ChosenTargets targets)
+                                .WithEffectOnChosenTargets(async delegate (CombatAction action, Creature attacker, ChosenTargets targets)
                                 {
                                     if (await ThaumaturgeUtilities.HeldImplementOrSwap(Enums.ImplementIDs.Mirror, attacker, " to use " + ImplementDetails.MirrorInitiateBenefitName))
                                     {
@@ -1080,6 +1188,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                             mirrorClone.AddQEffect(mirrorTrackingEffect);
                                         }
                                     }
+                                    else
+                                    {
+                                        action.RevertRequested = true;
+                                    }
                                 }));
                         },
                         ProvideActionIntoPossibilitySection = (QEffect swapToClone, PossibilitySection possibilitySection) =>
@@ -1097,11 +1209,15 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 Creature pairedCreature = mirrorTracking.PairedCreature;
                                 return new ActionPossibility(new CombatAction(owner, ThaumaturgeModdedIllustrations.Mirror, "Swap to Clone", [Trait.Basic, ThaumaturgeTraits.Thaumaturge], (holdingMirror ? string.Empty : "{b}{Red}Swap to Mirror{/Red}{/b}\n\n") + "Swaps to the clone, in which you can continue your turn.", Target.Self())
                                     .WithActionCost(0)
-                                    .WithEffectOnSelf(async (Creature self) =>
+                                    .WithEffectOnSelf(async (CombatAction action, Creature self) =>
                                     {
                                         if (await ThaumaturgeUtilities.HeldImplementOrSwap(Enums.ImplementIDs.Mirror, self, " to swap to clone"))
                                         {
                                             SwapWithClone(self, pairedCreature);
+                                        }
+                                        else
+                                        {
+                                            action.RevertRequested = true;
                                         }
                                     }));
                             }
@@ -1433,7 +1549,12 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                     }
 
                                     bool holdingWand = ThaumaturgeUtilities.AnyHeldImplementsMatchID(Enums.ImplementIDs.Wand, owner);
-                                    CombatAction flingMagicAction = new CombatAction(self, wandIllustration, $"Fling Magic  ({wandDamageKind.HumanizeTitleCase2()})", wandTraits.ToArray(), (holdingWand ? string.Empty : "{b}{Red}Swap to Wand{/Red}{/b}\n\n") + ImplementDetails.WandInitiateBenefitRulesText, Target.Ranged(wandRange)
+                                    int additionalDamage = (self.HasEffect(ThaumaturgeQEIDs.WandIntensified)) ? (1 + ((int)Math.Ceiling(owner.Level / 2.0))) : 0;
+                                    string actionDescriptionLeadin = "{b}Requirements{/b} You are holding your wand implement.\n\n";
+                                    string actionDescriptionUnfromatted = "You fling magical energy at a target within 60 feet, dealing {0}+{1} {2} damage.";
+                                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                    string exploitTarget = (exploitEffect != null) ? exploitEffect.Target.Name : "the target of your Exploit Vulnerability";
+                                    CombatAction flingMagicAction = new CombatAction(self, wandIllustration, $"Fling Magic  ({wandDamageKind.HumanizeTitleCase2()})", wandTraits.ToArray(), actionDescriptionLeadin + (holdingWand ? string.Empty : "{b}{Red}Swap to Wand{/Red}{/b}\n\n") + string.Format(actionDescriptionUnfromatted, $"{(int)Math.Ceiling(owner.Level / 2.0)}d4", $"{self.Abilities.Charisma}", $"{wandDamageKind}") + ((additionalDamage > 0) ? " {Blue}{i}(" + additionalDamage + " Additional damage against " + exploitTarget + ".){/i}{/Blue}" : string.Empty), Target.Ranged(wandRange)
                                         .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
                                         {
                                             if (!ThaumaturgeUtilities.IsCreatureHoldingOrCarryingImplement(Enums.ImplementIDs.Wand, self))
@@ -1443,13 +1564,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                             return Usability.Usable;
                                         }));
                                     flingMagicAction.WithActionCost(2);
-                                    flingMagicAction.WithSavingThrow(new SavingThrow(Defense.Reflex, creature => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge)));
+                                    flingMagicAction.WithSavingThrow(new SavingThrow(Defense.Reflex, creature => owner.ClassDC(ThaumaturgeTraits.Thaumaturge)));
                                     flingMagicAction.WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
                                     {
                                         if (wandDamageKind != DamageKind.Untyped && await ThaumaturgeUtilities.HeldImplementOrSwap(Enums.ImplementIDs.Wand, attacker, " to Fling Magic"))
                                         {
                                             int level = owner.Level;
-                                            KindedDamage wandDamage = new KindedDamage(DiceFormula.FromText("" + (1 + (int)(Math.Floor((level - 1) / 2.0))) + "d4 + " + attacker.Abilities.Charisma, "Fling Magic"), (DamageKind)wandDamageKind);
+                                            KindedDamage wandDamage = new KindedDamage(DiceFormula.FromText("" + (1 + (int)(Math.Floor((level - 1) / 2.0))) + "d4 + " + (attacker.Abilities.Charisma + additionalDamage), "Fling Magic"), (DamageKind)wandDamageKind);
                                             DamageEvent wandDamageEvent = new DamageEvent(action, defender, result, [wandDamage], result == CheckResult.CriticalFailure, result == CheckResult.Success);
                                             if (result <= CheckResult.Success)
                                             {
@@ -1457,9 +1578,14 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                                 HandleWandAdeptEffect(wandDamageKind, wandIllustration, attacker, defender, result);
                                             }
                                         }
+                                        else
+                                        {
+                                            action.RevertRequested = true;
+                                        }
                                     });
 
-                                    CombatAction boostedFlingMagicAction = new CombatAction(self, wandIllustration, $"Boosted Fling Magic ({wandDamageKind.HumanizeTitleCase2()})", wandTraits.ToArray(), (holdingWand ? string.Empty : "{b}{Red}Swap to Wand{/Red}{/b}\n\n") + ImplementDetails.WandInitiateBenefitRulesText, Target.Ranged(wandRange)
+                                    string boostDescription = "After you do so, the wand takes 1d4 rounds to recharge, during which you can't boost the wand's damage but can continue to Fling Magic normally. If you critically hit with a Strike, your wand recharges immediately as it draws in power from the clash.";
+                                    CombatAction boostedFlingMagicAction = new CombatAction(self, wandIllustration, $"Boosted Fling Magic ({wandDamageKind.HumanizeTitleCase2()})", wandTraits.ToArray(), actionDescriptionLeadin + (holdingWand ? string.Empty : "{b}{Red}Swap to Wand{/Red}{/b}\n\n") + string.Format(actionDescriptionUnfromatted, "{Blue}" + (int)Math.Ceiling(owner.Level / 2.0) + "d6{/Blue}", $"{self.Abilities.Charisma}", $"{wandDamageKind}") + ((additionalDamage > 0) ? " {Blue}{i}(" + additionalDamage + " Additional damage against " + exploitTarget + ".){/i}{/Blue}" : string.Empty) + "\n\n" + boostDescription, Target.Ranged(wandRange)
                                         .WithAdditionalConditionOnTargetCreature((Creature user, Creature target) =>
                                         {
                                             if (owner.HasEffect(ThaumaturgeQEIDs.BoostedWandUsed))
@@ -1474,13 +1600,13 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                             return Usability.Usable;
                                         }));
                                     boostedFlingMagicAction.WithActionCost(2);
-                                    boostedFlingMagicAction.WithSavingThrow(new SavingThrow(Defense.Reflex, creature => ThaumaturgeUtilities.CalculateClassDC(owner, ThaumaturgeTraits.Thaumaturge)));
+                                    boostedFlingMagicAction.WithSavingThrow(new SavingThrow(Defense.Reflex, creature => owner.ClassDC(ThaumaturgeTraits.Thaumaturge)));
                                     boostedFlingMagicAction.WithEffectOnEachTarget(async delegate (CombatAction action, Creature attacker, Creature defender, CheckResult result)
                                     {
                                         if (wandDamageKind != DamageKind.Untyped && await ThaumaturgeUtilities.HeldImplementOrSwap(Enums.ImplementIDs.Wand, attacker, " to Boosted Fling Magic"))
                                         {
                                             int level = owner.Level;
-                                            KindedDamage wandDamage = new KindedDamage(DiceFormula.FromText("" + (1 + (int)(Math.Floor((level - 1) / 2.0))) + "d6 + " + attacker.Abilities.Charisma, "Boosted Fling Magic"), (DamageKind)wandDamageKind);
+                                            KindedDamage wandDamage = new KindedDamage(DiceFormula.FromText("" + (1 + (int)(Math.Floor((level - 1) / 2.0))) + "d6 + " + (attacker.Abilities.Charisma + additionalDamage), "Boosted Fling Magic"), (DamageKind)wandDamageKind);
                                             DamageEvent wandDamageEvent = new DamageEvent(action, defender, result, [wandDamage], result == CheckResult.CriticalFailure, result == CheckResult.Success);
                                             if (result <= CheckResult.Success)
                                             {
@@ -1497,6 +1623,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                                 Source = owner,
                                                 Value = 1 + boostedResult
                                             });
+                                        }
+                                        else
+                                        {
+                                            action.RevertRequested = true;
                                         }
                                     });
 
@@ -2192,7 +2322,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     Creature owner = provideMainAction.Owner;
                     PossibilitySection divineDisharmonySection = new PossibilitySection("Divine Disharmony Possibilities");
 
-                    CombatAction divineDisharmonyAction = new CombatAction(owner, ThaumaturgeModdedIllustrations.DivineDisharmony, "Divine Disharmony", [Trait.Divine, Trait.Enchantment, Trait.Manipulate, Trait.Basic, ThaumaturgeTraits.Thaumaturge], divineDisharmonyFeat.RulesText,Target.RangedCreature(12));
+                    CombatAction divineDisharmonyAction = new CombatAction(owner, ThaumaturgeModdedIllustrations.DivineDisharmony, "Divine Disharmony", [Trait.Divine, Trait.Enchantment, Trait.Manipulate, Trait.Basic, ThaumaturgeTraits.Thaumaturge], divineDisharmonyFeat.RulesText, Target.RangedCreature(12));
                     divineDisharmonyAction.WithActionCost(1);
                     divineDisharmonyAction.WithActionId(ThaumaturgeActionIDs.DivineDisharmony);
                     divineDisharmonyAction.WithActiveRollSpecification(new ActiveRollSpecification(TaggedChecks.SkillCheck(Skill.Deception, Skill.Intimidation), Checks.DefenseDC(Defense.Will)));
@@ -2250,8 +2380,8 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         {
                             if (checkResult >= CheckResult.Success)
                             {
-                                ActiveRollSpecification activeRollSpecification = new ActiveRollSpecification(Checks.SavingThrow(Defense.Fortitude), Checks.FlatDC(ThaumaturgeUtilities.CalculateClassDC(attacker, ThaumaturgeTraits.Thaumaturge)));
-                                int classDC = ThaumaturgeUtilities.CalculateClassDC(attacker, ThaumaturgeTraits.Thaumaturge);
+                                ActiveRollSpecification activeRollSpecification = new ActiveRollSpecification(Checks.SavingThrow(Defense.Fortitude), Checks.FlatDC(attacker.ClassDC(ThaumaturgeTraits.Thaumaturge)));
+                                int classDC = attacker.ClassDC(ThaumaturgeTraits.Thaumaturge);
                                 CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(defender, lingeringPainStrikeStrike, Defense.Fortitude, classDC);
                                 if (savingThrowResult <= CheckResult.Failure)
                                 {
@@ -2280,7 +2410,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 self.StartOfCombat = async (QEffect startOfCombat) =>
                 {
                     int totalWorth = 0;
-                    foreach(Creature creature in startOfCombat.Owner.Battle.AllCreatures.Where(enemy => !startOfCombat.Owner.FriendOfAndNotSelf(enemy)))
+                    foreach (Creature creature in startOfCombat.Owner.Battle.AllCreatures.Where(enemy => !startOfCombat.Owner.FriendOfAndNotSelf(enemy)))
                     {
                         totalWorth += Math.Max(creature.Level, 0);
                     }
@@ -2595,7 +2725,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                 };
 
                                 defender.AddQEffect(savingThrowPenalty);
-                            } 
+                            }
                         }));
                 };
             });
@@ -2695,7 +2825,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                     {
                         skillTraits.Add(ThaumaturgeTraits.SecondaryTomeSkill);
                     }
-                    yield return new Feat(ModManager.RegisterFeatName($"TomeTrait{skillType}Option{skillName}", skillName), Skills.GetSkillDescription(skill), skillName,  skillTraits, null)
+                    yield return new Feat(ModManager.RegisterFeatName($"TomeTrait{skillType}Option{skillName}", skillName), Skills.GetSkillDescription(skill), skillName, skillTraits, null)
                         .WithRulesTextCreator((CharacterSheet sheet) =>
                         {
                             CalculatedCharacterSheetValues values = sheet.Calculated;
@@ -2830,6 +2960,704 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             {
                 sheet.AddSelectionOption(new SingleFeatSelectionOption("ThaumaturgeDedicationSkill", "Thaumaturge Dedication Skill", -1, (Feat ft) => posibileSkills.Contains(ft.FeatName)).WithIsOptional());
             }
+        }
+
+        private static SingleFeatSelectionOption CreateLimitedSkillFeatOption(CalculatedCharacterSheetValues sheet, string key, string name, int level, Skill[] allowedSkills)
+        {
+            return new SingleFeatSelectionOption(key, name, level, (Feat ft) =>
+            {
+                if (ft is SkillSelectionFeat selectionFeat && allowedSkills.Contains(selectionFeat.Skill)) return true;
+                if (ft is SkillIncreaseFeat skillIncreaseFeat && allowedSkills.Contains(skillIncreaseFeat.Skill))
+                {
+                    var haveOriginalSelection = sheet.AllFeats.Any(selectionFeat => selectionFeat is SkillSelectionFeat skillSelectionFeat && skillIncreaseFeat.Skill == skillSelectionFeat.Skill);
+                    if (!haveOriginalSelection) return false;
+                    if (skillIncreaseFeat.TargetProficiency == Proficiency.Expert) return true;
+                    if (level < 7) return false;
+                    var haveExpert = sheet.AllFeats.Any(ft2 => ft2 is SkillIncreaseFeat previousIncreaseFeat && previousIncreaseFeat.TargetProficiency == Proficiency.Expert && skillIncreaseFeat.Skill == previousIncreaseFeat.Skill);
+                    if (!haveExpert) return false;
+                    if (skillIncreaseFeat.TargetProficiency == Proficiency.Master) return true;
+                    if (level < 15) return false;
+                    var haveMaster = sheet.AllFeats.Any(ft2 => ft2 is SkillIncreaseFeat previousIncreaseFeat && previousIncreaseFeat.TargetProficiency == Proficiency.Master && skillIncreaseFeat.Skill == previousIncreaseFeat.Skill);
+                    if (!haveMaster) return false;
+                    return true;
+                }
+
+                return false;
+            });
+        }
+
+        private static CombatAction? GetIntensifyVulnerabilityActionForImplement(Creature owner, FeatName featName)
+        {
+            if (featName == ThaumaturgeFeatNames.AmuletImplement)
+            {
+                return CreateAmuletIntensifyVulnerabilityAction(owner);
+            }
+            else if (featName == ThaumaturgeFeatNames.BellImplement)
+            {
+                return CreateBellIntensifyVulnerabilityAction(owner);
+            }
+            else if (featName == ThaumaturgeFeatNames.ChaliceImplement)
+            {
+                return CreateChaliceIntensifyVulnerabilityAction(owner);
+            }
+            else if (featName == ThaumaturgeFeatNames.LanternImplement)
+            {
+                return CreateLanternIntensifyVulnerabilityAction(owner);
+            }
+            else if (featName == ThaumaturgeFeatNames.MirrorImplement)
+            {
+                return CreateMirrorIntensifyVulnerabilityAction(owner);
+            }
+            else if (featName == ThaumaturgeFeatNames.RegaliaImplement)
+            {
+                return CreateRegaliaIntensifyVulnerabilityAction(owner);
+            }
+            else if (featName == ThaumaturgeFeatNames.TomeImplement)
+            {
+                return CreateTomeIntensifyVulnerabilityAction(owner);
+            }
+            else if (featName == ThaumaturgeFeatNames.WandImplement)
+            {
+                return CreateWandIntensifyVulnerabilityAction(owner);
+            }
+            else if (featName == ThaumaturgeFeatNames.WeaponImplement)
+            {
+                return CreateWeaponIntensifyVulnerabilityAction(owner);
+            }
+
+            return null;
+        }
+
+        private static CombatAction CreateBaseIntensifyVulnerabilityAction(Creature owner, ImplementIDs implement, string description, Target target)
+        {
+            bool holdingImplement = ThaumaturgeUtilities.AnyHeldImplementsMatchID(implement, owner);
+            CombatAction intensifyVulnerabilityAction = new CombatAction(owner, ThaumaturgeModdedIllustrations.GetIllustration(implement), $"{implement.HumanizeTitleCase2()} Intensify Vulnerability", [Trait.Concentrate, Trait.Divination, Trait.Magical], (holdingImplement ? string.Empty : "{b}{Red}Swap to " + implement.HumanizeTitleCase2() + "{/Red}{/b}\n\n") + "Till the start of your next turn. " + description, target)
+                .WithActionCost(1)
+                .WithEffectOnSelf((Creature self) =>
+                {
+                    self.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtStartOfYourTurn)
+                    {
+                        Id = ThaumaturgeQEIDs.UsedIntensifyVulnerability
+                    });
+                });
+
+            if (target is SelfTarget selfTarget)
+            {
+                selfTarget.WithAdditionalRestriction((Creature self) =>
+                {
+                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+
+                    if (exploitEffect == null)
+                    {
+                        return "No exploited targeted";
+                    }
+                    else if (owner.HasLineOfEffectTo(exploitEffect.Target) == CoverKind.Blocked)
+                    {
+                        return "No line of effect to target";
+                    }
+                    else if (owner.HasEffect(ThaumaturgeQEIDs.UsedExploitVulnerability))
+                    {
+                        return "Used 'Exploit Vulnerability' this turn";
+                    }
+                    else if (owner.HasEffect(ThaumaturgeQEIDs.UsedIntensifyVulnerability))
+                    {
+                        return "Used 'Intensify Vulnerability' this turn";
+                    }
+
+                    return null;
+                });
+            }
+
+            return intensifyVulnerabilityAction;
+        }
+
+        private static CombatAction CreateAmuletIntensifyVulnerabilityAction(Creature owner)
+        {
+            CombatAction intensifyVulnerabilityAction = CreateBaseIntensifyVulnerabilityAction(owner, ImplementIDs.Amulet, $"You gain a +2 status bonus to AC and saves against the target of your Exploit Vulnerability.", Target.Self());
+            intensifyVulnerabilityAction.EffectOnChosenTargets += async (CombatAction combatAction, Creature self, ChosenTargets chosenTargets) =>
+            {
+                if (await ThaumaturgeUtilities.HeldImplementOrSwap(ImplementIDs.Amulet, self, " to Intensify Vulnerability?"))
+                {
+                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                    if (exploitEffect != null)
+                    {
+                        Creature target = exploitEffect.Target;
+                        self.AddQEffect(new QEffect("Intensify Vulnerability (Amulet)", $"+2 status bonus to AC and saves against {target.Name}")
+                        {
+                            ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn,
+                            Illustration = ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Amulet),
+                            Tag = target,
+                            StateCheck = async (QEffect stateCheck) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect == null)
+                                {
+                                    stateCheck.ExpiresAt = ExpirationCondition.Immediately;
+                                }
+                                else if (exploitEffect.Target != stateCheck.Tag)
+                                {
+                                    stateCheck.Tag = exploitEffect.Target;
+                                    stateCheck.Description = $"+2 status bonus to AC and saves against {exploitEffect.Target.Name}";
+                                }
+                            },
+                            BonusToDefenses = (QEffect bonusToDefenses, CombatAction? action, Defense defense) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect != null && action != null)
+                                {
+                                    Creature actionOwner = action.Owner;
+                                    if (actionOwner == exploitEffect.Target)
+                                    {
+                                        if (defense == Defense.AC || action.SavingThrow != null)
+                                        {
+                                            return new Bonus(2, BonusType.Status, "Intensify Vulnerability (Amulet)", true);
+                                        }
+                                    }
+                                }
+
+                                return null;
+                            }
+                        });
+                    }
+                }
+                else
+                {
+                    intensifyVulnerabilityAction.RevertRequested = true;
+                }
+            };
+
+            return intensifyVulnerabilityAction;
+        }
+
+        private static CombatAction CreateBellIntensifyVulnerabilityAction(Creature owner)
+        {
+            CombatAction intensifyVulnerabilityAction = CreateBaseIntensifyVulnerabilityAction(owner, ImplementIDs.Bell, $"When you successfully Strike the target of your Exploit Vulnerability, your bell implement plays a haunting tone and the creature takes a –2 status penalty on saves against your Ring Bell for 1 round, or a –3 status penalty on a critical hit.", Target.Self());
+            intensifyVulnerabilityAction.WithExtraTrait(Trait.Auditory);
+            intensifyVulnerabilityAction.WithExtraTrait(Trait.Emotion);
+            intensifyVulnerabilityAction.WithExtraTrait(Trait.Mental);
+            intensifyVulnerabilityAction.EffectOnChosenTargets += async (CombatAction combatAction, Creature self, ChosenTargets chosenTargets) =>
+            {
+                if (await ThaumaturgeUtilities.HeldImplementOrSwap(ImplementIDs.Bell, self, " to Intensify Vulnerability?"))
+                {
+                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                    if (exploitEffect != null)
+                    {
+                        Creature target = exploitEffect.Target;
+                        self.AddQEffect(new QEffect("Intensify Vulnerability (Bell)", $"Successful Strikes against {target.Name} will give them a penalty to your Ring Bell action.")
+                        {
+                            ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn,
+                            Illustration = ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Bell),
+                            Tag = target,
+                            StateCheck = async (QEffect stateCheck) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect == null)
+                                {
+                                    stateCheck.ExpiresAt = ExpirationCondition.Immediately;
+                                }
+                                else if (exploitEffect.Target != stateCheck.Tag)
+                                {
+                                    stateCheck.Tag = exploitEffect.Target;
+                                    stateCheck.Description = $"Successful Strikes against {target.Name} will give them a penalty to your Ring Bell action.";
+                                }
+                            },
+                            AfterYouTakeActionAgainstTarget = async (QEffect afterActionToTarget, CombatAction action, Creature target, CheckResult result) =>
+                            {
+                                if (result >= CheckResult.Success && action.HasTrait(Trait.Strike))
+                                {
+                                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                    if (exploitEffect != null && target == exploitEffect.Target)
+                                    {
+                                        int bonusAmount = (result == CheckResult.CriticalSuccess) ? -3 : -2;
+                                        target.AddQEffect(new QEffect("Intensify Vulnerability (Bell)", $"You take a {bonusAmount} status penality to your saving throws from {self.Name}'s Ring Bell action.")
+                                        {
+                                            ExpiresAt = ExpirationCondition.ExpiresAtStartOfSourcesTurn,
+                                            Source = self,
+                                            Illustration = ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Bell),
+                                            BonusToDefenses = (QEffect bonusToDefenses, CombatAction? action, Defense defense) =>
+                                            {
+                                                if (action != null && action.ActionId == ThaumaturgeActionIDs.RingBell && action.Owner == self)
+                                                {
+                                                    return new Bonus(bonusAmount, BonusType.Status, "Intensify Vulnerability (Bell)", false);
+                                                }
+
+                                                return null;
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+                else
+                {
+                    intensifyVulnerabilityAction.RevertRequested = true;
+                }
+            };
+
+            return intensifyVulnerabilityAction;
+        }
+
+        private static CombatAction CreateChaliceIntensifyVulnerabilityAction(Creature owner)
+        {
+            CombatAction intensifyVulnerabilityAction = CreateBaseIntensifyVulnerabilityAction(owner, ImplementIDs.Chalice, $"When you successfully Strike the target of your Exploit Vulnerability, you increase the effect if someone Drinks from the Chalice before the end of that turn. Add an additional half your level to the temporary HP if the drinker sips, or add your level to the HP regained if the drinker drains the chalice. This effect isn't cumulative if you hit with more than one Strike.", Target.Self());
+            intensifyVulnerabilityAction.EffectOnChosenTargets += async (CombatAction combatAction, Creature self, ChosenTargets chosenTargets) =>
+            {
+                if (await ThaumaturgeUtilities.HeldImplementOrSwap(ImplementIDs.Chalice, self, " to Intensify Vulnerability?"))
+                {
+                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                    if (exploitEffect != null)
+                    {
+                        Creature target = exploitEffect.Target;
+                        self.AddQEffect(new QEffect("Intensify Vulnerability (Chalice)", $"Successful Strikes against {target.Name} improve both the Sip and Drain actions.")
+                        {
+                            ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn,
+                            Illustration = ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Chalice),
+                            Tag = target,
+                            StateCheck = async (QEffect stateCheck) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect == null)
+                                {
+                                    stateCheck.ExpiresAt = ExpirationCondition.Immediately;
+                                }
+                                else if (exploitEffect.Target != stateCheck.Tag)
+                                {
+                                    stateCheck.Tag = exploitEffect.Target;
+                                    stateCheck.Description = $"Successful Strikes against {target.Name} improve both the Sip and Drain actions.";
+                                }
+                            },
+                            AfterYouTakeActionAgainstTarget = async (QEffect afterActionToTarget, CombatAction action, Creature target, CheckResult result) =>
+                            {
+                                if (result >= CheckResult.Success && action.HasTrait(Trait.Strike))
+                                {
+                                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                    if (exploitEffect != null && target == exploitEffect.Target)
+                                    {
+                                        afterActionToTarget.Description = "Until the end of this turn,\n\n{b}Sip{/b} Add an additional {Blue}" + ((int)Math.Floor(owner.Level / 2.0)) + "{/Blue} to the temporary HP if the drinker sips\n{b}Drain{/b} Add {Blue}" + owner.Level + "{/Blue} to the HP regained if the drinker drains";
+                                        afterActionToTarget.ExpiresAt = ExpirationCondition.ExpiresAtEndOfYourTurn;
+                                        owner.AddQEffect(new QEffect(ExpirationCondition.ExpiresAtEndOfYourTurn)
+                                        {
+                                            Id = ThaumaturgeQEIDs.ChaliceIntensified
+                                        });
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+                else
+                {
+                    intensifyVulnerabilityAction.RevertRequested = true;
+                }
+            };
+
+            return intensifyVulnerabilityAction;
+        }
+
+        private static CombatAction CreateLanternIntensifyVulnerabilityAction(Creature owner)
+        {
+            CombatAction intensifyVulnerabilityAction = CreateBaseIntensifyVulnerabilityAction(owner, ImplementIDs.Lantern, $"Your Strikes against the target of your Exploit Vulnerability ignore Concealment.\n\nThe status bonuses from the lantern's initiate benefit increase to +2. The target of your Exploit Vulnerability takes a –2 status penalty to Deception checks and Stealth checks as long as it's within the lantern's light.", Target.Self());
+            intensifyVulnerabilityAction.EffectOnChosenTargets += async (CombatAction combatAction, Creature self, ChosenTargets chosenTargets) =>
+            {
+                if (await ThaumaturgeUtilities.HeldImplementOrSwap(ImplementIDs.Lantern, self, " to Intensify Vulnerability?"))
+                {
+                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                    if (exploitEffect != null)
+                    {
+                        Creature target = exploitEffect.Target;
+                        self.AddQEffect(new QEffect("Intensify Vulnerability (Lantern)", $"Your Strikes against {target.Name} ignore Concealment.\nImproved Searching\n{target.Name} takes a –2 status penalty to Deception checks and Stealth checks in the lantern's light.")
+                        {
+                            Id = ThaumaturgeQEIDs.LanternIntensified,
+                            ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn,
+                            Illustration = ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Lantern),
+                            Tag = target,
+                            StateCheck = async (QEffect stateCheck) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect == null)
+                                {
+                                    stateCheck.ExpiresAt = ExpirationCondition.Immediately;
+                                }
+                                else if (exploitEffect.Target != stateCheck.Tag)
+                                {
+                                    stateCheck.Tag = exploitEffect.Target;
+                                    stateCheck.Description = $"Your Strikes against {exploitEffect.Target.Name} ignore Concealment.\nImproved Searching\n{exploitEffect.Target.Name} takes a –2 status penalty to Deception checks and Stealth checks in the lantern's light.";
+                                }
+                            },
+                            YouBeginAction = async (QEffect startAction, CombatAction action) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (action.HasTrait(Trait.Strike) && !action.HasTrait(Trait.UnaffectedByConcealment) && exploitEffect != null && action.ChosenTargets.ChosenCreature != null && action.ChosenTargets.ChosenCreature == exploitEffect.Target)
+                                {
+                                    action.WithExtraTrait(Trait.UnaffectedByConcealment);
+                                    action.WithExtraTrait(ThaumaturgeTraits.TemporaryUnaffectedByConcealment);
+                                }
+                            },
+                            AfterYouTakeAction = async (QEffect afterAction, CombatAction action) =>
+                            {
+                                if (action.HasTrait(ThaumaturgeTraits.TemporaryUnaffectedByConcealment))
+                                {
+                                    action.Traits.Remove(ThaumaturgeTraits.TemporaryUnaffectedByConcealment);
+                                    action.Traits.Remove(Trait.UnaffectedByConcealment);
+                                }
+                            }
+                        });
+                        int lightDistance = (owner.HasFeat(ThaumaturgeFeatNames.LanternAdept)) ? 6 : 4;
+                        target.AddQEffect(new QEffect("Intensify Vulnerability (Lantern)", "–2 status penalty to Deception checks and Stealth checks within the lantern's light.")
+                        {
+                            ExpiresAt = ExpirationCondition.ExpiresAtStartOfSourcesTurn,
+                            Source = owner,
+                            BonusToSkillChecks = (Skill skill, CombatAction action, Creature? defender) =>
+                            {
+                                if ((skill == Skill.Deception || skill == Skill.Stealth) &&action.Owner.DistanceTo(owner) <= lightDistance && action.Owner.HasLineOfEffectTo(owner) < CoverKind.Blocked)
+                                {
+                                    return new Bonus(-2, BonusType.Status, "Intensify Vulnerability (Lantern)", false);
+                                }
+
+                                return null;
+                            }
+                        });
+                    }
+                }
+                else
+                {
+                    intensifyVulnerabilityAction.RevertRequested = true;
+                }
+            };
+
+            return intensifyVulnerabilityAction;
+        }
+
+        private static CombatAction CreateMirrorIntensifyVulnerabilityAction(Creature owner)
+        {
+            CombatAction intensifyVulnerabilityAction = CreateBaseIntensifyVulnerabilityAction(owner, ImplementIDs.Mirror, $"You become concealed to the target of your Exploit Vulnerability.", Target.Self());
+            intensifyVulnerabilityAction.EffectOnChosenTargets += async (CombatAction combatAction, Creature self, ChosenTargets chosenTargets) =>
+            {
+                if (await ThaumaturgeUtilities.HeldImplementOrSwap(ImplementIDs.Mirror, self, " to Intensify Vulnerability?"))
+                {
+                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                    if (exploitEffect != null)
+                    {
+                        string tempEffectName = "TEMP MIRROR CONCEALMENT";
+                        Creature target = exploitEffect.Target;
+                        self.AddQEffect(new QEffect("Intensify Vulnerability (Mirror)", $"You are concealed from {target.Name}")
+                        {
+                            ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn,
+                            Illustration = ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Mirror),
+                            Tag = target,
+                            StateCheck = async (QEffect stateCheck) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect == null)
+                                {
+                                    stateCheck.ExpiresAt = ExpirationCondition.Immediately;
+                                }
+                                else if (exploitEffect.Target != stateCheck.Tag)
+                                {
+                                    stateCheck.Tag = exploitEffect.Target;
+                                    stateCheck.Description = $"You are concealed from {target.Name}";
+                                }
+                            },
+                            YouAreTargeted = async (QEffect beforeTargeted, CombatAction action) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect != null && action.Owner == exploitEffect.Target)
+                                {
+                                    owner.AddQEffect(new QEffect()
+                                    {
+                                        Name = tempEffectName,
+                                        ThisCreatureCannotBeMoreVisibleThan = DetectionStrength.Concealed
+                                    });
+                                }
+                            },
+                            AfterYouAreTargeted = async (QEffect afterTargeted, CombatAction action) =>
+                            {
+                                owner.RemoveAllQEffects(qe => qe.Name == tempEffectName);
+                            }
+                        });
+                    }
+                }
+                else
+                {
+                    intensifyVulnerabilityAction.RevertRequested = true;
+                }
+            };
+
+            return intensifyVulnerabilityAction;
+        }
+
+        private static CombatAction CreateRegaliaIntensifyVulnerabilityAction(Creature owner)
+        {
+            CombatAction intensifyVulnerabilityAction = CreateBaseIntensifyVulnerabilityAction(owner, ImplementIDs.Regalia, $"When you successfully Strike the target of your Exploit Vulnerability, choose an ally that you can see. That ally gains a +1 circumstance bonus to its attack rolls against the creature until the beginning of your next turn. If the attack roll was a critical hit, the circumstance bonus increases to +2.", Target.Self());
+            intensifyVulnerabilityAction.EffectOnChosenTargets += async (CombatAction combatAction, Creature self, ChosenTargets chosenTargets) =>
+            {
+                if (await ThaumaturgeUtilities.HeldImplementOrSwap(ImplementIDs.Regalia, self, " to Intensify Vulnerability?"))
+                {
+                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                    if (exploitEffect != null)
+                    {
+                        Creature target = exploitEffect.Target;
+                        self.AddQEffect(new QEffect("Intensify Vulnerability (Regalia)", $"Successful Strikes against {target.Name} let an ally gain a bonus.")
+                        {
+                            ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn,
+                            Illustration = ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Regalia),
+                            Tag = target,
+                            StateCheck = async (QEffect stateCheck) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect == null)
+                                {
+                                    stateCheck.ExpiresAt = ExpirationCondition.Immediately;
+                                }
+                                else if (exploitEffect.Target != stateCheck.Tag)
+                                {
+                                    stateCheck.Tag = exploitEffect.Target;
+                                    stateCheck.Description = $"Successful Strikes against {target.Name} let an ally gain a bonus.";
+                                }
+                            },
+                            AfterYouTakeActionAgainstTarget = async (QEffect afterActionToTarget, CombatAction action, Creature target, CheckResult result) =>
+                            {
+                                if (result >= CheckResult.Success && action.HasTrait(Trait.Strike))
+                                {
+                                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                    if (exploitEffect != null && target == exploitEffect.Target)
+                                    {
+                                        int bonusAmount = (result == CheckResult.CriticalSuccess) ? 2 : 1;
+
+                                        List<Option> possibilities = new List<Option>();
+                                        foreach (Creature ally in owner.Battle.AllCreatures.Where(creature => owner != creature && owner.OwningFaction == creature.OwningFaction && owner.HasLineOfEffectTo(creature) < CoverKind.Blocked))
+                                        {
+                                            possibilities.Add(Option.ChooseCreature("Intensify Vulnerability (Regalia)", ally, async () =>
+                                            {
+                                                ally.AddQEffect(new QEffect("Intensify Vulnerability (Regalia)", $"+{bonusAmount} circumstance bonus to attack rolls against {exploitEffect.Target}")
+                                                {
+                                                    Illustration = ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Regalia),
+                                                    ExpiresAt = ExpirationCondition.ExpiresAtStartOfSourcesTurn,
+                                                    Source = owner,
+                                                    BonusToAttackRolls = (QEffect bonusToAttackRolls, CombatAction action, Creature? defender) =>
+                                                    {
+                                                        if (defender == exploitEffect.Target)
+                                                        {
+                                                            return new Bonus(bonusAmount, BonusType.Circumstance, "Intensify Vulnerability (Regalia)", true);
+                                                        }
+
+                                                        return null;
+                                                    }
+                                                });
+                                            }, noConfirmation: true));
+                                        }
+
+                                        // Creates the possibilites and prompts for user selection
+                                        if (possibilities.Count > 0)
+                                        {
+                                            Option chosenOption;
+                                            if (possibilities.Count >= 2)
+                                            {
+                                                var requestResult = await owner.Battle.SendRequest(new AdvancedRequest(owner, $"Choose an ally to gain a +{bonusAmount} circumstance bonus to attack rolls against {exploitEffect.Target}.", possibilities)
+                                                {
+                                                    TopBarText = "Choose an ally.",
+                                                    TopBarIcon = ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Regalia)
+                                                });
+                                                chosenOption = requestResult.ChosenOption;
+                                            }
+                                            else
+                                            {
+                                                chosenOption = possibilities[0];
+                                            }
+                                            await chosenOption.Action();
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+                else
+                {
+                    intensifyVulnerabilityAction.RevertRequested = true;
+                }
+            };
+
+            return intensifyVulnerabilityAction;
+        }
+
+        private static CombatAction CreateTomeIntensifyVulnerabilityAction(Creature owner)
+        {
+            CombatAction intensifyVulnerabilityAction = CreateBaseIntensifyVulnerabilityAction(owner, ImplementIDs.Tome, $"Roll a d20 and set the result aside. Until the start of your next turn, you can use the d20 result you set aside for an attack roll to Strike the target of your Exploit Vulnerability, instead of rolling a new d20; this is a fortune effect.", Target.Self());
+            intensifyVulnerabilityAction.WithExtraTrait(Trait.Fortune);
+            intensifyVulnerabilityAction.EffectOnChosenTargets += async (CombatAction combatAction, Creature self, ChosenTargets chosenTargets) =>
+            {
+                if (await ThaumaturgeUtilities.HeldImplementOrSwap(ImplementIDs.Tome, self, " to Intensify Vulnerability?"))
+                {
+                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                    if (exploitEffect != null)
+                    {
+                        Creature target = exploitEffect.Target;
+                        int rollResult = R.NextD20();
+                        string tempTargetEffectName = "TEMP TOME ROLL SWAP";
+                        owner.Battle.Log(owner + "'s can use a " + rollResult + " instead of rolling for a Strike's attack roll against the target of their Exploit Vulnerability.");
+                        QEffect tomeIntensifyEffect = new QEffect("Intensify Vulnerability (Tome)", "{Blue}" + rollResult + "{/Blue} - You make a Strike attack roll a {Blue}" + rollResult + "{/Blue} against " + target.Name + " instead of rolling, until the end of your turn.")
+                        {
+                            ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn,
+                            Illustration = ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Tome),
+                            Tag = target,
+                            StateCheck = async (QEffect stateCheck) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect == null)
+                                {
+                                    stateCheck.ExpiresAt = ExpirationCondition.Immediately;
+                                }
+                                else if (exploitEffect.Target != stateCheck.Tag)
+                                {
+                                    stateCheck.Tag = exploitEffect.Target;
+                                    stateCheck.Description = "{Blue}" + rollResult + "{/Blue} - You make a Strike attack roll a {Blue}" + rollResult + "{/Blue} against " + target.Name + " instead of rolling, until the end of your turn.";
+                                }
+                            },
+                            YouBeginAction = async (QEffect startAction, CombatAction action) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect != null && action.ChosenTargets.ChosenCreature != null && action.ChosenTargets.ChosenCreature == exploitEffect.Target && action.HasTrait(Trait.Strike))
+                                {
+                                    if (await owner.AskForConfirmation(ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Tome), "Use a {Blue}" + rollResult + "{/Blue} for your attack roll instead of rolling?", "Yes", "No"))
+                                    {
+                                        action.Traits.Add(Trait.Fortune);
+                                        exploitEffect.Target.AddQEffect(new QEffect(tempTargetEffectName, "The next Strike made against you this turn will use " + rollResult + " as the d20 result.")
+                                        {
+                                            Source = owner,
+                                            Id = QEffectId.Stratagem,
+                                            Value = rollResult
+                                        });
+                                        startAction.ExpiresAt = ExpirationCondition.Immediately;
+                                    }
+                                }
+                            },
+                            WhenExpires = (QEffect whenExpires) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect != null)
+                                {
+                                    exploitEffect.Target.RemoveAllQEffects(qe => qe.Name == tempTargetEffectName);
+                                }
+                                else
+                                {
+                                    foreach (Creature creature in owner.Battle.AllCreatures.Where(creature => creature.QEffects.Any(qe => qe.Name == tempTargetEffectName)))
+                                    {
+                                        creature.RemoveAllQEffects(qe => qe.Name == tempTargetEffectName);
+                                    }
+                                }
+                            }
+                        };
+                        exploitEffect.WhenExpires += (QEffect whenExpires) =>
+                        {
+                            exploitEffect.Target.RemoveAllQEffects(qe => qe.Name == tempTargetEffectName);
+                        };
+                        self.AddQEffect(tomeIntensifyEffect);
+                    }
+                }
+                else
+                {
+                    intensifyVulnerabilityAction.RevertRequested = true;
+                }
+            };
+
+            return intensifyVulnerabilityAction;
+        }
+
+        private static CombatAction CreateWandIntensifyVulnerabilityAction(Creature owner)
+        {
+            CombatAction intensifyVulnerabilityAction = CreateBaseIntensifyVulnerabilityAction(owner, ImplementIDs.Wand, "When you Fling Magic to damage the target of your Exploit Vulnerability, you deal {Blue}" + (1 + ((int)Math.Ceiling(owner.Level / 2.0))) + "{/Blue} additional damage.", Target.Self());
+            intensifyVulnerabilityAction.EffectOnChosenTargets += async (CombatAction combatAction, Creature self, ChosenTargets chosenTargets) =>
+            {
+                if (await ThaumaturgeUtilities.HeldImplementOrSwap(ImplementIDs.Wand, self, " to Intensify Vulnerability?"))
+                {
+                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                    if (exploitEffect != null)
+                    {
+                        Creature target = exploitEffect.Target;
+                        self.AddQEffect(new QEffect("Intensify Vulnerability (Wand)", "Fling Magic against " + target.Name + " deals an additional {Blue}" + (1 + ((int)Math.Ceiling(owner.Level / 2.0))) + "{/Blue} damage.")
+                        {
+                            ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn,
+                            Illustration = ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Wand),
+                            Tag = target,
+                            Id = ThaumaturgeQEIDs.WandIntensified,
+                            StateCheck = async (QEffect stateCheck) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect == null)
+                                {
+                                    stateCheck.ExpiresAt = ExpirationCondition.Immediately;
+                                }
+                                else if (exploitEffect.Target != stateCheck.Tag)
+                                {
+                                    stateCheck.Tag = exploitEffect.Target;
+                                    stateCheck.Description = "Fling Magic against " + target.Name + " deals an additional {Blue}" + (1 + ((int)Math.Ceiling(owner.Level / 2.0))) + "{/Blue} damage.";
+                                }
+                            }
+                        });
+                    }
+                }
+                else
+                {
+                    intensifyVulnerabilityAction.RevertRequested = true;
+                }
+            };
+
+            return intensifyVulnerabilityAction;
+        }
+
+        private static CombatAction CreateWeaponIntensifyVulnerabilityAction(Creature owner)
+        {
+            CombatAction intensifyVulnerabilityAction = CreateBaseIntensifyVulnerabilityAction(owner, ImplementIDs.Weapon, "You gain a +2 status bonus to attack rolls against the target of your Exploit Vulnerability.", Target.Self());
+            intensifyVulnerabilityAction.EffectOnChosenTargets += async (CombatAction combatAction, Creature self, ChosenTargets chosenTargets) =>
+            {
+                if (await ThaumaturgeUtilities.HeldImplementOrSwap(ImplementIDs.Weapon, self, " to Intensify Vulnerability?"))
+                {
+                    ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                    if (exploitEffect != null)
+                    {
+                        Creature target = exploitEffect.Target;
+                        self.AddQEffect(new QEffect("Intensify Vulnerability (Weapon)", $"+2 status bonus to attack rolls against {target.Name}")
+                        {
+                            ExpiresAt = ExpirationCondition.ExpiresAtStartOfYourTurn,
+                            Illustration = ThaumaturgeModdedIllustrations.GetIllustration(ImplementIDs.Weapon),
+                            Tag = target,
+                            Id = ThaumaturgeQEIDs.WeaponIntensified,
+                            StateCheck = async (QEffect stateCheck) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect == null)
+                                {
+                                    stateCheck.ExpiresAt = ExpirationCondition.Immediately;
+                                }
+                                else if (exploitEffect.Target != stateCheck.Tag)
+                                {
+                                    stateCheck.Tag = exploitEffect.Target;
+                                    stateCheck.Description = $"+2 status bonus to attack rolls against {exploitEffect.Target.Name}";
+                                }
+                            },
+                            BonusToAttackRolls = (QEffect bonusToAttackRolls, CombatAction action, Creature? defender) =>
+                            {
+                                ExploitEffect? exploitEffect = (ExploitEffect?)self.QEffects.FirstOrDefault(qe => qe is ExploitEffect);
+                                if (exploitEffect != null && defender == exploitEffect.Target)
+                                {
+                                    return new Bonus(2, BonusType.Status, "Intensify Vulnerability (Weapon)", true);
+                                }
+
+                                return null;
+                            }
+                        });
+                    }
+                }
+                else
+                {
+                    intensifyVulnerabilityAction.RevertRequested = true;
+                }
+            };
+
+            return intensifyVulnerabilityAction;
         }
     }
 }

@@ -87,5 +87,15 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk.RegisteredComponents
         /// The Cheek Pouches ancestry feat name
         /// </summary>
         public static readonly FeatName CheekPouches = ModManager.RegisterFeatName("Cheek Pouches", "Cheek Pouches");
+
+        /// <summary>
+        /// The Big Mouth ancestry feat name
+        /// </summary>
+        public static readonly FeatName BigMouth = ModManager.RegisterFeatName("Big Mouth", "Big Mouth");
+
+        /// <summary>
+        /// The Uncanny Cheeks ancestry feat name
+        /// </summary>
+        public static readonly FeatName UncannyCheeks = ModManager.RegisterFeatName("Uncanny Cheeks", "Uncanny Cheeks");
     }
 }

@@ -24,6 +24,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         public static readonly QEffectId UsedExploitVulnerability = ModManager.RegisterEnumMember<QEffectId>("Exploit Vulnerability Used This Turn QEID");
 
         /// <summary>
+        /// The Used Intensify Vulnerability persistent QEffect ID 
+        /// </summary>
+        public static readonly QEffectId UsedIntensifyVulnerability = ModManager.RegisterEnumMember<QEffectId>("Intensify Vulnerability Used This Turn QEID");
+
+        /// <summary>
+        /// The Lantern Seek Buff persistent QEffect ID 
+        /// </summary>
+        public static readonly QEffectId LanternSeekBuff = ModManager.RegisterEnumMember<QEffectId>("Lantern Seek Buff QEID");
+
+        /// <summary>
         /// The Lantern Searching persistent QEffect ID 
         /// </summary>
         public static readonly QEffectId LanternSearching = ModManager.RegisterEnumMember<QEffectId>("Lantern Searching QEID");
@@ -102,5 +112,25 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Can Use Cursed Effigy persistent QEffect ID
         /// </summary>
         public static readonly QEffectId CanUseCursedEffigy = ModManager.RegisterEnumMember<QEffectId>("Can Use Cursed Effigy QEID");
+
+        /// <summary>
+        /// The Chalice Intensified persistent QEffect ID
+        /// </summary>
+        public static readonly QEffectId ChaliceIntensified = ModManager.RegisterEnumMember<QEffectId>("Chalice Intensified QEID");
+
+        /// <summary>
+        /// The Lantern Intensified persistent QEffect ID
+        /// </summary>
+        public static readonly QEffectId LanternIntensified = ModManager.RegisterEnumMember<QEffectId>("Lantern Intensified QEID");
+
+        /// <summary>
+        /// The Wand Intensified persistent QEffect ID
+        /// </summary>
+        public static readonly QEffectId WandIntensified = ModManager.RegisterEnumMember<QEffectId>("Wand Intensified QEID");
+
+        /// <summary>
+        /// The Weapon Intensified persistent QEffect ID
+        /// </summary>
+        public static readonly QEffectId WeaponIntensified = ModManager.RegisterEnumMember<QEffectId>("Weapon Intensified QEID");
     }
 }

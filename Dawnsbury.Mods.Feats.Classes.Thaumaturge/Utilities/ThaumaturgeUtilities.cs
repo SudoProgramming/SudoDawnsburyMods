@@ -264,11 +264,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             return new CalculatedNumber(Checks.LevelBasedDC(dcLevel), dcText, new List<Bonus?>());
         }
 
-        public static int CalculateClassDC(Creature creature, Trait classTrait)
-        {
-            return 10 + creature.Abilities.Get(creature.Abilities.KeyAbility) + creature.Proficiencies.Get(classTrait).ToNumber(creature.ProficiencyLevel);
-        }
-
         public static FeatName LookupImplementFeatName(ImplementIDs implementID, bool isDedication)
         {
             switch(implementID)

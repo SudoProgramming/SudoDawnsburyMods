@@ -62,5 +62,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Duplicated Start Of Combat Scroll trait
         /// </summary>
         public static readonly Trait DuplicatedStartOfCombatScroll = ModManager.RegisterTrait("Duplicated Start Of Combat Scroll", new TraitProperties("Duplicated Start Of Combat Scroll", false));
+
+        /// <summary>
+        /// The Unaffected By Concealmen trait
+        /// </summary>
+        public static readonly Trait TemporaryUnaffectedByConcealment = ModManager.RegisterTrait("Temporary Unaffected By Concealmen", new TraitProperties("Temporary Unaffected By Concealmen", false));
     }
 }

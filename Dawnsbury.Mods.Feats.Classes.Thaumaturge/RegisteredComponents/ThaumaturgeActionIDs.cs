@@ -22,5 +22,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         /// The Divine Disharmony persistent Action ID 
         /// </summary>
         public static readonly ActionId DivineDisharmony = ModManager.RegisterEnumMember<ActionId>("Divine Disharmony AID");
+
+        /// <summary>
+        /// The Ring Bell persistent Action ID 
+        /// </summary>
+        public static readonly ActionId RingBell = ModManager.RegisterEnumMember<ActionId>("Ring Bell AID");
     }
 }

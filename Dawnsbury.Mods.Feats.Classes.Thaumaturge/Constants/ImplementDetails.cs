@@ -27,7 +27,7 @@
         // Lantern Details
         public static readonly string LanternInitiateBenefitName = string.Empty;
         public static readonly string LanternInitiateBenefitFlavorText = "Lantern implements shine the light of revelation to part shadows and expose truth. You might use a common glass lantern, torch, paper lantern, or other similar light source. Lantern implements are associated with the harrow suit of stars and the astrological signs of the lantern bearer and the archer.";
-        public static readonly string LanternInitiateBenefitRulesText = "While you hold your lantern, its burning 20 feet light leaves secrets no place to hide. You are always Seeking passively without the need to spend an Action. You gain a +1 status bonus to Perception checks to Seek.";
+        public static readonly string LanternInitiateBenefitRulesText = "While you hold your lantern, its burning 20 feet light leaves secrets no place to hide. You are always Seeking passively without the need to spend an Action. You and any ally within your lantern's light gain a +1 status bonus to Perception checks to Seek.";
 
         // Mirror Details
         public static readonly string MirrorInitiateBenefitName = "Mirror's Reflection";

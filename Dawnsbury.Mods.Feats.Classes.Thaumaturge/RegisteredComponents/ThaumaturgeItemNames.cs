@@ -12,45 +12,47 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
     /// </summary>
     public static class ThaumaturgeItemNames
     {
+        private static readonly string level9TextLeadIn = "\n\n{b}At higher levels:{/b}\n{b}Intensify Vulnerability{/b} {icon:Action}\n";
+
         /// <summary>
         /// The Amulet Implement Item
         /// </summary>
-        public static readonly ItemName Amulet = ModManager.RegisterNewItemIntoTheShop("Amulet Implement", itemName => new Implement(Enums.ImplementIDs.Amulet, itemName, ThaumaturgeModdedIllustrations.Amulet, "Amulet", "{b}" + ImplementDetails.AmuletInitiateBenefitName + "{/b} {icon:Reaction}\n\n" + ImplementDetails.AmuletInitiateBenefitRulesText));
+        public static readonly ItemName Amulet = ModManager.RegisterNewItemIntoTheShop("Amulet Implement", itemName => new Implement(Enums.ImplementIDs.Amulet, itemName, ThaumaturgeModdedIllustrations.Amulet, "Amulet", "{b}" + ImplementDetails.AmuletInitiateBenefitName + "{/b} {icon:Reaction}\n\n" + ImplementDetails.AmuletInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.AmuletIntensifyVulnerabilityRulesText));
 
         /// <summary>
         /// The Bell Implement Item
         /// </summary>
-        public static readonly ItemName Bell = ModManager.RegisterNewItemIntoTheShop("Bell Implement", itemName => new Implement(Enums.ImplementIDs.Bell, itemName, ThaumaturgeModdedIllustrations.Bell, "Bell", "{b}" + ImplementDetails.BellInitiateBenefitName + "{/b} {icon:Reaction}\n\n" + ImplementDetails.BellInitiateBenefitRulesText));
+        public static readonly ItemName Bell = ModManager.RegisterNewItemIntoTheShop("Bell Implement", itemName => new Implement(Enums.ImplementIDs.Bell, itemName, ThaumaturgeModdedIllustrations.Bell, "Bell", "{b}" + ImplementDetails.BellInitiateBenefitName + "{/b} {icon:Reaction}\n\n" + ImplementDetails.BellInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.BellIntensifyVulnerabilityRulesText));
 
         /// <summary>
         /// The Chalice Implement Item
         /// </summary>
-        public static readonly ItemName Chalice = ModManager.RegisterNewItemIntoTheShop("Chalice Implement", itemName => new Implement(Enums.ImplementIDs.Chalice, itemName, ThaumaturgeModdedIllustrations.Chalice, "Chalice", "{b}" + ImplementDetails.ChaliceInitiateBenefitName + "{/b} {icon:Action}\n\n" + ImplementDetails.ChaliceInitiateBenefitRulesText));
+        public static readonly ItemName Chalice = ModManager.RegisterNewItemIntoTheShop("Chalice Implement", itemName => new Implement(Enums.ImplementIDs.Chalice, itemName, ThaumaturgeModdedIllustrations.Chalice, "Chalice", "{b}" + ImplementDetails.ChaliceInitiateBenefitName + "{/b} {icon:Action}\n\n" + ImplementDetails.ChaliceInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.ChaliceIntensifyVulnerabilityRulesText));
 
         /// <summary>
         /// The Lantern Implement Item
         /// </summary>
-        public static readonly ItemName Lantern = ModManager.RegisterNewItemIntoTheShop("Lantern Implement", itemName => new Implement(Enums.ImplementIDs.Lantern, itemName, ThaumaturgeModdedIllustrations.Lantern, "Lantern", ImplementDetails.LanternInitiateBenefitRulesText));
+        public static readonly ItemName Lantern = ModManager.RegisterNewItemIntoTheShop("Lantern Implement", itemName => new Implement(Enums.ImplementIDs.Lantern, itemName, ThaumaturgeModdedIllustrations.Lantern, "Lantern", ImplementDetails.LanternInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.LanternIntensifyVulnerabilityRulesText));
 
         /// <summary>
         /// The Amulet Implement Item
         /// </summary>
-        public static readonly ItemName Mirror = ModManager.RegisterNewItemIntoTheShop("Mirror Implement", itemName => new Implement(Enums.ImplementIDs.Mirror, itemName, ThaumaturgeModdedIllustrations.Mirror, "Mirror", "{b}" + ImplementDetails.MirrorInitiateBenefitName + "{/b} {icon:Action}\n\n" + ImplementDetails.MirrorInitiateBenefitRulesText));
+        public static readonly ItemName Mirror = ModManager.RegisterNewItemIntoTheShop("Mirror Implement", itemName => new Implement(Enums.ImplementIDs.Mirror, itemName, ThaumaturgeModdedIllustrations.Mirror, "Mirror", "{b}" + ImplementDetails.MirrorInitiateBenefitName + "{/b} {icon:Action}\n\n" + ImplementDetails.MirrorInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.MirrorIntensifyVulnerabilityRulesText));
 
         /// <summary>
         /// The Amulet Implement Item
         /// </summary>
-        public static readonly ItemName Regalia = ModManager.RegisterNewItemIntoTheShop("Regalia Implement", itemName => new Implement(Enums.ImplementIDs.Regalia, itemName, ThaumaturgeModdedIllustrations.Regalia, "Regalia", ImplementDetails.RegaliaInitiateBenefitRulesText));
+        public static readonly ItemName Regalia = ModManager.RegisterNewItemIntoTheShop("Regalia Implement", itemName => new Implement(Enums.ImplementIDs.Regalia, itemName, ThaumaturgeModdedIllustrations.Regalia, "Regalia", ImplementDetails.RegaliaInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.RegaliaIntensifyVulnerabilityRulesText));
 
         /// <summary>
         /// The Amulet Implement Item
         /// </summary>
-        public static readonly ItemName Tome = ModManager.RegisterNewItemIntoTheShop("Tome Implement", itemName => new Implement(Enums.ImplementIDs.Tome, itemName, ThaumaturgeModdedIllustrations.Tome, "Tome", ImplementDetails.TomeInitiateBenefitRulesText));
+        public static readonly ItemName Tome = ModManager.RegisterNewItemIntoTheShop("Tome Implement", itemName => new Implement(Enums.ImplementIDs.Tome, itemName, ThaumaturgeModdedIllustrations.Tome, "Tome", ImplementDetails.TomeInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.TomeIntensifyVulnerabilityRulesText));
 
         /// <summary>
         /// The Wand Implement Item
         /// </summary>
-        public static readonly ItemName Wand = ModManager.RegisterNewItemIntoTheShop("Wand Implement", itemName => new Implement(Enums.ImplementIDs.Wand, itemName, ThaumaturgeModdedIllustrations.Wand, "Wand", "{b}" + ImplementDetails.WandInitiateBenefitName + "{/b} {icon:TwoActions}\n\n" + ImplementDetails.WandInitiateBenefitRulesText));
+        public static readonly ItemName Wand = ModManager.RegisterNewItemIntoTheShop("Wand Implement", itemName => new Implement(Enums.ImplementIDs.Wand, itemName, ThaumaturgeModdedIllustrations.Wand, "Wand", "{b}" + ImplementDetails.WandInitiateBenefitName + "{/b} {icon:TwoActions}\n\n" + ImplementDetails.WandInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.WandIntensifyVulnerabilityRulesText));
 
         public static readonly ItemName WeaponImplementChoice = ModManager.RegisterNewItemIntoTheShop("Weapon Implement", itemName =>
         {

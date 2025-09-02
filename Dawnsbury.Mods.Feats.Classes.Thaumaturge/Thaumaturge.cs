@@ -74,56 +74,58 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             yield return new Feat(ThaumaturgeFeatNames.ElectricityWand, "Electricity Wand", "Your wand is attuned to Electricity.", [], null);
             yield return new Feat(ThaumaturgeFeatNames.FireWand, "Fire Wand", "Your wand is attuned to Fire.", [], null);
 
+            string level9TextLeadIn = "\n\n{b}At higher levels:{/b}\n{b}Intensify Vulnerability{/b} {icon:Action}\n";
+
             // Creates and adds the logic for the Amulet Implement sub-class feature
-            Feat amuletImplementFeat = new Feat(ThaumaturgeFeatNames.AmuletImplement, ImplementDetails.AmuletInitiateBenefitFlavorText, "You gain the " + ImplementDetails.AmuletInitiateBenefitName + " reaction.\n\n{b}" + ImplementDetails.AmuletInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.AmuletInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            Feat amuletImplementFeat = new Feat(ThaumaturgeFeatNames.AmuletImplement, ImplementDetails.AmuletInitiateBenefitFlavorText, "You gain the " + ImplementDetails.AmuletInitiateBenefitName + " reaction.\n\n{b}" + ImplementDetails.AmuletInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.AmuletInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.AmuletIntensifyVulnerabilityRulesText, [ThaumaturgeTraits.Implement], null);
             AddLevelTag(amuletImplementFeat);
             AddAmuletImplementLogic(amuletImplementFeat);
             yield return amuletImplementFeat;
 
             // Creates and adds the logic for the Bell Implement sub-class feature
-            Feat bellImplementFeat = new Feat(ThaumaturgeFeatNames.BellImplement, ImplementDetails.BellInitiateBenefitFlavorText, "You gain the " + ImplementDetails.BellInitiateBenefitName + " reaction.\n\n{b}" + ImplementDetails.BellInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.BellInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            Feat bellImplementFeat = new Feat(ThaumaturgeFeatNames.BellImplement, ImplementDetails.BellInitiateBenefitFlavorText, "You gain the " + ImplementDetails.BellInitiateBenefitName + " reaction.\n\n{b}" + ImplementDetails.BellInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.BellInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.BellIntensifyVulnerabilityRulesText, [ThaumaturgeTraits.Implement], null);
             AddLevelTag(bellImplementFeat);
             AddBellImplementLogic(bellImplementFeat);
             yield return bellImplementFeat;
 
             // Creates and adds the logic for the Chalice Implement sub-class feature
-            Feat chaliceImplementFeat = new Feat(ThaumaturgeFeatNames.ChaliceImplement, ImplementDetails.ChaliceInitiateBenefitFlavorText, "You gain the " + ImplementDetails.ChaliceInitiateBenefitName + " action.\n\n{b}" + ImplementDetails.ChaliceInitiateBenefitName + "{/b} {icon:Action}\n" + ImplementDetails.ChaliceInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            Feat chaliceImplementFeat = new Feat(ThaumaturgeFeatNames.ChaliceImplement, ImplementDetails.ChaliceInitiateBenefitFlavorText, "You gain the " + ImplementDetails.ChaliceInitiateBenefitName + " action.\n\n{b}" + ImplementDetails.ChaliceInitiateBenefitName + "{/b} {icon:Action}\n" + ImplementDetails.ChaliceInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.ChaliceIntensifyVulnerabilityRulesText, [ThaumaturgeTraits.Implement], null);
             AddLevelTag(chaliceImplementFeat);
             AddChaliceImplementLogic(chaliceImplementFeat);
             yield return chaliceImplementFeat;
 
             // Creates and adds the logic for the Lantern Implement sub-class feature
-            Feat lanternImplementFeat = new Feat(ThaumaturgeFeatNames.LanternImplement, ImplementDetails.LanternInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.LanternInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            Feat lanternImplementFeat = new Feat(ThaumaturgeFeatNames.LanternImplement, ImplementDetails.LanternInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.LanternInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.LanternIntensifyVulnerabilityRulesText, [ThaumaturgeTraits.Implement], null);
             AddLevelTag(lanternImplementFeat);
             AddLanternImplementLogic(lanternImplementFeat);
             yield return lanternImplementFeat;
 
             // Creates and adds the logic for the Mirror Implement sub-class feature
-            Feat mirrorImplementFeat = new Feat(ThaumaturgeFeatNames.MirrorImplement, ImplementDetails.MirrorInitiateBenefitFlavorText, "You gain the " + ImplementDetails.MirrorInitiateBenefitName + " action.\n\n{b}" + ImplementDetails.MirrorInitiateBenefitName + "{/b} {icon:Action}\n" + ImplementDetails.MirrorInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            Feat mirrorImplementFeat = new Feat(ThaumaturgeFeatNames.MirrorImplement, ImplementDetails.MirrorInitiateBenefitFlavorText, "You gain the " + ImplementDetails.MirrorInitiateBenefitName + " action.\n\n{b}" + ImplementDetails.MirrorInitiateBenefitName + "{/b} {icon:Action}\n" + ImplementDetails.MirrorInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.MirrorIntensifyVulnerabilityRulesText, [ThaumaturgeTraits.Implement], null);
             AddLevelTag(mirrorImplementFeat);
             AddMirrorImplementLogic(mirrorImplementFeat);
             yield return mirrorImplementFeat;
 
             // Creates and adds the logic for the Regalia Implement sub-class feature
-            Feat regaliaImplementFeat = new Feat(ThaumaturgeFeatNames.RegaliaImplement, ImplementDetails.RegaliaInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.RegaliaInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            Feat regaliaImplementFeat = new Feat(ThaumaturgeFeatNames.RegaliaImplement, ImplementDetails.RegaliaInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.RegaliaInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.RegaliaIntensifyVulnerabilityRulesText, [ThaumaturgeTraits.Implement], null);
             AddLevelTag(regaliaImplementFeat);
             AddRegaliaImplementLogic(regaliaImplementFeat);
             yield return regaliaImplementFeat;
 
             // Creates and adds the logic for the Tome Implement sub-class feature
-            Feat tomeImplementFeat = new Feat(ThaumaturgeFeatNames.TomeImplement, ImplementDetails.TomeInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.TomeInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            Feat tomeImplementFeat = new Feat(ThaumaturgeFeatNames.TomeImplement, ImplementDetails.TomeInitiateBenefitFlavorText, "You gain the following benefit.\n\n" + ImplementDetails.TomeInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.TomeIntensifyVulnerabilityRulesText, [ThaumaturgeTraits.Implement], null);
             AddLevelTag(tomeImplementFeat);
             AddTomeImplementLogic(tomeImplementFeat);
             yield return tomeImplementFeat;
 
             // Creates and adds the logic for the Wand Implement sub-class feature
-            Feat wandImplementFeat = new Feat(ThaumaturgeFeatNames.WandImplement, ImplementDetails.WandInitiateBenefitFlavorText, "You gain the " + ImplementDetails.WandInitiateBenefitName + " activity.\n\n{b}" + ImplementDetails.WandInitiateBenefitName + "{/b} {icon:TwoActions}\n" + ImplementDetails.WandInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            Feat wandImplementFeat = new Feat(ThaumaturgeFeatNames.WandImplement, ImplementDetails.WandInitiateBenefitFlavorText, "You gain the " + ImplementDetails.WandInitiateBenefitName + " activity.\n\n{b}" + ImplementDetails.WandInitiateBenefitName + "{/b} {icon:TwoActions}\n" + ImplementDetails.WandInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.WandIntensifyVulnerabilityRulesText, [ThaumaturgeTraits.Implement], null);
             AddLevelTag(wandImplementFeat);
             AddWandImplementLogic(wandImplementFeat);
             yield return wandImplementFeat;
 
             // Creates and adds the logic for the Weapon Implement sub-class feature
-            Feat weaponImplementFeat = new Feat(ThaumaturgeFeatNames.WeaponImplement, ImplementDetails.WeaponInitiateBenefitFlavorText, "{b}IMPORANT{/b} You must drag the 'Weapon Implement' onto the weapon you wish to make your implement.\n\nYou gain the " + ImplementDetails.WeaponInitiateBenefitName + " reaction.\n\n{b}NOTE: Only the first weapon with the weapon implement attached will become an implement at the start of each encounter.{/b}\n\n{b}" + ImplementDetails.WeaponInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.WeaponInitiateBenefitRulesText, [ThaumaturgeTraits.Implement], null);
+            Feat weaponImplementFeat = new Feat(ThaumaturgeFeatNames.WeaponImplement, ImplementDetails.WeaponInitiateBenefitFlavorText, "{b}IMPORANT{/b} You must drag the 'Weapon Implement' onto the weapon you wish to make your implement.\n\nYou gain the " + ImplementDetails.WeaponInitiateBenefitName + " reaction.\n\n{b}NOTE: Only the first weapon with the weapon implement attached will become an implement at the start of each encounter.{/b}\n\n{b}" + ImplementDetails.WeaponInitiateBenefitName + "{/b} {icon:Reaction}\n" + ImplementDetails.WeaponInitiateBenefitRulesText + level9TextLeadIn + ImplementDetails.WeaponIntensifyVulnerabilityRulesText, [ThaumaturgeTraits.Implement], null);
             AddLevelTag(weaponImplementFeat);
             AddWeaponImplementLogic(weaponImplementFeat);
             yield return weaponImplementFeat;

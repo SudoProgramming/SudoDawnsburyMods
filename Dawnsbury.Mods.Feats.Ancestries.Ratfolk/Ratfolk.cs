@@ -3,9 +3,13 @@ using Dawnsbury.Core;
 using Dawnsbury.Core.Animations.Movement;
 using Dawnsbury.Core.CharacterBuilder.AbilityScores;
 using Dawnsbury.Core.CharacterBuilder.Feats;
+using Dawnsbury.Core.CharacterBuilder.FeatsDb.Spellbook;
 using Dawnsbury.Core.CharacterBuilder.Selections.Options;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Core.CombatActions;
+using Dawnsbury.Core.Coroutines;
+using Dawnsbury.Core.Coroutines.Options;
+using Dawnsbury.Core.Coroutines.Requests;
 using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Intelligence;
 using Dawnsbury.Core.Mechanics;
@@ -86,8 +90,7 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
             yield return agileTailFeat;
 
             // Creates and adds the logic for the Cheek Pouches Ratfolk Feat
-            // HACK: Update if and when Draw and Replace have Item added
-            TrueFeat cheekPouchesFeat = new TrueFeat(RatfolkFeatNames.CheekPouches, 1, "Your cheeks are stretchy, and you can store up to four small items in these cheek pouches.", "The first two items you draw or replace within an encounter are a {icon: FreeAction} free action instead of an action.", [RatfolkTraits.Ratfolk]);
+            TrueFeat cheekPouchesFeat = new TrueFeat(RatfolkFeatNames.CheekPouches, 1, "Your cheeks are stretchy, and you can store up to small items in these cheek pouches.", "The first two non two-handed items you draw or replace within an encounter are a {icon: FreeAction} free action instead of an action.", [RatfolkTraits.Ratfolk]);
             AddCheekPouchesLogic(cheekPouchesFeat);
             yield return cheekPouchesFeat;
 
@@ -132,6 +135,21 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
             TrueFeat ratMagicFeat = new TrueFeat(RatfolkFeatNames.RatMagic, 5, "There always seemed to be a little magic within you.", "Choose any one primal cantrip. You can cast it at-will as an innate spell.", [RatfolkTraits.Ratfolk]);
             AddRatMagicLogic(ratMagicFeat);
             yield return ratMagicFeat;
+
+            // Level 9 Ancestry Feats
+            // Creates and adds the logic for the Big Mouth Ratfolk Feat
+            TrueFeat bigMouthFeat = new TrueFeat(RatfolkFeatNames.BigMouth, 9, "Your cheeks are unparalleled and you can retrieve items from them with ease.", "You no longer have a limit to how many times you can draw or replace for free. Also any item can now be draw or replaced instead of just non two-handed items.", [RatfolkTraits.Ratfolk]);
+            bigMouthFeat.WithPrerequisite(RatfolkFeatNames.CheekPouches, "Requires cheek pouches.");
+            AddBigMouthLogic(bigMouthFeat);
+            yield return bigMouthFeat;
+
+            // Creates and adds the logic for the Uncanny Cheeks Ratfolk Feat
+            TrueFeat uncannyCheeksFeat = new TrueFeat(RatfolkFeatNames.UncannyCheeks, 9, "You store so many consumables in your cheeks you sometimes forget what is in their.", "Once per day, you can 'create' a consumable that has a value less than 10gp in an open hand. You can do this as a free action if you have the 'Cheek Pouches' feat.", [RatfolkTraits.Ratfolk])
+                .WithActionCost(1);
+            AddUncannyCheeksLogic(uncannyCheeksFeat);
+            yield return uncannyCheeksFeat;
+
+
         }
 
         /// <summary>
@@ -310,23 +328,27 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
                 self.Value = 2;
                 self.AfterYouTakeAction = async (QEffect countTracking, CombatAction action) =>
                 {
-                    // HACK: Currently the item drawn is not stored add later:  && action.Item != null && !action.Item.HasTrait(Trait.TwoHanded)
-                    if ((action.Name.ToLower().StartsWith("draw") || action.Name.ToLower().StartsWith("replace")) && self.Value > 0)
+                    if (action.ActionCost == 0 && (action.Name.ToLower().StartsWith("draw") || action.Name.ToLower().StartsWith("replace")) && self.Value > 0)
                     {
-                        self.Value--;
-                        if (self.Value <= 0)
+                        if (!countTracking.Owner.HasFeat(RatfolkFeatNames.BigMouth) && action.Item != null && !action.Item.HasTrait(Trait.TwoHanded))
                         {
-                            self.Owner.RemoveAllQEffects(qe => qe.Id == RatfolkQEIDs.CheekPouches);
+                            self.Value--;
+                            if (self.Value <= 0)
+                            {
+                                self.Owner.RemoveAllQEffects(qe => qe.Id == RatfolkQEIDs.CheekPouches);
+                            }
                         }
                     }
                 };
             });
             ModManager.RegisterActionOnEachActionPossibility(action =>
             {
-                // HACK: Currently the item drawn is not stored add later:  && action.Item != null && !action.Item.HasTrait(Trait.TwoHanded)
-                if (action.Owner.HasEffect(RatfolkQEIDs.CheekPouches) && (action.Name.ToLower().StartsWith("draw") || action.Name.ToLower().StartsWith("replace")))
+                if (action.ActionCost != 0 && action.Owner.HasEffect(RatfolkQEIDs.CheekPouches) && (action.Name.ToLower().StartsWith("draw") || action.Name.ToLower().StartsWith("replace")))
                 {
-                    action.ActionCost = 0;
+                    if (action.Owner.HasFeat(RatfolkFeatNames.BigMouth) || (action.Item != null && !action.Item.HasTrait(Trait.TwoHanded)))
+                    {
+                        action.ActionCost = 0;
+                    }
                 }
             });
         }
@@ -539,6 +561,112 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Ratfolk
                 character.SetProficiency(Trait.Spell, Proficiency.Trained);
                 character.InnateSpells.GetOrCreate(RatfolkTraits.Ratfolk, () => new InnateSpells(Trait.Primal));
                 character.AddSelectionOption(new AddInnateSpellOption("ExtraRatfolkCantrip", "Rat magic cantrip", -1, RatfolkTraits.Ratfolk, 0, spell => spell.HasTrait(Trait.Primal)));
+            });
+        }
+
+        /// <summary>
+        /// Adds the Big Mouth Logic
+        /// </summary>
+        /// <param name="bigMouthFeat">The Big Mouth feat</param>
+        public static void AddBigMouthLogic(TrueFeat bigMouthFeat)
+        {
+            bigMouthFeat.WithPermanentQEffect("You can draw or replace as a free action.", delegate (QEffect self)
+            {
+            });
+        }
+
+        /// <summary>
+        /// Adds the Uncanny Cheeks Logic
+        /// </summary>
+        /// <param name="uncannyCheeksFeat">The Uncanny Cheeks feat</param>
+        public static void AddUncannyCheeksLogic(TrueFeat uncannyCheeksFeat)
+        {
+            uncannyCheeksFeat.WithPermanentQEffect("Once per day, create a consumable less than 10gp.", delegate (QEffect self)
+            {
+                self.ProvideActionIntoPossibilitySection = (QEffect actionIntoSection, PossibilitySection section) =>
+                {
+                    if (section.PossibilitySectionId == PossibilitySectionId.ItemActions)
+                    {
+                        Creature owner = actionIntoSection.Owner;
+                        if (owner.PersistentUsedUpResources.UsedUpActions.Contains("Uncanny Cheeks"))
+                        {
+                            return null;
+                        }
+
+                        CombatAction CreateUncannyCheeksActionForItem(Creature owner, Item item)
+                        {
+                            CombatAction uncannyCheeksAction = new CombatAction(owner, item.Illustration, $"Uncanny Cheeks ({item.Name})", [], $"Create a {item.Name} and add it in an open hand.", Target.Self()
+                                .WithAdditionalRestriction((Creature user) =>
+                                {
+                                    if (!user.HasFreeHand)
+                                    {
+                                        return "Must have a free hand";
+                                    }
+
+                                    return null;
+                                }))
+                                .WithItem(item)
+                                .WithActionCost(0)
+                                .WithEffectOnSelf((Creature self) =>
+                                {
+                                    self.PersistentUsedUpResources.UsedUpActions.Add("Uncanny Cheeks");
+                                    self.AddHeldItem(item);
+                                });
+
+                            return uncannyCheeksAction;
+                        }
+
+                        List<CombatAction> uncannyCheeksCreateItemAction = new List<CombatAction>();
+                        foreach (Item consumable in Items.ShopItems.Where(item => item.HasTrait(Trait.Consumable) && item.Price <= 10))
+                        {
+                            uncannyCheeksCreateItemAction.Add(CreateUncannyCheeksActionForItem(owner, consumable));
+                        }
+
+                        CombatAction uncannyCheeksAction = new CombatAction(owner, IllustrationName.MinorHealingPotion, "Uncanny Cheeks", [], "Create a consumable that is worth 10gp or less in an open hand.", Target.Self()
+                            .WithAdditionalRestriction((Creature user) =>
+                            {
+                                if (!user.HasFreeHand)
+                                {
+                                    return "Must have a free hand";
+                                }
+
+                                return null;
+                            }))
+                            .WithActionCost(1)
+                            .WithEffectOnSelf(async (CombatAction action, Creature self) =>
+                            {
+                                RequestResult result = await self.Battle.SendRequest(new ComboBoxInputRequest<CombatAction>(
+                                    self,
+                                    $"What consumable would you like to create with Uncanny Cheeks?",
+                                    IllustrationName.MinorHealingPotion,
+                                    "Fulltext search...",
+                                    uncannyCheeksCreateItemAction.ToArray(), createAction => new ComboBoxInformation(
+                                        createAction.Illustration,
+                                        createAction.Item!.Name,
+                                        createAction.Description,
+                                        $"Uncanny Cheeks {createAction.Name}"),
+                                    createAction => $"Create {createAction.Item!.Name} with Uncanny Cheeks", "Cancel"));
+
+                                if (result.ChosenOption is CancelOption)
+                                {
+                                    action.RevertRequested = true;
+                                }
+                                else if (result.ChosenOption is ComboBoxInputOption<CombatAction> comboBoxInputOption)
+                                {
+                                    await owner.Battle.GameLoop.FullCast(comboBoxInputOption.SelectedObject);
+                                }
+                            });
+
+                        if (owner.HasFeat(RatfolkFeatNames.CheekPouches))
+                        {
+                            uncannyCheeksAction.WithActionCost(0);
+                        }
+
+                        return new ActionPossibility(uncannyCheeksAction);
+                    }
+
+                    return null;
+                };
             });
         }
 

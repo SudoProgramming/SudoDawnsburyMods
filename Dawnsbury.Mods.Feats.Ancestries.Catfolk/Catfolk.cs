@@ -4,6 +4,7 @@ using Dawnsbury.Core.Animations.Movement;
 using Dawnsbury.Core.CharacterBuilder;
 using Dawnsbury.Core.CharacterBuilder.AbilityScores;
 using Dawnsbury.Core.CharacterBuilder.Feats;
+using Dawnsbury.Core.CharacterBuilder.FeatsDb.Common;
 using Dawnsbury.Core.CharacterBuilder.Selections.Options;
 using Dawnsbury.Core.CharacterBuilder.Spellcasting;
 using Dawnsbury.Core.CombatActions;
@@ -154,6 +155,18 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Catfolk
             comfortableCatNapFeat.WithPrerequisite(CatfolkFeatNames.CatNap, "Comfortable Cat Nap");
             AddComfortableCatNapLogic(comfortableCatNapFeat);
             yield return comfortableCatNapFeat;
+
+            // Level 9 Ancestry Feats
+            // Creates and adds the logic for the Aggravating Scratch Feat
+            TrueFeat aggravatingScratchFeat = new TrueFeat(CatfolkFeatNames.AggravatingScratch, 9, "Your claws carry an irritant that is harmless to you but can be damaging to others.", "Your claw Strikes deal an additional 1d4 persistent poison damage on a critical hit.", [CatfolkTraits.Catfolk]);
+            AddAggravatingScratchLogic(aggravatingScratchFeat);
+            yield return aggravatingScratchFeat;
+
+            // Creates and adds the logic for the Sense For Trouble Feat
+            TrueFeat senseForTroubleFeat = new TrueFeat(CatfolkFeatNames.SenseForTrouble, 9, "You can tell when something's off.", "Before you roll initiative, you can choose to spend your Cat's Luck to roll twice and keep the better one.", [CatfolkTraits.Catfolk]);
+            senseForTroubleFeat.WithPrerequisite(CatfolkFeatNames.CatsLuck, "Requires Cat's Luck");
+            AddSenseForTroubleLogic(senseForTroubleFeat);
+            yield return senseForTroubleFeat;
         }
 
         /// <summary>
@@ -613,6 +626,43 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Catfolk
         {
             comfortableCatNapFeat.WithPermanentQEffect("More temp HP from Cat Nap after a long rest.", delegate (QEffect self)
             {
+            });
+        }
+
+        /// <summary>
+        /// Adds the Aggravating Scratch Logic
+        /// </summary>
+        /// <param name="aggravatingScratchFeat">The Aggravating Scratch feat</param>
+        public static void AddAggravatingScratchLogic(TrueFeat aggravatingScratchFeat)
+        {
+            aggravatingScratchFeat.WithPermanentQEffect("Critical Claw Strikes deal an additional 1d4 persistent poison damage.", delegate (QEffect self)
+            {
+                self.AfterYouTakeAction = async (QEffect afterAction, CombatAction action) =>
+                {
+                    if (action.CheckResult == CheckResult.CriticalSuccess && action.HasTrait(Trait.Strike) && action.ChosenTargets.ChosenCreature != null && action.Item != null && action.Item.Name.ToLower().Contains("claw"))
+                    {
+                        action.ChosenTargets.ChosenCreature.AddQEffect(QEffect.PersistentDamage("1d4", DamageKind.Poison));
+                    }
+                };
+            });
+        }
+
+        /// <summary>
+        /// Adds the Sense For Trouble Logic
+        /// </summary>
+        /// <param name="senseForTroubleFeat">The Sense For Trouble feat</param>
+        public static void AddSenseForTroubleLogic(TrueFeat senseForTroubleFeat)
+        {
+            senseForTroubleFeat.WithPermanentQEffect("You can choose to roll initiative twice with your Cat's Luck.", delegate (QEffect self)
+            {
+                self.StartOfCombat = async (QEffect startOfCombat) =>
+                {
+                    Creature owner = startOfCombat.Owner;
+                    if (!owner.PersistentUsedUpResources.UsedUpActions.Contains("Cat's Luck") && await owner.Battle.AskForConfirmation(owner, IllustrationName.BitOfLuck, $"You rolled a total of {owner.Initiative}, would you like to reroll with Cat's Luck?", "Reroll Initiative"))
+                    {
+                        owner.EnterInitiativeOrderNow();
+                    }
+                };
             });
         }
     }

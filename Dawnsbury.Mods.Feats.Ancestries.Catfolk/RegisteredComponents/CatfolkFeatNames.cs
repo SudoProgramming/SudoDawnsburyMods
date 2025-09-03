@@ -102,5 +102,15 @@ namespace Dawnsbury.Mods.Feats.Ancestries.Catfolk.RegisteredComponents
         /// The Comfortable Cat Nap ancestry feat name
         /// </summary>
         public static readonly FeatName ComfortableCatNap = ModManager.RegisterFeatName("Comfortable Cat Nap", "Comfortable Cat Nap");
+
+        /// <summary>
+        /// The Comfortable Cat Nap ancestry feat name
+        /// </summary>
+        public static readonly FeatName AggravatingScratch = ModManager.RegisterFeatName("AggravatingScratch", "Aggravating Scratch");
+
+        /// <summary>
+        /// The Sense For Trouble ancestry feat name
+        /// </summary>
+        public static readonly FeatName SenseForTrouble = ModManager.RegisterFeatName("SenseForTrouble", "Sense For Trouble");
     }
 }

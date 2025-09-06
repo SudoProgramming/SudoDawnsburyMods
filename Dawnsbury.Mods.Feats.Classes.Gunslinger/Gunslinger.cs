@@ -138,10 +138,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                 {
                     // Base Prof
                     sheet.Proficiencies.Set([Trait.Firearm, Trait.Simple], Proficiency.Expert);
-                    sheet.Proficiencies.Set([Trait.Firearm, Trait.Material], Proficiency.Expert);
+                    sheet.Proficiencies.Set([Trait.Firearm, Trait.Martial], Proficiency.Expert);
                     sheet.Proficiencies.Set([Trait.Firearm, Trait.Advanced], Proficiency.Trained);
                     sheet.Proficiencies.Set([Trait.Crossbow, Trait.Simple], Proficiency.Expert);
-                    sheet.Proficiencies.Set([Trait.Crossbow, Trait.Material], Proficiency.Expert);
+                    sheet.Proficiencies.Set([Trait.Crossbow, Trait.Martial], Proficiency.Expert);
                     sheet.Proficiencies.Set([Trait.Crossbow, Trait.Advanced], Proficiency.Trained);
 
                     // Adds the Singular Expertise base class feature, adds a Level 1 Gunslinger feat selection, and adds the Will Expert profeciency at level 3
@@ -155,10 +155,10 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                     {
                         // Upgraded Prof
                         sheet.Proficiencies.Set([Trait.Firearm, Trait.Simple], Proficiency.Master);
-                        sheet.Proficiencies.Set([Trait.Firearm, Trait.Material], Proficiency.Master);
+                        sheet.Proficiencies.Set([Trait.Firearm, Trait.Martial], Proficiency.Master);
                         sheet.Proficiencies.Set([Trait.Firearm, Trait.Advanced], Proficiency.Expert);
                         sheet.Proficiencies.Set([Trait.Crossbow, Trait.Simple], Proficiency.Master);
-                        sheet.Proficiencies.Set([Trait.Crossbow, Trait.Material], Proficiency.Master);
+                        sheet.Proficiencies.Set([Trait.Crossbow, Trait.Martial], Proficiency.Master);
                         sheet.Proficiencies.Set([Trait.Crossbow, Trait.Advanced], Proficiency.Expert);
 
                         values.SetProficiency(Trait.Unarmed, Proficiency.Expert);

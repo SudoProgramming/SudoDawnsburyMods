@@ -101,7 +101,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Barbarian.Remastered
                         foreach (Item item in owner.HeldItems.Concat(owner.CarriedItems).Where(item => DoesGiantInstictApply(item)))
                         {
                             item.Traits.Add(BarbarianRemasteredTraits.GiantWeaponTrait);
-                            item.Name = "Giant " + item.Name;
+                            item.ProsaicName = "Giant " + item.Name;
                         }
                     }
                 });

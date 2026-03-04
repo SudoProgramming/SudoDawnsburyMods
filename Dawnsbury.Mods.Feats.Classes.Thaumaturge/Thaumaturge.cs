@@ -1913,7 +1913,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         if (action.CastFromScroll != null && scrollAndImplementEffect != null && scrollAndImplementEffect.Tag != null && scrollAndImplementEffect.Tag is ImplementAndHeldItem implementAndHeldItem && action.CastFromScroll == implementAndHeldItem.HeldItem && implementAndHeldItem.Illustration is SideBySideIllustration sideBySideIllustration)
                         {
                             implementAndHeldItem.Implement.Illustration = sideBySideIllustration.Left;
-                            implementAndHeldItem.Implement.Name = implementAndHeldItem.OriginalImplementName;
+                            implementAndHeldItem.Implement.ProsaicName = implementAndHeldItem.OriginalImplementName;
                             scrollAndImplementEffect.ExpiresAt = ExpirationCondition.EphemeralAtEndOfImmediateAction;
                         }
                     }
@@ -1959,7 +1959,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                         });
 
                         implement.Illustration = implementAndScroll.Illustration;
-                        implement.Name = implementAndScroll.OriginalImplementName + " " + scroll.Name;
+                        implement.ProsaicName = implementAndScroll.OriginalImplementName + " " + scroll.Name;
                     }
                 };
                 self.EndOfCombat = async (QEffect endOfCombat, bool didWin) =>
@@ -2057,7 +2057,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                                             });
 
                                                             implement.Illustration = implementAndScroll.Illustration;
-                                                            implement.Name = implementAndScroll.OriginalImplementName + " " + scroll.Name;
+                                                            implement.ProsaicName = implementAndScroll.OriginalImplementName + " " + scroll.Name;
                                                         }
                                                     });
 
@@ -2598,7 +2598,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                             });
 
                                             implement.Illustration = implementAndScroll.Illustration;
-                                            implement.Name = implementAndScroll.OriginalImplementName + " " + item.Name;
+                                            implement.ProsaicName = implementAndScroll.OriginalImplementName + " " + item.Name;
                                         }
 
                                         self.PersistentUsedUpResources.UsedUpActions.Add("Scroll Esoterica");

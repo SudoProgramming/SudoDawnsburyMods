@@ -871,11 +871,11 @@ namespace Dawnsbury.Mods.Items.Firearms
                     if (item.Tag != null && item.Tag is int ammoLeft)
                     {
 
-                        item.Name = itemNameWithoutReload + $" [{ammoLeft}/5]";
+                        item.ProsaicName = itemNameWithoutReload + $" [{ammoLeft}/5]";
                     }
                     else
                     {
-                        item.Name = itemNameWithoutReload;
+                        item.ProsaicName = itemNameWithoutReload;
                     }
                 },
                 AfterYouTakeAction = async (QEffect afterAction, CombatAction action) =>

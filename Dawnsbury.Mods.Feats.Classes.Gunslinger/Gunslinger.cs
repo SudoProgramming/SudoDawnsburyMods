@@ -461,7 +461,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             {
                 self.ProvideStrikeModifier = (Item item) =>
                 {
-                    if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && FirearmUtilities.IsItemLoaded(item) && !item.HasTrait(Trait.TwoHanded) && item.WeaponProperties != null)
+                    if (FirearmUtilities.IsItemFirearmOrCrossbow(item) && FirearmUtilities.IsItemLoaded(item) && item.WeaponProperties != null)
                     {
                         // Creates a technical effect to track using this only once per round and creates a basic strike for the item
                         QEffect technicalEffectForOncePerRound = new QEffect("Technical Cover Fire", "[this condition has no description]")
@@ -735,7 +735,9 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                                                     CommonSpellEffects.DealDirectDamage(null, DiceFormula.FromText("1"), creature, CheckResult.Success, damageKind);
                                                 }
 
-                                                return new KindedDamage(DiceFormula.FromText("1", "Coated Munitions (" + damageString + ")"), damageKind);
+
+                                                defender.AddQEffect(QEffect.PersistentDamage("1", damageKind));
+                                                return null;
                                             }
 
                                             return null;

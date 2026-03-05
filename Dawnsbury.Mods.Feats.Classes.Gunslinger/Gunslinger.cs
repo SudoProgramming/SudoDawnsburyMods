@@ -2074,7 +2074,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
             // Provides the effect that adds the Advanced Shooter as a main action
             advancedShooterFeat.WithOnSheet((CalculatedCharacterSheetValues sheet) =>
             {
-                sheet.AddSelectionOption(new SingleFeatSelectionOption("Advanced Shooter Choice", "Advanced Shooter", 6, feat => feat.FeatName == GunslingerFeatNames.AdvancedShooterFirearm || feat.FeatName == GunslingerFeatNames.AdvancedShooterCrossbow));
+                sheet.AddSelectionOption(new SingleFeatSelectionOption("Advanced Shooter Choice", "Advanced Shooter", sheet.CurrentLevel, feat => feat.FeatName == GunslingerFeatNames.AdvancedShooterFirearm || feat.FeatName == GunslingerFeatNames.AdvancedShooterCrossbow));
             });
         }
 

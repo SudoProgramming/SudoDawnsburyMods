@@ -201,7 +201,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                 "{b}4. Implement's Empowerment{/b} When you Strike, you can trace mystic patterns with an implement you're holding to empower the Strike, causing it to deal 2 additional damage per weapon damage die. Channeling the power requires full use of your hands. You don't gain the benefit of implement's empowerment if you are holding anything in either hand other than a single one-handed weapon or other implements and you must be holding at least one implement to gain the benefit.\n\n" +
                 "{b}5. Thaumaturge Feat{/b}",
                 null)
-                .WithClassFeatures(features => features
+                .WithEffectiveClassFeatures(features => features
                     .AddFeature(3, "Expert in Esoteric Lore")
                     .AddFeature(5, "Second Implement", "You choose a second implement and gain the initiate benefit. Swapping an implement with another implement is a free action. All implements with reactions will prompt you to swap to it if it would trigger.")
                     .AddFeature(5, "Thaumaturge Weapon Expertise", "Expert in unarmed, simple and martial weapons")
@@ -672,7 +672,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                                             {
                                                 if (await ThaumaturgeUtilities.HeldImplementOrSwap(Enums.ImplementIDs.Bell, owner, " use Bell reaction"))
                                                 {
-                                                    CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(action.Owner, new CombatAction(owner, ThaumaturgeModdedIllustrations.Bell, ImplementDetails.BellInitiateBenefitName, [Trait.Auditory, Trait.Emotion, Trait.Enchantment, Trait.Magical, Trait.Manipulate, Trait.Mental, ThaumaturgeTraits.Thaumaturge], ImplementDetails.BellInitiateBenefitRulesText, Target.Touch()).WithActionId(ThaumaturgeActionIDs.RingBell), actionIsSpell ? Defense.Fortitude : Defense.Will, owner.ClassDC(ThaumaturgeTraits.Thaumaturge));
+                                                    CheckResult savingThrowResult = await CommonSpellEffects.RollSavingThrowAsync(action.Owner, new CombatAction(owner, ThaumaturgeModdedIllustrations.Bell, ImplementDetails.BellInitiateBenefitName, [Trait.Auditory, Trait.Emotion, Trait.Enchantment, Trait.Magical, Trait.Manipulate, Trait.Mental, ThaumaturgeTraits.Thaumaturge], ImplementDetails.BellInitiateBenefitRulesText, Target.Touch()).WithActionId(ThaumaturgeActionIDs.RingBell), actionIsSpell ? Defense.Fortitude : Defense.Will, owner.ClassDC(ThaumaturgeTraits.Thaumaturge));
                                                     if (savingThrowResult <= CheckResult.Failure)
                                                     {
                                                         QEffect bellEffect = new QEffect(ExpirationCondition.CountsDownAtStartOfSourcesTurn);
@@ -2384,7 +2384,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             {
                                 ActiveRollSpecification activeRollSpecification = new ActiveRollSpecification(Checks.SavingThrow(Defense.Fortitude), Checks.FlatDC(attacker.ClassDC(ThaumaturgeTraits.Thaumaturge)));
                                 int classDC = attacker.ClassDC(ThaumaturgeTraits.Thaumaturge);
-                                CheckResult savingThrowResult = CommonSpellEffects.RollSavingThrow(defender, lingeringPainStrikeStrike, Defense.Fortitude, classDC);
+                                CheckResult savingThrowResult = await CommonSpellEffects.RollSavingThrowAsync(defender, lingeringPainStrikeStrike, Defense.Fortitude, classDC);
                                 if (savingThrowResult <= CheckResult.Failure)
                                 {
                                     defender.AddQEffect(QEffect.Sickened(1, classDC));

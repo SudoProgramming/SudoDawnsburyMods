@@ -1,4 +1,9 @@
-﻿using Dawnsbury.Audio;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Metadata.Ecma335;
+using System.Security.Cryptography.X509Certificates;
+using Dawnsbury.Audio;
 using Dawnsbury.Auxiliary;
 using Dawnsbury.Campaign.Encounters;
 using Dawnsbury.Campaign.Path;
@@ -13,6 +18,7 @@ using Dawnsbury.Core.CharacterBuilder.FeatsDb.TrueFeatDb.Archetypes;
 using Dawnsbury.Core.CharacterBuilder.Selections.Options;
 using Dawnsbury.Core.CombatActions;
 using Dawnsbury.Core.Coroutines.Options;
+using Dawnsbury.Core.Coroutines.Options.Reactive;
 using Dawnsbury.Core.Coroutines.Requests;
 using Dawnsbury.Core.Creatures;
 using Dawnsbury.Core.Creatures.Parts;
@@ -20,6 +26,7 @@ using Dawnsbury.Core.Mechanics;
 using Dawnsbury.Core.Mechanics.Core;
 using Dawnsbury.Core.Mechanics.Damage;
 using Dawnsbury.Core.Mechanics.Enumerations;
+using Dawnsbury.Core.Mechanics.ReactiveAttacks;
 using Dawnsbury.Core.Mechanics.Rules;
 using Dawnsbury.Core.Mechanics.Targeting;
 using Dawnsbury.Core.Mechanics.Targeting.Targets;
@@ -36,11 +43,8 @@ using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Extensions;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents;
 using Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using static System.Collections.Specialized.BitVector32;
+using static Dawnsbury.Core.Mechanics.ReactiveAttacks.AttackOfOpportunityMechanics;
 
 namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
 {
@@ -1670,7 +1674,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             {
                 List<FeatName> wandFeatNames = new List<FeatName>() { ThaumaturgeFeatNames.ColdWand, ThaumaturgeFeatNames.ElectricityWand, ThaumaturgeFeatNames.FireWand };
                 sheet.AddSelectionOption(new SingleFeatSelectionOption("Thaumaturge Adept Wand Type", "Adept Wand", sheet.CurrentLevel, feat => wandFeatNames.Contains(feat.FeatName)));
-                ThaumaturgeUtilities.EnsureCorrectImplements(sheet, false);
+                //ThaumaturgeUtilities.EnsureCorrectImplements(sheet, false, wandAdeptFeat);
             };
             wandAdeptFeat.WithPermanentQEffect("Creatures that fail their saves against your fling magic have an additiional effects.", delegate (QEffect self)
             {
@@ -1693,6 +1697,21 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             {
                 if (!isDedication || sheet.HasFeat(ThaumaturgeFeatNames.WeaponImplementDedication))
                 {
+                    AttackOfOpportunityMechanics attackOfOpportunityMechanics = new AttackOfOpportunityMechanics()
+                    {
+                        Name = "Implements Interruption",
+                        Description = "When you use Implement's Interruption and fail (but don't critically fail) the Strike, you deal 1 damage of the weapon's normal type, possibly applying any bonus damage due to the target's weakness.",
+                        OverheadName = "*Implements Interruption*",
+                        StrikeAndReactionTraits = [Trait.ReactiveAttack, Trait.AttackOfOpportunity, Trait.Magical],
+                        RestrictToOnlyAgainstWhom = (QEffect restrictEffect, Creature provoker) =>
+                        {
+                            return provoker.QEffects.Any(qe => (qe.Id == ThaumaturgeQEIDs.ExploitVulnerabilityTarget && qe.Tag == restrictEffect.Owner));
+                        },
+                        IsWeaponPermissible = (Item weapon) => weapon.HasTrait(ThaumaturgeTraits.Implement),
+                    };
+
+                    self.AddQEffect(AttackOfOpportunityMechanics.AttackOfOpportunity(attackOfOpportunityMechanics));
+
                     self.AddQEffect(new QEffect(weaponImplementFeat.BaseName, ImplementDetails.WeaponInitiateBenefitName + " - Reactively Strike with your One-Hand weapon")
                     {
                         StartOfCombat = async (QEffect startOfCombat) =>
@@ -1707,71 +1726,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
                             if (weaponImplement != null)
                             {
                                 weaponImplement.Traits.Add(ThaumaturgeTraits.Implement);
-                                owner.AddQEffect(new QEffect("Implement's Interruption {icon:Reaction}", ImplementDetails.WeaponInitiateBenefitRulesText)
-                                {
-                                    Id = QEffectId.AttackOfOpportunity,
-                                    WhenProvoked = async (QEffect aooEffect, CombatAction provokingAction) =>
-                                    {
-                                        Creature attacker = aooEffect.Owner;
-                                        Creature provoker = provokingAction.Owner;
-                                        if (attacker.PrimaryWeapon != null && attacker.QEffects.Any(qe => (qe is ExploitEffect exploitEffect && exploitEffect.Target.BaseName == provoker.BaseName) || (qe is QEffectClone clonedEffect && clonedEffect.OriginalEffect is ExploitEffect clonedExploitEffect && clonedExploitEffect.Target.BaseName == provoker.BaseName)))
-                                        {
-                                            MirrorTrackingEffect? pairedCreatureEffect = (MirrorTrackingEffect?)attacker.QEffects.FirstOrDefault(qe => qe is MirrorTrackingEffect mirrorTrackingEffect);
-                                            if (((attacker is not MirrorClone && attacker.Actions.CanTakeReaction()) || (pairedCreatureEffect != null && pairedCreatureEffect.PairedCreature.Actions.CanTakeReaction())) && await ThaumaturgeUtilities.HeldImplementOrSwap(Enums.ImplementIDs.Weapon, attacker, " since you have been provoked and can make an attack of opportunity", false))
-                                            {
-                                                CheckResult? strikeCheckResult = await CommonCombatActions.OfferAndMakeReactiveStrike(attacker, provoker, "{b}" + provoker.Name + "{/b} uses {b}" + provokingAction.Name + "{/b} which provokes.\nUse your reaction to make an attack of opportunity?", "*attack of opportunity*", 1);
-                                                if (strikeCheckResult != null && strikeCheckResult == CheckResult.CriticalSuccess)
-                                                {
-                                                    if (provokingAction.HasTrait(Trait.Manipulate))
-                                                    {
-                                                        provokingAction.Disrupted = true;
-                                                    }
-                                                }
-                                                else if (strikeCheckResult == CheckResult.Failure && ((attacker is not MirrorClone && attacker.HasFeat(ThaumaturgeFeatNames.WeaponAdept) || (pairedCreatureEffect != null && pairedCreatureEffect.PairedCreature.HasFeat(ThaumaturgeFeatNames.WeaponAdept)))) && attacker.PrimaryWeapon != null)
-                                                {
-                                                    List<DamageKind> damageTypes = attacker.PrimaryWeapon.DetermineDamageKinds();
-                                                    SpecialResistance? specialWeakness = null;
-                                                    QEffect? exploitEffect = attacker.QEffects.FirstOrDefault(qe => (qe is ExploitEffect exploitEffect && exploitEffect.Target.BaseName == provoker.BaseName) || (qe is QEffectClone clonedEffect && clonedEffect.OriginalEffect is ExploitEffect clonedExploitEffect && clonedExploitEffect.Target.BaseName == provoker.BaseName));
-
-                                                    if (exploitEffect != null && exploitEffect is ExploitEffect actualExploitEffect)
-                                                    {
-                                                        if (actualExploitEffect.ExploitedWeakness is SpecialResistance specialWeak)
-                                                        {
-                                                            specialWeakness = specialWeak;
-                                                        }
-                                                        else
-                                                        {
-                                                            damageTypes.Add(actualExploitEffect.ExploitedWeakness.DamageKind);
-                                                        }
-                                                    }
-                                                    else if (exploitEffect != null && exploitEffect is QEffectClone clonedEffect && clonedEffect.OriginalEffect is ExploitEffect clonedExploitEffect)
-                                                    {
-                                                        if (clonedExploitEffect.ExploitedWeakness is SpecialResistance specialWeak)
-                                                        {
-                                                            specialWeakness = specialWeak;
-                                                        }
-                                                        else
-                                                        {
-                                                            damageTypes.Add(clonedExploitEffect.ExploitedWeakness.DamageKind);
-                                                        }
-                                                    }
-                                                    DamageKind damageKindToUse = provoker.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(damageTypes);
-                                                    CombatAction simpleAction = CombatAction.CreateSimple(attacker, "Weapon Adept");
-                                                    if (specialWeakness != null)
-                                                    {
-                                                        simpleAction.Name += $" ({specialWeakness.Name} {specialWeakness.Value} included)";
-                                                    }
-                                                    await CommonSpellEffects.DealDirectSplashDamage(simpleAction, DiceFormula.FromText(specialWeakness != null ? $"{1 + specialWeakness.Value}" : "1"), provoker, damageKindToUse);
-                                                }
-
-                                                if (attacker is MirrorClone && pairedCreatureEffect != null)
-                                                {
-                                                    pairedCreatureEffect.PairedCreature.Actions.UseUpReaction();
-                                                }
-                                            }
-                                        }
-                                    }
-                                });
                             }
                         }
                     });
@@ -1787,6 +1741,48 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         {
             weaponAdeptFeat.WithPermanentQEffect("You deal 1 damage when you miss your Attack of Opportunity (Possibly triggering weaknesses)", delegate (QEffect self)
             {
+                self.AfterYouTakeAction = async (QEffect afterYouTakeAction, CombatAction action) =>
+                {
+                    Creature attacker = action.Owner;
+                    Creature? target = action.ChosenTargets.ChosenCreature;
+                    Item? weaponImplement = attacker.HeldItems.FirstOrDefault(item => item.HasTrait(ThaumaturgeTraits.WeaponImplement));
+                    if (action.Name == "Implements Interruption" && action.CheckResult == CheckResult.Failure && weaponImplement != null && target != null)
+                    {
+                        List<DamageKind> damageTypes = weaponImplement.DetermineDamageKinds();
+                        SpecialResistance? specialWeakness = null;
+                        QEffect? exploitEffect = attacker.QEffects.FirstOrDefault(qe => (qe is ExploitEffect exploitEffect && exploitEffect.Target.BaseName == target.BaseName) || (qe is QEffectClone clonedEffect && clonedEffect.OriginalEffect is ExploitEffect clonedExploitEffect && clonedExploitEffect.Target.BaseName == target.BaseName));
+
+                        if (exploitEffect != null && exploitEffect is ExploitEffect actualExploitEffect)
+                        {
+                            if (actualExploitEffect.ExploitedWeakness is SpecialResistance specialWeak)
+                            {
+                                specialWeakness = specialWeak;
+                            }
+                            else
+                            {
+                                damageTypes.Add(actualExploitEffect.ExploitedWeakness.DamageKind);
+                            }
+                        }
+                        else if (exploitEffect != null && exploitEffect is QEffectClone clonedEffect && clonedEffect.OriginalEffect is ExploitEffect clonedExploitEffect)
+                        {
+                            if (clonedExploitEffect.ExploitedWeakness is SpecialResistance specialWeak)
+                            {
+                                specialWeakness = specialWeak;
+                            }
+                            else
+                            {
+                                damageTypes.Add(clonedExploitEffect.ExploitedWeakness.DamageKind);
+                            }
+                        }
+                        DamageKind damageKindToUse = target.WeaknessAndResistance.WhatDamageKindIsBestAgainstMe(damageTypes);
+                        CombatAction simpleAction = CombatAction.CreateSimple(attacker, "Weapon Adept");
+                        if (specialWeakness != null)
+                        {
+                            simpleAction.Name += $" ({specialWeakness.Name} {specialWeakness.Value} included)";
+                        }
+                        await CommonSpellEffects.DealDirectSplashDamage(simpleAction, DiceFormula.FromText(specialWeakness != null ? $"{1 + specialWeakness.Value}" : "1"), target, damageKindToUse);
+                    }
+                };
             });
         }
 
@@ -2759,12 +2755,19 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
         {
             implementFeat.WithOnSheet((character) =>
             {
-                ThaumaturgeUtilities.EnsureCorrectImplements(character, isDedication);
+                character.AtEndOfRecalculation += (charSheet) =>
+                {
+                    ThaumaturgeUtilities.EnsureCorrectImplements(charSheet, isDedication);
+                };
             });
-            implementFeat.WithOnCreature((character, creature) =>
-            {
-                ThaumaturgeUtilities.EnsureCorrectImplements(character, isDedication);
-            });
+            //implementFeat.WithOnSheet((character) =>
+            //{
+            //    ThaumaturgeUtilities.EnsureCorrectImplements(character, isDedication);
+            //});
+            //implementFeat.WithOnCreature((character, creature) =>
+            //{
+            //    ThaumaturgeUtilities.EnsureCorrectImplements(character, isDedication);
+            //});
         }
 
         private static void AddLevelTag(Feat feat, bool isDedication = false)

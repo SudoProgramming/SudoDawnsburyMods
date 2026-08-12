@@ -111,7 +111,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             this.MetamagicProvider = originalQEffect.MetamagicProvider;
             this.OverrideItemDamageDie = originalQEffect.OverrideItemDamageDie;
             this.PreventAreaAttacksAgainstMe = originalQEffect.PreventAreaAttacksAgainstMe;
-            this.PreventDeathDueToDyingAsync = originalQEffect.PreventDeathDueToDyingAsync;
+            this.PreventDeathDueToDyingReaction = originalQEffect.PreventDeathDueToDyingReaction;
             this.PreventTakingAction = originalQEffect.PreventTakingAction;
             this.PreventTargetingBy = originalQEffect.PreventTargetingBy;
             this.ProvideActionIntoPossibilitySection = originalQEffect.ProvideActionIntoPossibilitySection;
@@ -147,7 +147,7 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge
             this.WhenCreatureDiesAtStateCheckAsync = originalQEffect.WhenCreatureDiesAtStateCheckAsync;
             this.WhenExpires = originalQEffect.WhenExpires;
             this.WhenMonsterDies = originalQEffect.WhenMonsterDies;
-            this.WhenProvoked = originalQEffect.WhenProvoked;
+            this.WhenProvokedReactions = originalQEffect.WhenProvokedReactions;
             this.YouAcquireQEffect = originalQEffect.YouAcquireQEffect;
             this.YouAreDealtDamage = originalQEffect.YouAreDealtDamage;
             this.YouAreDealtDamageEvent = originalQEffect.YouAreDealtDamageEvent;

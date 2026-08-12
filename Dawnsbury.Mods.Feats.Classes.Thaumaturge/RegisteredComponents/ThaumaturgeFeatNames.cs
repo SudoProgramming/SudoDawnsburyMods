@@ -271,6 +271,16 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.RegisteredComponents
         public static readonly FeatName TomePrimarySkill = ModManager.RegisterFeatName("Tome Primary Skill", "Tome Primary Skill");
 
         /// <summary>
+        /// Technical Feat to Ensure implement ensurance
+        /// </summary>
+        public static readonly FeatName ImplementEnsurance = ModManager.RegisterFeatName("Implement Ensurance", "Implement Ensurance");
+
+        /// <summary>
+        /// Technical Feat to Ensure implement ensurance
+        /// </summary>
+        public static readonly FeatName ImplementAddingInProgress = ModManager.RegisterFeatName("ImplementAddingInProgress", "Implement Adding In Progress");
+
+        /// <summary>
         /// Tome Secondary Skill feat
         /// </summary>
         public static readonly FeatName TomeSecondarySkill = ModManager.RegisterFeatName("Tome Secondary Skill", "Tome Secondary Skill");

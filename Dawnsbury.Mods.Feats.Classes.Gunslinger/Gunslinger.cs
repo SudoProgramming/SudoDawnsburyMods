@@ -188,10 +188,6 @@ namespace Dawnsbury.Mods.Feats.Classes.Gunslinger
                             }
                         });
                     }
-                    if (creature.Level >= 7)
-                    {
-                        creature.AddQEffect(QEffect.WeaponSpecialization());
-                    }
                 });
 
             // Level 1 Class Feats

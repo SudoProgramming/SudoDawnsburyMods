@@ -291,6 +291,50 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             }
         }
 
+        public static ImplementIDs LookupImplementID(FeatName featName, bool isDedication)
+        {
+            if (featName == ThaumaturgeFeatNames.AmuletImplement || featName == ThaumaturgeFeatNames.AmuletImplementDedication)
+            {
+                return ImplementIDs.Amulet;
+            }
+            else if (featName == ThaumaturgeFeatNames.BellImplement || featName == ThaumaturgeFeatNames.BellImplementDedication)
+            {
+                return ImplementIDs.Bell;
+            }
+            else if (featName == ThaumaturgeFeatNames.ChaliceImplement || featName == ThaumaturgeFeatNames.ChaliceImplementDedication)
+            {
+                return ImplementIDs.Chalice;
+            }
+            else if (featName == ThaumaturgeFeatNames.LanternImplement || featName == ThaumaturgeFeatNames.LanternImplementDedication)
+            {
+                return ImplementIDs.Lantern;
+            }
+            else if (featName == ThaumaturgeFeatNames.MirrorImplement || featName == ThaumaturgeFeatNames.MirrorImplementDedication)
+            {
+                return ImplementIDs.Mirror;
+            }
+            else if (featName == ThaumaturgeFeatNames.RegaliaImplement || featName == ThaumaturgeFeatNames.RegaliaImplementDedication)
+            {
+                return ImplementIDs.Regalia;
+            }
+            else if (featName == ThaumaturgeFeatNames.TomeImplement || featName == ThaumaturgeFeatNames.TomeImplementDedication)
+            {
+                return ImplementIDs.Tome;
+            }
+            else if (featName == ThaumaturgeFeatNames.WandImplement || featName == ThaumaturgeFeatNames.WandImplementDedication)
+            {
+                return ImplementIDs.Wand;
+            }
+            else if (featName == ThaumaturgeFeatNames.WeaponImplement || featName == ThaumaturgeFeatNames.WeaponImplementDedication)
+            {
+                return ImplementIDs.Weapon;
+            }
+            else
+            {
+                throw new InvalidOperationException("Feat name has no supported implement ID" + featName);
+            }
+        }
+
         public static Implement CreateImplement(ImplementIDs implementID)
         {
             switch (implementID)
@@ -349,18 +393,43 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             List<ImplementIDs> implementsToAdd = new List<ImplementIDs>();
             List<ImplementIDs> implementsToRemove = new List<ImplementIDs>();
 
+            FeatName? firstImplement = (character.Tags.ContainsKey("First Implement") && character.Tags["First Implement"] is FeatName firstImplementFeatName) ? firstImplementFeatName : null;
+            FeatName? secondImplement = (character.Tags.ContainsKey("Second Implement") && character.Tags["Second Implement"] is FeatName secondImplementFeatName) ? secondImplementFeatName : null;
+            FeatName? dedicationImplement = (character.Tags.ContainsKey("Dedication Implement") && character.Tags["Dedication Implement"] is FeatName dedicationImplementFeatName) ? dedicationImplementFeatName : null;
+
+            if (firstImplement != null)
+            {
+                implementsToAdd.Add(LookupImplementID((FeatName)firstImplement, false));
+            }
+            if (secondImplement != null)
+            {
+                implementsToAdd.Add(LookupImplementID((FeatName)secondImplement, false));
+            }
+            if (dedicationImplement != null)
+            {
+                implementsToAdd.Add(LookupImplementID((FeatName)dedicationImplement, true));
+            }
+
             foreach (ImplementIDs implementID in implementIDs)
             {
-                FeatName featName = LookupImplementFeatName(implementID, isDedication);
-                if (character.HasFeat(featName))
-                {
-                    implementsToAdd.Add(implementID);
-                }
-                else
+                if (!implementsToAdd.Contains(implementID))
                 {
                     implementsToRemove.Add(implementID);
                 }
             }
+
+            //foreach (ImplementIDs implementID in implementIDs)
+            //{
+            //    FeatName featName = LookupImplementFeatName(implementID, isDedication);
+            //    if (character.HasFeat(featName))
+            //    {
+            //        implementsToAdd.Add(implementID);
+            //    }
+            //    else
+            //    {
+            //        implementsToRemove.Add(implementID);
+            //    }
+            //}
 
             foreach (ImplementIDs implementID in implementsToRemove)
             {
@@ -370,17 +439,32 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
                 }
             }
 
+            List<Item> implements = new List<Item>();
             foreach (ImplementIDs implementID in implementsToAdd)
             {
                 if (implementID != ImplementIDs.Weapon)
                 {
-                    AddImplement(character, CreateImplement(implementID), LookupImplementFeatName(implementID, isDedication));
+                    implements.Add(CreateImplement(implementID));
                 }
                 else
                 {
-                    AddImplement(character, Items.CreateNew(ThaumaturgeItemNames.WeaponImplementChoice), LookupImplementFeatName(implementID, isDedication));
+                    implements.Add(Items.CreateNew(ThaumaturgeItemNames.WeaponImplementChoice));
                 }
             }
+
+            //foreach (ImplementIDs implementID in implementsToAdd)
+            //{
+            //    if (implementID != ImplementIDs.Weapon)
+            //    {
+            //        AddImplement(character, CreateImplement(implementID), LookupImplementFeatName(implementID, isDedication));
+            //    }
+            //    else
+            //    {
+            //        AddImplement(character, Items.CreateNew(ThaumaturgeItemNames.WeaponImplementChoice), LookupImplementFeatName(implementID, isDedication));
+            //    }
+            //}
+
+            AddImplements(character, implements.ToArray());
 
             UpdateAllImplementsForPossibleScrolls(character);
         }
@@ -425,24 +509,25 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             }
         }
 
-        private static void AddImplement(CalculatedCharacterSheetValues character, Item implement, FeatName implementFeatName)
+        private static void AddImplements(CalculatedCharacterSheetValues character, Item[] implements)
         {
             // Add Implement to Sheet
             int[] levels = character.Sheet.InventoriesByLevel.Keys.ToArray();
             Inventory campaignInventory = character.Sheet.CampaignInventory;
-            AddImplementIntoInventory(campaignInventory, implement);
+            AddImplementsIntoInventory(campaignInventory, implements);
 
             foreach (int level in levels)
             {
                 Inventory inventory = character.Sheet.InventoriesByLevel[level];
 
-                if (level == 1 || inventory.LeftHand != null || inventory.RightHand != null || inventory.Backpack.Count != 0)
-                {
-                    if (level >= 5 || (character.Tags.ContainsKey("First Implement") && character.Tags["First Implement"] is FeatName firstImplementFeatName && firstImplementFeatName == implementFeatName) || (character.Tags.ContainsKey("Dedication Implement") && character.Tags["Dedication Implement"] is FeatName dedicationImplement && dedicationImplement == implementFeatName))
-                    {
-                        AddImplementIntoInventory(inventory, implement);
-                    }
-                }
+                AddImplementsIntoInventory(inventory, implements);
+                //if (level == 1 || inventory.LeftHand != null || inventory.RightHand != null || inventory.Backpack.Count != 0)
+                //{
+                //    if (level >= 5 || (character.Tags.ContainsKey("First Implement") && character.Tags["First Implement"] is FeatName firstImplementFeatName && firstImplementFeatName == implementFeatName) || (character.Tags.ContainsKey("Dedication Implement") && character.Tags["Dedication Implement"] is FeatName dedicationImplement && dedicationImplement == implementFeatName))
+                //    {
+                //        AddImplementsIntoInventory(inventory, implements);
+                //    }
+                //}
             }
         }
 
@@ -513,50 +598,95 @@ namespace Dawnsbury.Mods.Feats.Classes.Thaumaturge.Utilities
             }));
         }
 
-        private static bool AddImplementIntoInventory(Inventory inventory, Item implement)
+        private static bool AddImplementsIntoInventory(Inventory inventory, Item[] implements)
         {
-            if (implement.BaseItemName == ThaumaturgeItemNames.WeaponImplementChoice && 
-                ((inventory.LeftHand?.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName) ?? false) || 
-                (inventory.RightHand?.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName) ?? false) || 
+            Dictionary<Item, bool> shouldAddImplement = new Dictionary<Item, bool>();
+            foreach (Item item in implements)
+            {
+                shouldAddImplement.Add(item, true);
+            }
+
+            bool didAdd = false;
+            bool rightHandFree = inventory.RightHand == null;
+            bool leftHandFree = inventory.LeftHand == null;
+
+            foreach (Item implement in implements)
+            {
+                if (implement.BaseItemName == ThaumaturgeItemNames.WeaponImplementChoice &&
+                ((inventory.LeftHand?.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName) ?? false) ||
+                (inventory.RightHand?.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName) ?? false) ||
                 inventory.Backpack.Any(item => item?.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName) ?? false)))
-            {
-                return false;
-            }
-            else if (implement.BaseItemName == ThaumaturgeItemNames.WeaponImplementChoice && 
-                (inventory.LeftHand?.StoredItems.Any(item => item.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName)) ?? false) || 
-                (inventory.RightHand?.StoredItems.Any(item => item.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName)) ?? false) ||
-                inventory.Backpack.Any(item => item?.StoredItems.Any(item => item.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName)) ?? false))
-            {
-                return false;
-            }
-            else if ((inventory.LeftHand?.StoredItems.Any(item => item.BaseItemName == implement.BaseItemName) ?? false)||
-                (inventory.RightHand?.StoredItems.Any(item => item.BaseItemName == implement.BaseItemName) ?? false) ||
-                (inventory.Backpack.Any(item => item?.StoredItems.Any(item => item.BaseItemName == implement.BaseItemName) ?? false)))
-            {
-                return false;
-            }
-            else if ((inventory.LeftHand == null || inventory.LeftHand.BaseItemName != implement.BaseItemName) && (inventory.RightHand == null || inventory.RightHand.BaseItemName != implement.BaseItemName) && !inventory.Backpack.Any(item => item != null && item.BaseItemName == implement.BaseItemName))
-            {
-                if (inventory.RightHand == null && implement.ItemName != ThaumaturgeItemNames.WeaponImplementChoice && (inventory.LeftHand == null || !inventory.LeftHand.HasTrait(Trait.TwoHanded)))
                 {
-                    inventory.RightHand = implement;
+                    shouldAddImplement[implement] = false;
                 }
-                else if (inventory.LeftHand == null && implement.ItemName != ThaumaturgeItemNames.WeaponImplementChoice)
+                else if (implement.BaseItemName == ThaumaturgeItemNames.WeaponImplementChoice &&
+                    (inventory.LeftHand?.StoredItems.Any(item => item.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName)) ?? false) ||
+                    (inventory.RightHand?.StoredItems.Any(item => item.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName)) ?? false) ||
+                    inventory.Backpack.Any(item => item?.StoredItems.Any(item => item.Runes.Any(rune => rune.BaseItemName == implement.BaseItemName)) ?? false))
                 {
-                    inventory.LeftHand = implement;
+                    shouldAddImplement[implement] = false;
                 }
-                else
+                else if ((inventory.LeftHand?.StoredItems.Any(item => item.BaseItemName == implement.BaseItemName) ?? false) ||
+                    (inventory.RightHand?.StoredItems.Any(item => item.BaseItemName == implement.BaseItemName) ?? false) ||
+                    (inventory.Backpack.Any(item => item?.StoredItems.Any(item => item.BaseItemName == implement.BaseItemName) ?? false)))
                 {
-                    if (inventory.CanBackpackFit(implement, 0))
+                    shouldAddImplement[implement] = false;
+                }
+                else if ((inventory.LeftHand?.BaseItemName == implement.BaseItemName) ||
+                    (inventory.RightHand?.BaseItemName == implement.BaseItemName) ||
+                    (inventory.Backpack.Any(item => item?.BaseItemName == implement.BaseItemName)))
+                {
+                    shouldAddImplement[implement] = false;
+                }
+            }
+
+            foreach (Item implement in implements)
+            {
+                if (shouldAddImplement[implement])
+                {
+                    if (rightHandFree)
+                    {
+                        rightHandFree = false;
+                        inventory.RightHand = implement;
+                    }
+                    else if (leftHandFree)
+                    {
+                        leftHandFree = false;
+                        inventory.LeftHand = implement;
+                    }
+                    else if (inventory.CanBackpackFit(implement, 0))
                     {
                         inventory.AddAtEndOfBackpack(implement);
                     }
+
+                    didAdd = true;
                 }
-
-                return true;
             }
+               
 
-            return false;
+            //    else if ((inventory.LeftHand == null || inventory.LeftHand.BaseItemName != implement.BaseItemName) && (inventory.RightHand == null || inventory.RightHand.BaseItemName != implement.BaseItemName) && !inventory.Backpack.Any(item => item != null && item.BaseItemName == implement.BaseItemName))
+            //    {
+            //        if (inventory.RightHand == null && implement.ItemName != ThaumaturgeItemNames.WeaponImplementChoice && (inventory.LeftHand == null || !inventory.LeftHand.HasTrait(Trait.TwoHanded)))
+            //        {
+            //            inventory.RightHand = implement;
+            //        }
+            //        else if (inventory.LeftHand == null && implement.ItemName != ThaumaturgeItemNames.WeaponImplementChoice)
+            //        {
+            //            inventory.LeftHand = implement;
+            //        }
+            //        else
+            //        {
+            //            if (inventory.CanBackpackFit(implement, 0))
+            //            {
+            //                inventory.AddAtEndOfBackpack(implement);
+            //            }
+            //        }
+
+            //        didAdd = true;
+            //    }
+            //}
+
+            return didAdd;
         }
 
         private static void RemoveImplementFromInventory(Inventory inventory, ItemName implementName, bool skipDeletingIfScroll = true)
